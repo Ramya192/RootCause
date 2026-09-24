@@ -1,0 +1,34 @@
+{
+  "edges": [
+    [
+      "compensation",
+      "job_satisfaction"
+    ],
+    [
+      "manager_quality",
+      "job_satisfaction"
+    ],
+    [
+      "manager_quality",
+      "burnout"
+    ],
+    [
+      "workload",
+      "burnout"
+    ],
+    [
+      "job_satisfaction",
+      "attrition"
+    ],
+    [
+      "burnout",
+      "attrition"
+    ]
+  ],
+  "effects": {
+    "job_satisfaction->attrition": -1.2,
+    "burnout->attrition": 1.0
+  },
+  "seed": 42,
+  "n_rows": 2000
+}

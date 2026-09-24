@@ -1,0 +1,98 @@
+domain:
+  id: employee_attrition
+  name: Employee Attrition
+  description: >-
+    Root-causes voluntary attrition from HR survey/HRIS data: which factors
+    (compensation, manager quality, workload, satisfaction, burnout) actually
+    drive employees to leave, and which interventions reduce it.
+  status: working
+  input_type: tabular
+
+# --- Stage 1: Ingestion ---
+ingestion:
+  file_type: csv
+  data_path: data/employee_attrition/attrition.csv  # relative to the repo root
+  id_column: employee_id
+  outcome_column: attrition
+
+# --- Stage 2: Feature Store ---
+feature_store:
+  entity: employee
+  entity_id_column: employee_id
+  feature_columns:
+    - compensation
+    - manager_quality
+    - workload
+    - job_satisfaction
+    - burnout
+
+# --- Stage 3: Causal Discovery ---
+causal_discovery:
+  algorithm: pc
+  alpha: 0.05
+  variables:
+    - compensation
+    - manager_quality
+    - workload
+    - job_satisfaction
+    - burnout
+    - attrition
+  # Domain priors: edges the domain expert already knows must exist / must
+  # not exist, used to seed and constrain the PC search rather than relying
+  # on structure learning alone.
+  required_edges:
+    - [job_satisfaction, attrition]
+    - [burnout, attrition]
+  forbidden_edges:
+    - [attrition, compensation]
+    - [attrition, manager_quality]
+    - [attrition, workload]
+
+# --- Stage 4: Effect Estimation ---
+# Treatments are the three actionable levers (root nodes in the Stage 3
+# graph, not the job_satisfaction/burnout mediators) -- these are what
+# Stage 6's candidate interventions actually move, so this is the total
+# effect (through both mediators) Stage 6 needs to rank ROI against. No
+# confounders: by construction (see scripts/generate_synthetic_attrition_data.py)
+# compensation/manager_quality/workload are mutually independent roots.
+effect_estimation:
+  outcome: attrition
+  treatments:
+    - name: compensation
+      confounders: []
+    - name: manager_quality
+      confounders: []
+    - name: workload
+      confounders: []
+  estimator: backdoor.linear_regression
+  refutation: placebo_treatment_refuter
+
+# --- Stage 5: Counterfactuals ---
+counterfactuals:
+  meta_learner: t_learner
+  treatment: job_satisfaction
+  outcome: attrition
+  treatment_threshold: 0.0  # >= threshold => "treated" (high satisfaction) arm
+
+# --- Stage 6: Interventions ---
+interventions:
+  sensitive_attribute: gender
+  fairness_threshold: 0.8  # fairlearn four-fifths-rule disparate impact ratio
+  candidates:
+    - id: manager_training
+      target_variable: manager_quality
+      expected_shift: 1.0
+      cost: 15000
+    - id: compensation_adjustment
+      target_variable: compensation
+      expected_shift: 1.0
+      cost: 40000
+    - id: workload_rebalancing
+      target_variable: workload
+      expected_shift: -1.0
+      cost: 20000
+
+# --- Stage 7: Explanation ---
+explanation:
+  llm_model: gpt-4o-mini
+  audience: HR business partner

@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git init *)",
+      "Bash(python -c \"import sys; print\\(sys.executable\\)\")",
+      "Bash(py -0p)",
+      "Bash(where python3.11)",
+      "Bash(\"C:\\\\Users\\\\priya\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python311\\\\python.exe\" -m venv .venv)",
+      "Bash(.venv/Scripts/python.exe --version)",
+      "Bash(.venv/Scripts/python.exe -m pip install --upgrade pip -q)",
+      "Bash(.venv/Scripts/python.exe -m pip install -r requirements-dev.txt)",
+      "Bash(.venv/Scripts/python.exe -c \"import causallearn; print\\(causallearn.__file__\\)\")",
+      "Bash(.venv/Scripts/python.exe -c \"import pkgutil; [print\\(m.name\\) for m in pkgutil.iter_modules\\(\\) if m.name in \\('causallearn','dowhy','causalml','feast','crewai','shap','fairlearn','sklearn'\\)]\")",
+      "Bash(.venv/Scripts/python.exe -c ' *)",
+      "Bash(.venv/Scripts/python.exe scripts/generate_synthetic_attrition_data.py)",
+      "Bash(echo \"EXIT CODE: $?\")",
+      "Bash(rm -f out.txt err.txt)"
+    ]
+  }
+}

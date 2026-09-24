@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+
+# Feast local artifacts
+rootcause/feature_repo/data/registry.db
+rootcause/feature_repo/data/online_store.db
+rootcause/feature_repo/data/features.parquet
+rootcause/feature_repo/.feast/
+
+.vscode/
+.idea/

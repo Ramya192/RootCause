@@ -1,0 +1,42 @@
+# Python 3.11
+# Data processing
+pandas
+numpy
+pyyaml
+pydantic>=2
+
+# Stage 3: Causal Discovery
+causal-learn
+networkx
+
+# Stage 4: Effect Estimation
+dowhy
+statsmodels
+
+# Stage 5: Counterfactuals
+# NOTE: causalml has Cython extensions and needs a C++ build toolchain on
+# Windows. If `pip install causalml` fails here, rootcause/pipeline/
+# counterfactuals.py has a scikit-learn-only fallback path — comment this
+# line out and rely on scikit-learn (already a causalml/dowhy dependency).
+causalml
+scipy
+scikit-learn
+
+# Stage 6: Interventions
+fairlearn
+
+# Stage 7: Explanation
+shap
+openai
+
+# Stage 2: Feature Store
+feast
+
+# Orchestration
+crewai
+
+# API
+fastapi
+uvicorn[standard]
+
+python-dotenv

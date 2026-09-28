@@ -1,0 +1,24 @@
+digraph causal_graph {
+  rankdir=TB;
+  node [shape=box, style="rounded,filled", fontname="Helvetica"];
+  "age" [fillcolor="#BAB0AC"];
+  "female" [fillcolor="#BAB0AC"];
+  "foreign_worker" [fillcolor="#BAB0AC"];
+  "employment_since" [fillcolor="#BAB0AC"];
+  "checking_status__lt_0" [fillcolor="#BAB0AC"];
+  "duration_months" [fillcolor="#4C78A8"];
+  "credit_amount_kdm" [fillcolor="#4C78A8"];
+  "installment_rate" [fillcolor="#4C78A8"];
+  "default" [fillcolor="#E45756"];
+  "age" -> "employment_since";
+  "female" -> "employment_since";
+  "female" -> "installment_rate";
+  "foreign_worker" -> "duration_months";
+  "foreign_worker" -> "installment_rate";
+  "employment_since" -> "default";
+  "checking_status__lt_0" -> "default";
+  "duration_months" -> "credit_amount_kdm";
+  "duration_months" -> "default";
+  "installment_rate" -> "credit_amount_kdm";
+  "installment_rate" -> "employment_since";
+}

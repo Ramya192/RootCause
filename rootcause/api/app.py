@@ -5,6 +5,11 @@
     POST /domains/{id}/analyze         queue a run -> 202 + job
     GET  /jobs                         recent jobs (no results)
     GET  /jobs/{job_id}                job status; carries the PipelineResult once done
+    GET  /jobs/{job_id}/graph          the discovered causal graph as a PNG (?format=dot for Graphviz DOT)
+
+`dataset` picks which of the domain's data sources to run (real, synthetic or
+semi_synthetic -- same schema and config, different file); omitted, the
+domain's default_dataset is used.
 
 `orchestration` picks how the 7 stages run: "direct" (default; the stage
 functions called in order -- fast) or "crew" (the CDIA spec's hierarchical
@@ -14,16 +19,19 @@ CrewAI orchestration -- minutes of paid LLM calls, needs OPENAI_API_KEY).
 from __future__ import annotations
 
 import os
+import tempfile
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Callable, Literal, Optional
 
 from fastapi import FastAPI, HTTPException, Response
 from pydantic import BaseModel
 
-from rootcause.api.jobs import Job, JobStore
+from rootcause.api.jobs import Job, JobStatus, JobStore
 from rootcause.models.schemas import PipelineResult
 from rootcause.pipeline import runner
 from rootcause.utils.config_loader import ConfigLoader
+from rootcause.utils.graph_plot import plot_causal_graph, to_dot
 
 Runner = Callable[[str, dict, str], PipelineResult]
 
@@ -35,6 +43,8 @@ DEFAULT_RUNNERS: dict[str, Runner] = {
 
 class AnalyzeRequest(BaseModel):
     orchestration: Literal["direct", "crew"] = "direct"
+    # real | synthetic | semi_synthetic; omitted -> the domain's default_dataset
+    dataset: Optional[str] = None
 
 
 class DomainSummary(BaseModel):
@@ -43,6 +53,8 @@ class DomainSummary(BaseModel):
     description: str
     status: str
     runnable: bool
+    datasets: list[str]
+    default_dataset: str
 
 
 def create_app(
@@ -73,6 +85,8 @@ def create_app(
                 description=d.description,
                 status=d.status,
                 runnable=d.is_runnable,
+                datasets=runner.available_datasets(d.extra),
+                default_dataset=d.extra["ingestion"]["default_dataset"],
             )
             for d in loader.list_domains()
         ]
@@ -95,12 +109,24 @@ def create_app(
                 detail="orchestration='crew' needs OPENAI_API_KEY (the manager agent is an LLM)",
             )
 
+        try:
+            dataset = runner.resolve_dataset(domain.extra, body.dataset)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from None
+        data_path = runner.resolve_data_path(domain.extra, dataset)
+        if not data_path.is_file():
+            raise HTTPException(
+                status_code=409,
+                detail=f"Dataset '{dataset}' is configured but its file was not found at {data_path}",
+            )
+
         run_fn = run_fns[body.orchestration]
-        data_path = str(runner.resolve_data_path(domain.extra))
+        run_config = runner.with_dataset(domain.extra, dataset)
         job = jobs.submit(
             domain_id,
             body.orchestration,
-            lambda: run_fn(domain_id, domain.extra, data_path),
+            lambda: run_fn(domain_id, run_config, str(data_path)),
+            dataset=dataset,
         )
         response.headers["Location"] = f"/jobs/{job.id}"
         return job
@@ -115,5 +141,21 @@ def create_app(
         if job is None:
             raise HTTPException(status_code=404, detail=f"Unknown job '{job_id}'")
         return job
+
+    @app.get("/jobs/{job_id}/graph")
+    def get_job_graph(job_id: str, format: Literal["png", "dot"] = "png") -> Response:
+        job = jobs.get(job_id)
+        if job is None:
+            raise HTTPException(status_code=404, detail=f"Unknown job '{job_id}'")
+        if job.status != JobStatus.succeeded or job.result is None:
+            raise HTTPException(status_code=409, detail=f"Job '{job_id}' is {job.status.value}; it has no graph yet")
+        domain_config = loader.get_domain(job.domain_id).extra
+        if format == "dot":
+            return Response(to_dot(job.result.causal_graph, domain_config), media_type="text/vnd.graphviz")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = plot_causal_graph(
+                job.result.causal_graph, Path(tmp) / "graph.png", domain_config, title=f"{job.domain_id} ({job.dataset})"
+            )
+            return Response(path.read_bytes(), media_type="image/png")
 
     return app

@@ -11,9 +11,18 @@ rootcause/agents/crew.py).
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 
-from rootcause.models.schemas import PipelineResult
+import pandas as pd
+
+from rootcause.models.schemas import (
+    CausalGraph,
+    CounterfactualResult,
+    EffectEstimate,
+    InterventionRecommendation,
+    PipelineResult,
+)
 from rootcause.pipeline import (
     causal_discovery,
     counterfactuals,
@@ -27,27 +36,69 @@ from rootcause.pipeline import (
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
-def resolve_data_path(domain_config: dict) -> Path:
-    """The domain's configured dataset, resolved against the repo root."""
-    return REPO_ROOT / domain_config["ingestion"]["data_path"]
+def available_datasets(domain_config: dict) -> list[str]:
+    return sorted(domain_config["ingestion"]["datasets"])
 
 
-def run_direct(domain_id: str, domain_config: dict, data_path: str | Path) -> PipelineResult:
+def resolve_dataset(domain_config: dict, requested: str | None = None) -> str:
+    """The dataset kind to run: `requested`, else the domain's default."""
+    ingestion_cfg = domain_config["ingestion"]
+    name = requested or ingestion_cfg["default_dataset"]
+    if name not in ingestion_cfg["datasets"]:
+        raise ValueError(
+            f"dataset {name!r} is not configured for this domain; available: "
+            f"{available_datasets(domain_config)}"
+        )
+    return name
+
+
+def resolve_data_path(domain_config: dict, dataset: str | None = None) -> Path:
+    """The chosen dataset's file, resolved against the repo root."""
+    name = resolve_dataset(domain_config, dataset)
+    return REPO_ROOT / domain_config["ingestion"]["datasets"][name]
+
+
+def with_dataset(domain_config: dict, dataset: str) -> dict:
+    """Copy of the config tagged with the dataset being run, so Stage 2 keeps
+    each (domain, dataset) pair's Feast state apart."""
+    return {**domain_config, "run": {"dataset": dataset}}
+
+
+@dataclass
+class AnalysisOutputs:
+    """Everything Stages 1-6 produce -- all of it except the Stage 7 narrative."""
+
+    raw: pd.DataFrame
+    features: pd.DataFrame
+    graph: CausalGraph
+    effects: list[EffectEstimate]
+    counterfactuals: list[CounterfactualResult]
+    recommendations: list[InterventionRecommendation]
+
+
+def run_analysis_stages(domain_config: dict, data_path: str | Path) -> AnalysisOutputs:
+    """Stages 1-6. Split out from `run_direct` so the evaluation harness can score
+    them without paying for Stage 7 (a SHAP fit, plus an LLM call if a key is set)."""
     raw = ingestion.ingest(data_path, domain_config)
     features = feature_store.build_feature_vectors(raw, domain_config)
     graph = causal_discovery.discover_graph(features, domain_config)
     effects = effect_estimation.estimate_effects(features, domain_config)
     cf_results = counterfactuals.estimate_counterfactuals(features, domain_config)
     recs = interventions.rank_interventions(raw, effects, domain_config)
+    return AnalysisOutputs(raw, features, graph, effects, cf_results, recs)
+
+
+def run_direct(domain_id: str, domain_config: dict, data_path: str | Path) -> PipelineResult:
+    out = run_analysis_stages(domain_config, data_path)
     explained = explanation.generate_explanation(
-        features, effects, cf_results, recs, domain_config
+        out.features, out.effects, out.counterfactuals, out.recommendations, domain_config
     )
     return PipelineResult(
         domain_id=domain_id,
-        causal_graph=graph,
-        effect_estimates=effects,
-        counterfactuals=cf_results,
-        recommendations=recs,
+        causal_graph=out.graph,
+        effect_estimates=out.effects,
+        counterfactuals=out.counterfactuals,
+        recommendations=out.recommendations,
         explanation=explained,
     )
 

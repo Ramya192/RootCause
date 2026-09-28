@@ -1,14 +1,23 @@
 """Stage 7: Explanation.
 
-Trains a lightweight attrition classifier on the feature vectors purely to
+Trains a lightweight outcome classifier on the feature vectors purely to
 attribute SHAP feature importances -- this model plays no role in the causal
 reasoning itself, Stages 3-6 already did that. Combines those attributions
 with Stage 4-6's causal outputs into a narrative for the config's target
-audience. AutoGen is on the spec doc but deferred per the V1 scope
-guardrails, so this calls the OpenAI API directly; if no key is configured
-(or the call fails for any reason -- auth, network, rate limit), falls back
-to a deterministic templated narrative built from the same facts, so the
-pipeline still runs end-to-end without a live API key.
+audience, trying three writers in order and keeping the first whose text passes
+the grounding check in narrative.py (every number comes from the facts, required
+caveats present):
+
+  1. autogen: analyst -> skeptic -> writer chain (optional `autogen` dependency)
+  2. llm: one OpenAI call over the same facts
+  3. template: deterministic text from the facts; always available, needs no key
+
+Tiers 1 and 2 need OPENAI_API_KEY; any failure (auth, network, rate limit, missing
+package, a rejected draft) moves on to the next tier instead of crashing the run.
+`Explanation.narrative_log` records what happened to each tier.
+Config: `explanation.tiers` (default all three, in that order; 'template' is always the
+last resort) and an optional `explanation.autogen` dict (max_tokens, temperature,
+timeout_seconds, total_timeout_seconds).
 """
 
 from __future__ import annotations
@@ -25,11 +34,15 @@ from rootcause.models.schemas import (
     EffectEstimate,
     Explanation,
     InterventionRecommendation,
+    NarrativeAttempt,
 )
+from rootcause.pipeline import narrative
+from rootcause.pipeline.preprocessing import feature_columns_of
+from rootcause.utils.vocabulary import domain_vocabulary
 
 
 def _shap_summary(feature_df: pd.DataFrame, domain_config: dict) -> dict[str, float]:
-    feature_cols = domain_config["feature_store"]["feature_columns"]
+    feature_cols = feature_columns_of(feature_df, domain_config)
     outcome_col = domain_config["effect_estimation"]["outcome"]
 
     X = feature_df[feature_cols].to_numpy(dtype=float)
@@ -52,12 +65,16 @@ def _template_narrative(
     recommendations: list[InterventionRecommendation],
     shap_summary: dict[str, float],
 ) -> str:
-    outcome = domain_config["effect_estimation"]["outcome"]
+    outcome = domain_vocabulary(domain_config).outcome
     top_driver = max(shap_summary, key=shap_summary.get) if shap_summary else "n/a"
 
     lines = [f"Top-line drivers of {outcome}, ranked by causal effect size:"]
     for e in sorted(effect_estimates, key=lambda e: abs(e.ate), reverse=True):
-        lines.append(f"- {e.treatment}: ATE={e.ate:+.4f} ({e.estimator})")
+        line = f"- {e.treatment}: ATE={e.ate:+.4f} ({e.estimator})"
+        if e.refutation_passed is False:
+            p = f" (permutation p={e.refutation_p_value:.3f})" if e.refutation_p_value is not None else ""
+            line += f" -- placebo check FAILED{p}: no evidence of an effect beyond noise"
+        lines.append(line)
     lines.append(f"SHAP attribution agrees '{top_driver}' carries the most predictive weight.")
     for cf in counterfactuals:
         lines.append(f"- {cf.description}")
@@ -67,6 +84,7 @@ def _template_narrative(
             "fairness check passed"
             if top.fairness_pass
             else "FAIRNESS FLAG: population-level disparity detected"
+            + (f" (group ratio {top.fairness_ratio:.2f})" if top.fairness_ratio is not None else "")
         )
         lines.append(
             f"Recommended action: '{top.id}' (ROI={top.roi:.3g}, "
@@ -81,6 +99,7 @@ def _llm_narrative(
     counterfactuals: list[CounterfactualResult],
     recommendations: list[InterventionRecommendation],
     shap_summary: dict[str, float],
+    requirements: str = "",
 ) -> str:
     from openai import OpenAI
 
@@ -88,17 +107,46 @@ def _llm_narrative(
     facts = _template_narrative(
         domain_config, effect_estimates, counterfactuals, recommendations, shap_summary
     )
+    vocab = domain_vocabulary(domain_config)
     prompt = (
-        f"You are explaining a causal analysis of employee attrition to an "
+        f"You are explaining a causal analysis of {vocab.outcome} "
+        f"among {vocab.entities} to an "
         f"audience of {cfg['audience']}. Using only the facts below, write a "
         f"short (3-5 sentence) plain-language narrative -- no jargon like "
-        f"'ATE' or 'SHAP', translate them into business terms.\n\nFacts:\n{facts}"
+        f"'ATE', 'SHAP', 'placebo', 'p-value' or 'statistically significant', translate them into business "
+        f"terms. Use only numbers that "
+        f"appear in the facts, and keep any note that a check failed or that fairness "
+        f"was flagged.\n\nFacts:\n{facts}"
+        + (f"\n\nYour narrative MUST:\n{requirements}" if requirements else "")
     )
     response = OpenAI().chat.completions.create(
         model=cfg.get("llm_model", "gpt-4o-mini"),
         messages=[{"role": "user", "content": prompt}],
     )
     return response.choices[0].message.content.strip()
+
+
+def _tier_order(domain_config: dict) -> list[str]:
+    tiers = list(domain_config.get("explanation", {}).get("tiers") or narrative.NARRATIVE_TIERS)
+    unknown = [t for t in tiers if t not in narrative.NARRATIVE_TIERS]
+    if unknown:
+        raise ValueError(
+            f"unknown explanation tier(s) {unknown}; expected a subset of "
+            f"{list(narrative.NARRATIVE_TIERS)}"
+        )
+    return [t for t in tiers if t != "template"] + ["template"]
+
+
+def _grounding(
+    text, facts, effect_estimates, recommendations, plain_language=False
+) -> narrative.GroundingReport:
+    return narrative.check_grounding(
+        text,
+        facts,
+        plain_language=plain_language,
+        failed_refutation=any(e.refutation_passed is False for e in effect_estimates),
+        fairness_flagged=bool(recommendations) and not recommendations[0].fairness_pass,
+    )
 
 
 def generate_explanation(
@@ -109,19 +157,55 @@ def generate_explanation(
     domain_config: dict,
 ) -> Explanation:
     shap_summary = _shap_summary(feature_df, domain_config)
+    args = (domain_config, effect_estimates, counterfactuals, recommendations, shap_summary)
+    facts = _template_narrative(*args)
+    cfg = domain_config.get("explanation", {})
+    vocab = domain_vocabulary(domain_config)
+    has_key = bool(os.environ.get("OPENAI_API_KEY"))
 
-    narrative = None
-    if os.environ.get("OPENAI_API_KEY"):
-        try:
-            narrative = _llm_narrative(
-                domain_config, effect_estimates, counterfactuals, recommendations, shap_summary
+    requirements = narrative.required_points(
+        [e.treatment for e in effect_estimates if e.refutation_passed is False],
+        bool(recommendations) and not recommendations[0].fairness_pass,
+    )
+    writers = {
+        "autogen": lambda: narrative.autogen_narrative(
+            facts + (f"\n\nThe narrative MUST:\n{requirements}" if requirements else ""),
+            model=cfg.get("llm_model", "gpt-4o-mini"),
+            audience=cfg["audience"],
+            outcome=vocab.outcome,
+            entities=vocab.entities,
+            cfg=cfg.get("autogen"),
+        ),
+        "llm": lambda: _llm_narrative(*args, requirements=requirements),
+    }
+
+    log: list[NarrativeAttempt] = []
+    for tier in _tier_order(domain_config):
+        if tier == "template":
+            text = facts
+            log.append(NarrativeAttempt(tier=tier, outcome="used"))
+            return Explanation(
+                narrative=text, shap_summary=shap_summary, narrative_tier=tier, narrative_log=log
             )
-        except Exception:
-            narrative = None  # soft dependency on a live API -- fall back, don't crash the run
-
-    if narrative is None:
-        narrative = _template_narrative(
-            domain_config, effect_estimates, counterfactuals, recommendations, shap_summary
-        )
-
-    return Explanation(narrative=narrative, shap_summary=shap_summary)
+        if not has_key:
+            log.append(NarrativeAttempt(tier=tier, outcome="skipped", detail="no OPENAI_API_KEY"))
+            continue
+        if tier == "autogen" and not narrative.autogen_available():
+            log.append(
+                NarrativeAttempt(tier=tier, outcome="skipped", detail="autogen is not installed")
+            )
+            continue
+        try:
+            text = writers[tier]()
+        except Exception as exc:  # soft dependency on a live API -- move on, don't crash the run
+            log.append(
+                NarrativeAttempt(tier=tier, outcome="error", detail=f"{type(exc).__name__}: {exc}"[:300])
+            )
+            continue
+        report = _grounding(text, facts, effect_estimates, recommendations, plain_language=True)
+        if report.passed:
+            log.append(NarrativeAttempt(tier=tier, outcome="used"))
+            return Explanation(
+                narrative=text, shap_summary=shap_summary, narrative_tier=tier, narrative_log=log
+            )
+        log.append(NarrativeAttempt(tier=tier, outcome="rejected", detail=report.detail()))

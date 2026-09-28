@@ -2,8 +2,9 @@
 
 A full run takes seconds (direct) to several minutes (crew), so the API
 queues it and lets clients poll. A single worker thread serializes runs:
-Stage 2 (Feast) writes one shared parquet file + SQLite online store, so two
-concurrent runs would corrupt each other's feature data. Jobs live only for
+Stage 2 (Feast) writes a parquet file + SQLite online store per (domain,
+dataset), so two concurrent runs of the same pair would corrupt each other's
+feature data. Jobs live only for
 the process lifetime and the oldest finished ones are evicted past
 `max_jobs` -- fine for a V1 service, not a durable queue.
 """
@@ -37,6 +38,7 @@ class Job(BaseModel):
     id: str
     domain_id: str
     orchestration: str
+    dataset: Optional[str] = None
     status: JobStatus = JobStatus.queued
     created_at: datetime
     started_at: Optional[datetime] = None
@@ -57,12 +59,17 @@ class JobStore:
         self._max_jobs = max_jobs
 
     def submit(
-        self, domain_id: str, orchestration: str, fn: Callable[[], PipelineResult]
+        self,
+        domain_id: str,
+        orchestration: str,
+        fn: Callable[[], PipelineResult],
+        dataset: Optional[str] = None,
     ) -> Job:
         job = Job(
             id=uuid.uuid4().hex,
             domain_id=domain_id,
             orchestration=orchestration,
+            dataset=dataset,
             created_at=_now(),
         )
         with self._lock:

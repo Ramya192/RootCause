@@ -1,0 +1,178 @@
+domain:
+  id: illinois_wellness
+  name: Workplace Wellness Program (Illinois RCT)
+  description: >-
+    Does offering a workplace wellness program change whether employees are still
+    employed two years later? Real data from the Illinois Workplace Wellness Study
+    (Jones, Molitor & Reif 2019), a randomized trial whose published result is a null
+    effect, plus a synthetic mirror with the same schema and a planted effect. This is
+    the pipeline's false-positive check: on the real trial it should NOT find an effect.
+  status: working
+  input_type: tabular
+  entity_noun: employee
+  entity_noun_plural: employees
+  outcome_label: termination by January 2019
+
+# --- Stage 1: Ingestion ---
+ingestion:
+  file_type: csv
+  # real      = the RCT (data/illinois_wellness/wellness.csv, built from the public file by
+  #             scripts/prepare_illinois_wellness.py)
+  # synthetic = same schema, effect planted (scripts/generate_synthetic_wellness_data.py)
+  # multimodal = the real rows plus a SYNTHETIC screening-summary PDF and activity-chart image per
+  #             participant, rendered from pre-assignment covariates only (never `treat` or the
+  #             outcome) by scripts/generate_attachments.py. Shows the ingestion path works.
+  datasets:
+    real: data/illinois_wellness/wellness.csv
+    synthetic: data/illinois_wellness/wellness_synthetic.csv
+    multimodal: data/illinois_wellness/wellness.csv
+  default_dataset: real
+  attachments:
+    multimodal:
+      - name: screening_summary
+        kind: pdf
+        directory: data/illinois_wellness/attachments/reports
+        pattern: "{id}.pdf"
+        keywords:
+          male: ["sex: male"]
+          age50: ["age band: 50 plus"]
+          age37_49: ["age band: 37 to 49"]
+      - name: activity_chart
+        kind: image
+        directory: data/illinois_wellness/attachments/charts
+        pattern: "{id}.jpg"
+        model: resnet18
+        embedding_dims: 8
+  id_column: employee_id
+  outcome_column: terminated_0119
+
+# --- Stage 2: Feature Store ---
+# Only variables measured BEFORE random assignment plus the assignment itself. The public
+# file also has post-assignment columns (later gym visits, year-1/2 productivity, ...);
+# they are left out on purpose, since adjusting for them would bias the estimate.
+feature_store:
+  entity: employee
+  entity_id_column: employee_id
+  feature_columns:
+    - treat
+    - male
+    - age50
+    - age37_49
+    - white
+    - sickleave_0815_0716
+    - gym_0815_0716
+    - prod_index_yr0
+  # prod_index_yr0 is missing for 1.5% of the real file (the same share in both arms).
+  missing:
+    numeric: median
+
+# --- Stage 3: Causal Discovery ---
+causal_discovery:
+  algorithm: pc
+  alpha: 0.05
+  variables:
+    - male
+    - age50
+    - age37_49
+    - white
+    - sickleave_0815_0716
+    - gym_0815_0716
+    - prod_index_yr0
+    - treat
+    - terminated_0119
+  # No required_edges: asserting treat -> terminated_0119 would assume the answer, and the
+  # real trial's finding is that there is no such effect.
+  # Forbidden edges are timing/design knowledge, not findings: the outcome is measured last;
+  # assignment was randomized, so no covariate causes it and it causes no pre-assignment
+  # covariate; and nothing here causes sex, age band or race.
+  forbidden_edges:
+    # the outcome is last
+    - [terminated_0119, treat]
+    - [terminated_0119, male]
+    - [terminated_0119, age50]
+    - [terminated_0119, age37_49]
+    - [terminated_0119, white]
+    - [terminated_0119, sickleave_0815_0716]
+    - [terminated_0119, gym_0815_0716]
+    - [terminated_0119, prod_index_yr0]
+    # randomized assignment: causes nothing measured before it, is caused by nothing
+    - [treat, male]
+    - [treat, age50]
+    - [treat, age37_49]
+    - [treat, white]
+    - [treat, sickleave_0815_0716]
+    - [treat, gym_0815_0716]
+    - [treat, prod_index_yr0]
+    - [male, treat]
+    - [age50, treat]
+    - [age37_49, treat]
+    - [white, treat]
+    - [sickleave_0815_0716, treat]
+    - [gym_0815_0716, treat]
+    - [prod_index_yr0, treat]
+    # behaviours and productivity do not cause sex, age band or race
+    - [sickleave_0815_0716, male]
+    - [sickleave_0815_0716, age50]
+    - [sickleave_0815_0716, age37_49]
+    - [sickleave_0815_0716, white]
+    - [gym_0815_0716, male]
+    - [gym_0815_0716, age50]
+    - [gym_0815_0716, age37_49]
+    - [gym_0815_0716, white]
+    - [prod_index_yr0, male]
+    - [prod_index_yr0, age50]
+    - [prod_index_yr0, age37_49]
+    - [prod_index_yr0, white]
+
+# --- Stage 4: Effect Estimation ---
+# One binary treatment. Assignment was randomized, so nothing CONFOUNDS it; the pre-treatment
+# covariates are listed under `confounders` only because that is where Stage 4 takes its
+# adjustment set from, and adjusting for them tightens the estimate (standard regression
+# adjustment in an RCT). The placebo test failing here means "no evidence of an effect", which
+# is the correct answer on the real data.
+effect_estimation:
+  outcome: terminated_0119
+  treatments:
+    - name: treat
+      confounders:
+        - male
+        - age50
+        - age37_49
+        - white
+        - sickleave_0815_0716
+        - gym_0815_0716
+        - prod_index_yr0
+  adjust_for_attachments: true  # PDF/image feature columns (multimodal dataset only) join the adjustment set
+  estimator: backdoor.linear_regression
+  refutation: permutation_placebo
+  refutation_simulations: 100
+  refutation_alpha: 0.05
+
+# --- Stage 5: Counterfactuals ---
+counterfactuals:
+  meta_learner: t_learner
+  treatment: treat
+  outcome: terminated_0119
+  treatment_threshold: 0.5  # treat is 0/1; >= 0.5 is the program arm
+  propensity: constant  # used by the X/R/DR learners only: assignment was randomized, so P(treat) is the treated share
+  # Mean effect within each level of these binary pre-treatment columns (effect heterogeneity).
+  subgroups: [male, age50, age37_49, white]
+
+# --- Stage 6: Interventions ---
+# A single candidate (the data has one lever), so there is no ranking to get right. The cost is
+# the paper's first-year variable cost per person ASSIGNED to treatment: $152 = $271 per
+# participant x 0.56 who completed screening (Jones, Molitor & Reif 2019, footnote 27). The
+# authors call it conservative: it excludes paid time off and fixed management costs.
+interventions:
+  sensitive_attribute: male
+  fairness_threshold: 0.8
+  candidates:
+    - id: offer_wellness_program
+      target_variable: treat
+      expected_shift: 1.0
+      cost: 152
+
+# --- Stage 7: Explanation ---
+explanation:
+  llm_model: gpt-4o-mini
+  audience: HR benefits manager

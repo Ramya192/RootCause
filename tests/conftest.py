@@ -30,6 +30,17 @@ DATA_PATH = REPO_ROOT / "data" / "employee_attrition" / "attrition.csv"
 GROUND_TRUTH_PATH = REPO_ROOT / "data" / "employee_attrition" / "ground_truth.json"
 
 
+@pytest.fixture
+def isolated_feast_root(tmp_path, monkeypatch) -> Path:
+    """Point Feast's per-domain state at a temp dir. Tests that invent a
+    throwaway domain use this instead of deleting files afterwards: Feast keeps
+    its SQLite online store open until GC, so rmtree fails on Windows."""
+    from rootcause.feature_repo import definitions
+
+    monkeypatch.setattr(definitions, "DATA_ROOT", tmp_path)
+    return tmp_path
+
+
 @pytest.fixture(scope="session")
 def data_path() -> Path:
     return DATA_PATH

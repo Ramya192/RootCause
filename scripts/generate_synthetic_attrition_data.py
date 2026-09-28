@@ -1,47 +1,37 @@
-"""Generate a semi-synthetic employee-attrition dataset with a KNOWN causal
-DAG, so causal discovery (stage 3) and effect estimation (stage 4) have
-ground truth to be checked against instead of unverifiable real-world data.
+"""Generate the synthetic employee-attrition dataset with a KNOWN causal DAG,
+so causal discovery (stage 3) and effect estimation (stage 4) have ground
+truth to be checked against instead of unverifiable real-world data.
 
-Structural equations (each variable is a noisy function of its parents):
-
-    compensation        ~ N(0, 1)                                   (root)
-    manager_quality      ~ N(0, 1)                                   (root)
-    workload              ~ N(0, 1)                                   (root)
-    job_satisfaction     = 0.6*compensation + 0.5*manager_quality + noise
-    burnout                = 0.7*workload - 0.2*manager_quality + noise
-    attrition (prob)     = sigmoid(-1.2*job_satisfaction + 1.0*burnout + noise)
+The data-generating process itself lives in rootcause/evaluation/scms.py
+(`attrition_scm`), which is also what the evaluation harness intervenes on to
+compute true effects -- one definition, so the CSV and the ground truth can't
+drift apart. See that module for the structural equations.
 
 Ground-truth edges (parent -> child):
     compensation      -> job_satisfaction
-    manager_quality    -> job_satisfaction
-    manager_quality    -> burnout
-    workload            -> burnout
-    job_satisfaction   -> attrition
-    burnout              -> attrition
+    manager_quality   -> job_satisfaction
+    manager_quality   -> burnout
+    workload          -> burnout
+    job_satisfaction  -> attrition
+    burnout           -> attrition
 """
 
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
-SEED = 42
-N_ROWS = 2000
+REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT))  # so `python scripts/...` finds the rootcause package
 
-GROUND_TRUTH_EDGES = [
-    ("compensation", "job_satisfaction"),
-    ("manager_quality", "job_satisfaction"),
-    ("manager_quality", "burnout"),
-    ("workload", "burnout"),
-    ("job_satisfaction", "attrition"),
-    ("burnout", "attrition"),
-]
+from rootcause.evaluation.scms import N_ROWS, SEED, attrition_scm  # noqa: E402
 
 GROUND_TRUTH_EFFECTS = {
-    # approximate true coefficients, for sanity-checking stage 4 ATE estimates
+    # direct structural coefficients (NOT total effects -- for those see
+    # `python -m rootcause.evaluation`, which simulates do() on the SCM)
     "job_satisfaction->attrition": -1.2,
     "burnout->attrition": 1.0,
 }
@@ -58,50 +48,14 @@ VARIABLES = [
 ]
 
 
-def sigmoid(x: np.ndarray) -> np.ndarray:
-    return 1.0 / (1.0 + np.exp(-x))
-
-
 def generate(n_rows: int = N_ROWS, seed: int = SEED) -> pd.DataFrame:
-    rng = np.random.default_rng(seed)
-
-    compensation = rng.normal(0, 1, n_rows)
-    manager_quality = rng.normal(0, 1, n_rows)
-    workload = rng.normal(0, 1, n_rows)
-
-    # sensitive attribute for the fairness check in stage 6 -- deliberately
-    # NOT wired into any structural equation below, so a fair pipeline
-    # should find no causal effect of gender on attrition.
-    gender = rng.choice(["A", "B"], size=n_rows)
-
-    job_satisfaction = (
-        0.6 * compensation + 0.5 * manager_quality + rng.normal(0, 0.5, n_rows)
-    )
-    burnout = 0.7 * workload - 0.2 * manager_quality + rng.normal(0, 0.5, n_rows)
-
-    attrition_logit = (
-        -1.2 * job_satisfaction + 1.0 * burnout + rng.normal(0, 0.3, n_rows)
-    )
-    attrition_prob = sigmoid(attrition_logit)
-    attrition = (rng.uniform(0, 1, n_rows) < attrition_prob).astype(int)
-
-    df = pd.DataFrame(
-        {
-            "employee_id": np.arange(1, n_rows + 1),
-            "compensation": compensation,
-            "manager_quality": manager_quality,
-            "workload": workload,
-            "job_satisfaction": job_satisfaction,
-            "burnout": burnout,
-            "gender": gender,
-            "attrition": attrition,
-        }
-    )
+    df = attrition_scm().sample(n_rows, seed)
+    df.insert(0, "employee_id", range(1, n_rows + 1))
     return df[VARIABLES]
 
 
 def main() -> None:
-    out_dir = Path(__file__).resolve().parent.parent / "data" / "employee_attrition"
+    out_dir = REPO_ROOT / "data" / "employee_attrition"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     df = generate()
@@ -109,7 +63,7 @@ def main() -> None:
     df.to_csv(csv_path, index=False)
 
     ground_truth = {
-        "edges": GROUND_TRUTH_EDGES,
+        "edges": attrition_scm().edges(),
         "effects": GROUND_TRUTH_EFFECTS,
         "seed": SEED,
         "n_rows": N_ROWS,

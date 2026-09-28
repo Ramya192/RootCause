@@ -1,0 +1,278 @@
+domain:
+  id: carclaims
+  name: Vehicle Insurance Claim Fraud (carclaims)
+  description: >-
+    Which insurer-side choices are associated with fraud being found on a claim, and does the
+    population show a disparity by sex? Real data are 15,420 vehicle claims from 1994-96 at an
+    unnamed US insurer (the `carclaims` sample distributed with Angoss KnowledgeSEEKER). The data
+    are OBSERVATIONAL with no ground truth, so the pipeline's numbers here are plausibility and
+    stability checks, not validated effects. The outcome is fraud that was FOUND, which depends
+    on investigation as well as on fraud.
+  status: working
+  input_type: tabular
+  entity_noun: claim
+  entity_noun_plural: claims
+  outcome_label: fraud found
+
+# --- Stage 1: Ingestion ---
+ingestion:
+  file_type: csv
+  # real       = the 15,420 claims (data/carclaims/claims.csv, built from the raw carclaims.csv by
+  #              scripts/prepare_carclaims.py). No synthetic twin: see data/carclaims/README.md.
+  # multimodal = a fixed 5,000-claim sample of the real claims, each with a SYNTHETIC claim-report
+  #              PDF and damage photo rendered from its own covariates (never the outcome or a lever) by
+  #              scripts/generate_attachments.py. Shows the PDF/image ingestion path works; says
+  #              nothing about real claim documents.
+  datasets:
+    real: data/carclaims/claims.csv
+    multimodal: data/carclaims/claims_multimodal.csv
+  default_dataset: real
+  attachments:
+    multimodal:
+      - name: claim_report
+        kind: pdf
+        directory: data/carclaims/attachments/reports
+        pattern: "{id}.pdf"
+        keywords:
+          fault: ["fault: policy holder"]
+          rural: ["accident area: rural"]
+          witness: ["a witness was present"]
+      - name: damage_photo
+        kind: image
+        directory: data/carclaims/attachments/photos
+        pattern: "{id}.jpg"
+        model: resnet18
+        embedding_dims: 8
+  id_column: claim_id
+  outcome_column: fraud_found
+
+# --- Stage 2: Feature Store ---
+# What the insurer knows about the claim, the policy and the policyholder. Binned counts and
+# durations are ordinal (one step per bin, an approximation: the bins are not equal widths);
+# nominal columns are one-hot with the first level as reference.
+feature_store:
+  entity: claim
+  entity_id_column: claim_id
+  feature_columns:
+    - female
+    - deductible_100usd
+    - driver_rating
+    - agent_internal
+    - fault_policy_holder
+    - accident_rural
+    - witness_present
+    - police_report_filed
+  categorical_columns:
+    - {name: year, encoding: onehot, levels: ["1994", "1995", "1996"]}
+    - {name: policyholder_age_group, encoding: ordinal, order: [16_to_17, 18_to_20, 21_to_25, 26_to_30, 31_to_35, 36_to_40, 41_to_50, 51_to_65, over_65]}
+    - {name: marital_status, encoding: onehot, levels: [married, single, divorced, widow]}
+    - {name: make, encoding: onehot, levels: [pontiac, toyota, honda, mazda, chevrolet, acura, ford, other]}
+    - {name: vehicle_category, encoding: onehot, levels: [sedan, sport, utility]}
+    - {name: vehicle_price, encoding: ordinal, order: [lt_20k, 20k_to_29k, 30k_to_39k, 40k_to_59k, 60k_to_69k, gt_69k]}
+    - {name: vehicle_age, encoding: ordinal, order: [new, 2y, 3y, 4y, 5y, 6y, 7y, gt_7y]}
+    - {name: n_cars, encoding: ordinal, order: ["1", "2", 3_to_4, 5_to_8, gt_8]}
+    - {name: base_policy, encoding: onehot, levels: [collision, all_perils, liability]}
+    - {name: past_claims, encoding: ordinal, order: [none, "1", 2_to_4, gt_4]}
+    - {name: days_policy_to_accident, encoding: ordinal, order: [none, 1_to_7, 8_to_15, 15_to_30, gt_30]}
+    - {name: days_policy_to_claim, encoding: ordinal, order: [none, 8_to_15, 15_to_30, gt_30]}  # no 1-to-7 level in this column
+    - {name: address_change, encoding: ordinal, order: [lt_6m, 1y, 2_to_3y, 4_to_8y, no_change]}
+    - {name: n_supplements, encoding: ordinal, order: [none, 1_to_2, 3_to_5, gt_5]}
+
+# --- Stage 3: Causal Discovery ---
+# A compact subset, descriptive only: there is no known graph to score against. The forbidden
+# edges are timing/design knowledge, not findings: the outcome is determined last, and nothing
+# here causes the policyholder's sex or age.
+causal_discovery:
+  algorithm: pc
+  alpha: 0.05
+  variables:
+    - female
+    - policyholder_age_group
+    - base_policy__liability
+    - vehicle_price
+    - fault_policy_holder
+    - deductible_100usd
+    - agent_internal
+    - police_report_filed
+    - fraud_found
+  forbidden_edges:
+    # the outcome is last
+    - [fraud_found, female]
+    - [fraud_found, policyholder_age_group]
+    - [fraud_found, base_policy__liability]
+    - [fraud_found, vehicle_price]
+    - [fraud_found, fault_policy_holder]
+    - [fraud_found, deductible_100usd]
+    - [fraud_found, agent_internal]
+    - [fraud_found, police_report_filed]
+    # nothing causes sex or age, and they do not cause each other
+    - [policyholder_age_group, female]
+    - [base_policy__liability, female]
+    - [vehicle_price, female]
+    - [fault_policy_holder, female]
+    - [deductible_100usd, female]
+    - [agent_internal, female]
+    - [police_report_filed, female]
+    - [female, policyholder_age_group]
+    - [base_policy__liability, policyholder_age_group]
+    - [vehicle_price, policyholder_age_group]
+    - [fault_policy_holder, policyholder_age_group]
+    - [deductible_100usd, policyholder_age_group]
+    - [agent_internal, policyholder_age_group]
+    - [police_report_filed, policyholder_age_group]
+
+# --- Stage 4: Effect Estimation ---
+# Three things an insurer controls, at least in part: whether a police report is required, the
+# sales channel (internal vs external agent) and the deductible. Each is adjusted for every
+# other claim column, INCLUDING the other two levers. These are associations adjusted for what
+# is measured, and two caveats are specific to this data: (1) the outcome is fraud FOUND, so a
+# lever can move it by changing detection as well as fraud; (2) the policyholder chose some of
+# this (a deductible, whether to call the police), and whatever drove that choice is not blocked.
+# Rare levels: 428 claims have a police report, 241 an internal agent, 582 a deductible other
+# than $400.
+effect_estimation:
+  outcome: fraud_found
+  treatments:
+    - name: police_report_filed
+      confounders:
+        - female
+        - deductible_100usd
+        - driver_rating
+        - agent_internal
+        - fault_policy_holder
+        - accident_rural
+        - witness_present
+        - policyholder_age_group
+        - vehicle_price
+        - vehicle_age
+        - n_cars
+        - past_claims
+        - days_policy_to_accident
+        - days_policy_to_claim
+        - address_change
+        - n_supplements
+        - year__1995
+        - year__1996
+        - marital_status__single
+        - marital_status__divorced
+        - marital_status__widow
+        - make__toyota
+        - make__honda
+        - make__mazda
+        - make__chevrolet
+        - make__acura
+        - make__ford
+        - make__other
+        - vehicle_category__sport
+        - vehicle_category__utility
+        - base_policy__all_perils
+        - base_policy__liability
+    - name: agent_internal
+      confounders:
+        - female
+        - deductible_100usd
+        - driver_rating
+        - fault_policy_holder
+        - accident_rural
+        - witness_present
+        - police_report_filed
+        - policyholder_age_group
+        - vehicle_price
+        - vehicle_age
+        - n_cars
+        - past_claims
+        - days_policy_to_accident
+        - days_policy_to_claim
+        - address_change
+        - n_supplements
+        - year__1995
+        - year__1996
+        - marital_status__single
+        - marital_status__divorced
+        - marital_status__widow
+        - make__toyota
+        - make__honda
+        - make__mazda
+        - make__chevrolet
+        - make__acura
+        - make__ford
+        - make__other
+        - vehicle_category__sport
+        - vehicle_category__utility
+        - base_policy__all_perils
+        - base_policy__liability
+    - name: deductible_100usd
+      confounders:
+        - female
+        - driver_rating
+        - agent_internal
+        - fault_policy_holder
+        - accident_rural
+        - witness_present
+        - police_report_filed
+        - policyholder_age_group
+        - vehicle_price
+        - vehicle_age
+        - n_cars
+        - past_claims
+        - days_policy_to_accident
+        - days_policy_to_claim
+        - address_change
+        - n_supplements
+        - year__1995
+        - year__1996
+        - marital_status__single
+        - marital_status__divorced
+        - marital_status__widow
+        - make__toyota
+        - make__honda
+        - make__mazda
+        - make__chevrolet
+        - make__acura
+        - make__ford
+        - make__other
+        - vehicle_category__sport
+        - vehicle_category__utility
+        - base_policy__all_perils
+        - base_policy__liability
+  adjust_for_attachments: true  # PDF/image feature columns (multimodal dataset only) join the adjustment set
+  estimator: backdoor.linear_regression
+  refutation: permutation_placebo
+  refutation_simulations: 100
+  refutation_alpha: 0.05
+
+# --- Stage 5: Counterfactuals ---
+counterfactuals:
+  meta_learner: t_learner
+  treatment: police_report_filed
+  outcome: fraud_found
+  treatment_threshold: 0.5  # binary: report filed vs not
+
+# --- Stage 6: Interventions ---
+# The sensitive attribute is the policyholder's sex (2,420 female claims; fraud found on 4.3% vs
+# 6.3% for male policyholders). Female policyholders are more often on liability-only policies,
+# where fraud is almost never found, so part of this gap is policy mix. The flag says found-fraud
+# rates differ by group, not that anyone was treated unfairly.
+# Costs are ILLUSTRATIVE round numbers in dollars per claim, fixed before any results were seen:
+# the ranking is a demonstration of the mechanics, not advice to an insurer.
+interventions:
+  sensitive_attribute: female
+  fairness_threshold: 0.8
+  candidates:
+    - id: require_police_report
+      target_variable: police_report_filed
+      expected_shift: 1.0
+      cost: 50
+    - id: sell_through_internal_agents
+      target_variable: agent_internal
+      expected_shift: 1.0
+      cost: 80
+    - id: raise_deductible_by_100
+      target_variable: deductible_100usd
+      expected_shift: 1.0
+      cost: 30
+
+# --- Stage 7: Explanation ---
+explanation:
+  llm_model: gpt-4o-mini
+  audience: claims fraud manager

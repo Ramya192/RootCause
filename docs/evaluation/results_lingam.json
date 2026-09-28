@@ -1,0 +1,1786 @@
+{
+  "settings": {
+    "replicates": 10,
+    "n_rows": null,
+    "algorithm": "lingam"
+  },
+  "scenarios": [
+    {
+      "domain_id": "illinois_wellness",
+      "dataset": "synthetic",
+      "source": "committed file",
+      "scored_against_truth": true,
+      "runs": [
+        {
+          "label": "committed file",
+          "n_rows": 4834,
+          "values": {
+            "refutation_pass_rate": 1.0,
+            "edge_precision": 0.7,
+            "edge_recall": 0.5384615384615384,
+            "edge_f1": 0.608695652173913,
+            "shd": 7.0,
+            "discovered_precision": 0.7,
+            "discovered_recall": 0.5384615384615384,
+            "fairness_ratio_abs_err": 0.007446444541045816,
+            "fairness_flag_correct": 1.0,
+            "ate_mae": 0.006684113504959455,
+            "ate_max_abs_err": 0.006684113504959455,
+            "ate_sign_agreement": 1.0,
+            "subgroup_cate_mae": 0.013350052598711713
+          },
+          "effect_rows": [
+            {
+              "treatment": "treat",
+              "estimated": -0.054198113504959455,
+              "true": -0.047514
+            }
+          ],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "age37_49",
+              "terminated_0119"
+            ],
+            [
+              "age50",
+              "age37_49"
+            ],
+            [
+              "age50",
+              "terminated_0119"
+            ],
+            [
+              "male",
+              "gym_0815_0716"
+            ],
+            [
+              "male",
+              "sickleave_0815_0716"
+            ],
+            [
+              "prod_index_yr0",
+              "terminated_0119"
+            ],
+            [
+              "sickleave_0815_0716",
+              "prod_index_yr0"
+            ],
+            [
+              "sickleave_0815_0716",
+              "terminated_0119"
+            ],
+            [
+              "treat",
+              "terminated_0119"
+            ],
+            [
+              "white",
+              "age50"
+            ]
+          ],
+          "estimated_ates": {
+            "treat": -0.054198113504959455
+          },
+          "refutation_p_values": {
+            "treat": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "treat": true
+          },
+          "mean_cates": {
+            "treat": -0.05437101634713595
+          },
+          "fairness_ratio": 0.8705756752426315,
+          "fairness_passed": true,
+          "top_choice": "offer_wellness_program",
+          "cate_stds": {
+            "treat": 0.048790543664901445
+          },
+          "subgroup_cates": {
+            "male=0": -0.048126458164113504,
+            "male=1": -0.06268805693725897,
+            "age50=0": -0.04626551380259284,
+            "age50=1": -0.07156054240189655,
+            "age37_49=0": -0.0697071296520999,
+            "age37_49=1": -0.025047628618247088,
+            "white=0": -0.09212127829604182,
+            "white=1": -0.0473397405632784
+          },
+          "subgroup_rows": [
+            {
+              "treatment": "male=0",
+              "estimated": -0.048126458164113504,
+              "true": -0.049005686773889695
+            },
+            {
+              "treatment": "male=1",
+              "estimated": -0.06268805693725897,
+              "true": -0.04551014669353706
+            },
+            {
+              "treatment": "age50=0",
+              "estimated": -0.04626551380259284,
+              "true": -0.04809059463851251
+            },
+            {
+              "treatment": "age50=1",
+              "estimated": -0.07156054240189655,
+              "true": -0.04631930769868797
+            },
+            {
+              "treatment": "age37_49=0",
+              "estimated": -0.0697071296520999,
+              "true": -0.053739965387258226
+            },
+            {
+              "treatment": "age37_49=1",
+              "estimated": -0.025047628618247088,
+              "true": -0.03515094333989198
+            },
+            {
+              "treatment": "white=0",
+              "estimated": -0.09212127829604182,
+              "true": -0.05846021081181041
+            },
+            {
+              "treatment": "white=1",
+              "estimated": -0.0473397405632784,
+              "true": -0.045394320636929
+            }
+          ],
+          "baselines": {},
+          "error": null
+        }
+      ],
+      "skipped_reason": null,
+      "truth": {
+        "edges": [
+          [
+            "age50",
+            "white"
+          ],
+          [
+            "male",
+            "prod_index_yr0"
+          ],
+          [
+            "age50",
+            "prod_index_yr0"
+          ],
+          [
+            "prod_index_yr0",
+            "sickleave_0815_0716"
+          ],
+          [
+            "male",
+            "sickleave_0815_0716"
+          ],
+          [
+            "male",
+            "gym_0815_0716"
+          ],
+          [
+            "male",
+            "terminated_0119"
+          ],
+          [
+            "age50",
+            "terminated_0119"
+          ],
+          [
+            "age37_49",
+            "terminated_0119"
+          ],
+          [
+            "white",
+            "terminated_0119"
+          ],
+          [
+            "sickleave_0815_0716",
+            "terminated_0119"
+          ],
+          [
+            "prod_index_yr0",
+            "terminated_0119"
+          ],
+          [
+            "treat",
+            "terminated_0119"
+          ]
+        ],
+        "effects": {
+          "treat": -0.047514
+        },
+        "roi": {
+          "offer_wellness_program": 0.0003125921052631579
+        },
+        "subgroup_effects": {
+          "male=0": -0.049005686773889695,
+          "male=1": -0.04551014669353706,
+          "age50=0": -0.04809059463851251,
+          "age50=1": -0.04631930769868797,
+          "age37_49=0": -0.053739965387258226,
+          "age37_49=1": -0.03515094333989198,
+          "white=0": -0.05846021081181041,
+          "white=1": -0.045394320636929
+        },
+        "fairness_ratio": 0.8780221197836773
+      },
+      "reference": [],
+      "subgroup_reference": [],
+      "stress_id": null,
+      "stress_factor": null,
+      "stress_description": null
+    },
+    {
+      "domain_id": "illinois_wellness",
+      "dataset": "synthetic",
+      "source": "SCM replicates",
+      "scored_against_truth": true,
+      "runs": [
+        {
+          "label": "seed 1000",
+          "n_rows": 4834,
+          "values": {
+            "refutation_pass_rate": 1.0,
+            "edge_precision": 0.7,
+            "edge_recall": 0.5384615384615384,
+            "edge_f1": 0.608695652173913,
+            "shd": 7.0,
+            "discovered_precision": 0.7,
+            "discovered_recall": 0.5384615384615384,
+            "fairness_ratio_abs_err": 0.04777211197018183,
+            "fairness_flag_correct": 1.0,
+            "ate_mae": 0.011197906710216449,
+            "ate_max_abs_err": 0.011197906710216449,
+            "ate_sign_agreement": 1.0,
+            "subgroup_cate_mae": 0.012071494112429514
+          },
+          "effect_rows": [
+            {
+              "treatment": "treat",
+              "estimated": -0.03631609328978355,
+              "true": -0.047514
+            }
+          ],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "age37_49",
+              "terminated_0119"
+            ],
+            [
+              "age50",
+              "age37_49"
+            ],
+            [
+              "age50",
+              "terminated_0119"
+            ],
+            [
+              "male",
+              "gym_0815_0716"
+            ],
+            [
+              "male",
+              "sickleave_0815_0716"
+            ],
+            [
+              "prod_index_yr0",
+              "terminated_0119"
+            ],
+            [
+              "sickleave_0815_0716",
+              "prod_index_yr0"
+            ],
+            [
+              "sickleave_0815_0716",
+              "terminated_0119"
+            ],
+            [
+              "white",
+              "age50"
+            ],
+            [
+              "white",
+              "terminated_0119"
+            ]
+          ],
+          "estimated_ates": {
+            "treat": -0.03631609328978355
+          },
+          "refutation_p_values": {
+            "treat": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "treat": true
+          },
+          "mean_cates": {
+            "treat": -0.0357421899752223
+          },
+          "fairness_ratio": 0.8302500078134954,
+          "fairness_passed": true,
+          "top_choice": "offer_wellness_program",
+          "cate_stds": {
+            "treat": 0.027235051207256795
+          },
+          "subgroup_cates": {
+            "male=0": -0.02543086940186784,
+            "male=1": -0.049757332872631864,
+            "age50=0": -0.03522426759534571,
+            "age50=1": -0.036804846373327704,
+            "age37_49=0": -0.032792448627164066,
+            "age37_49=1": -0.04158347802082223,
+            "white=0": -0.052495554270535295,
+            "white=1": -0.03236986763943614
+          },
+          "subgroup_rows": [
+            {
+              "treatment": "male=0",
+              "estimated": -0.02543086940186784,
+              "true": -0.049005686773889695
+            },
+            {
+              "treatment": "male=1",
+              "estimated": -0.049757332872631864,
+              "true": -0.04551014669353706
+            },
+            {
+              "treatment": "age50=0",
+              "estimated": -0.03522426759534571,
+              "true": -0.04809059463851251
+            },
+            {
+              "treatment": "age50=1",
+              "estimated": -0.036804846373327704,
+              "true": -0.04631930769868797
+            },
+            {
+              "treatment": "age37_49=0",
+              "estimated": -0.032792448627164066,
+              "true": -0.053739965387258226
+            },
+            {
+              "treatment": "age37_49=1",
+              "estimated": -0.04158347802082223,
+              "true": -0.03515094333989198
+            },
+            {
+              "treatment": "white=0",
+              "estimated": -0.052495554270535295,
+              "true": -0.05846021081181041
+            },
+            {
+              "treatment": "white=1",
+              "estimated": -0.03236986763943614,
+              "true": -0.045394320636929
+            }
+          ],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "seed 1001",
+          "n_rows": 4834,
+          "values": {
+            "refutation_pass_rate": 1.0,
+            "edge_precision": 0.7272727272727273,
+            "edge_recall": 0.6153846153846154,
+            "edge_f1": 0.6666666666666667,
+            "shd": 6.0,
+            "discovered_precision": 0.7272727272727273,
+            "discovered_recall": 0.6153846153846154,
+            "fairness_ratio_abs_err": 0.003400729911231526,
+            "fairness_flag_correct": 1.0,
+            "ate_mae": 0.0033318110580030924,
+            "ate_max_abs_err": 0.0033318110580030924,
+            "ate_sign_agreement": 1.0,
+            "subgroup_cate_mae": 0.006510335450856762
+          },
+          "effect_rows": [
+            {
+              "treatment": "treat",
+              "estimated": -0.04418218894199691,
+              "true": -0.047514
+            }
+          ],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "age37_49",
+              "terminated_0119"
+            ],
+            [
+              "age50",
+              "age37_49"
+            ],
+            [
+              "age50",
+              "prod_index_yr0"
+            ],
+            [
+              "age50",
+              "terminated_0119"
+            ],
+            [
+              "male",
+              "sickleave_0815_0716"
+            ],
+            [
+              "prod_index_yr0",
+              "terminated_0119"
+            ],
+            [
+              "sickleave_0815_0716",
+              "prod_index_yr0"
+            ],
+            [
+              "sickleave_0815_0716",
+              "terminated_0119"
+            ],
+            [
+              "treat",
+              "terminated_0119"
+            ],
+            [
+              "white",
+              "age50"
+            ],
+            [
+              "white",
+              "terminated_0119"
+            ]
+          ],
+          "estimated_ates": {
+            "treat": -0.04418218894199691
+          },
+          "refutation_p_values": {
+            "treat": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "treat": true
+          },
+          "mean_cates": {
+            "treat": -0.04400398116673181
+          },
+          "fairness_ratio": 0.8746213898724458,
+          "fairness_passed": true,
+          "top_choice": "offer_wellness_program",
+          "cate_stds": {
+            "treat": 0.02897589444439717
+          },
+          "subgroup_cates": {
+            "male=0": -0.03909103681049956,
+            "male=1": -0.05023565108456186,
+            "age50=0": -0.0470263754095249,
+            "age50=1": -0.03779106961327852,
+            "age37_49=0": -0.05603421445943803,
+            "age37_49=1": -0.019619594711822622,
+            "white=0": -0.05129065152800929,
+            "white=1": -0.04253940568293717
+          },
+          "subgroup_rows": [
+            {
+              "treatment": "male=0",
+              "estimated": -0.03909103681049956,
+              "true": -0.049005686773889695
+            },
+            {
+              "treatment": "male=1",
+              "estimated": -0.05023565108456186,
+              "true": -0.04551014669353706
+            },
+            {
+              "treatment": "age50=0",
+              "estimated": -0.0470263754095249,
+              "true": -0.04809059463851251
+            },
+            {
+              "treatment": "age50=1",
+              "estimated": -0.03779106961327852,
+              "true": -0.04631930769868797
+            },
+            {
+              "treatment": "age37_49=0",
+              "estimated": -0.05603421445943803,
+              "true": -0.053739965387258226
+            },
+            {
+              "treatment": "age37_49=1",
+              "estimated": -0.019619594711822622,
+              "true": -0.03515094333989198
+            },
+            {
+              "treatment": "white=0",
+              "estimated": -0.05129065152800929,
+              "true": -0.05846021081181041
+            },
+            {
+              "treatment": "white=1",
+              "estimated": -0.04253940568293717,
+              "true": -0.045394320636929
+            }
+          ],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "seed 1002",
+          "n_rows": 4834,
+          "values": {
+            "refutation_pass_rate": 1.0,
+            "edge_precision": 0.7272727272727273,
+            "edge_recall": 0.6153846153846154,
+            "edge_f1": 0.6666666666666667,
+            "shd": 6.0,
+            "discovered_precision": 0.7272727272727273,
+            "discovered_recall": 0.6153846153846154,
+            "fairness_ratio_abs_err": 0.04206177904000041,
+            "fairness_flag_correct": 1.0,
+            "ate_mae": 0.012182274432426199,
+            "ate_max_abs_err": 0.012182274432426199,
+            "ate_sign_agreement": 1.0,
+            "subgroup_cate_mae": 0.014325017672897733
+          },
+          "effect_rows": [
+            {
+              "treatment": "treat",
+              "estimated": -0.0353317255675738,
+              "true": -0.047514
+            }
+          ],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "age37_49",
+              "terminated_0119"
+            ],
+            [
+              "age50",
+              "age37_49"
+            ],
+            [
+              "age50",
+              "prod_index_yr0"
+            ],
+            [
+              "age50",
+              "terminated_0119"
+            ],
+            [
+              "male",
+              "prod_index_yr0"
+            ],
+            [
+              "male",
+              "sickleave_0815_0716"
+            ],
+            [
+              "prod_index_yr0",
+              "terminated_0119"
+            ],
+            [
+              "sickleave_0815_0716",
+              "prod_index_yr0"
+            ],
+            [
+              "sickleave_0815_0716",
+              "terminated_0119"
+            ],
+            [
+              "white",
+              "age50"
+            ],
+            [
+              "white",
+              "terminated_0119"
+            ]
+          ],
+          "estimated_ates": {
+            "treat": -0.0353317255675738
+          },
+          "refutation_p_values": {
+            "treat": 0.019801980198019802
+          },
+          "refutation_passed": {
+            "treat": true
+          },
+          "mean_cates": {
+            "treat": -0.03513702668090326
+          },
+          "fairness_ratio": 0.9200838988236777,
+          "fairness_passed": true,
+          "top_choice": "offer_wellness_program",
+          "cate_stds": {
+            "treat": 0.02502396143237412
+          },
+          "subgroup_cates": {
+            "male=0": -0.0380670490223861,
+            "male=1": -0.03123457048947338,
+            "age50=0": -0.03731753230079199,
+            "age50=1": -0.03065050879254269,
+            "age37_49=0": -0.044486199785658764,
+            "age37_49=1": -0.016275274199898382,
+            "white=0": -0.0336171205058422,
+            "white=1": -0.03542277950074147
+          },
+          "subgroup_rows": [
+            {
+              "treatment": "male=0",
+              "estimated": -0.0380670490223861,
+              "true": -0.049005686773889695
+            },
+            {
+              "treatment": "male=1",
+              "estimated": -0.03123457048947338,
+              "true": -0.04551014669353706
+            },
+            {
+              "treatment": "age50=0",
+              "estimated": -0.03731753230079199,
+              "true": -0.04809059463851251
+            },
+            {
+              "treatment": "age50=1",
+              "estimated": -0.03065050879254269,
+              "true": -0.04631930769868797
+            },
+            {
+              "treatment": "age37_49=0",
+              "estimated": -0.044486199785658764,
+              "true": -0.053739965387258226
+            },
+            {
+              "treatment": "age37_49=1",
+              "estimated": -0.016275274199898382,
+              "true": -0.03515094333989198
+            },
+            {
+              "treatment": "white=0",
+              "estimated": -0.0336171205058422,
+              "true": -0.05846021081181041
+            },
+            {
+              "treatment": "white=1",
+              "estimated": -0.03542277950074147,
+              "true": -0.045394320636929
+            }
+          ],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "seed 1003",
+          "n_rows": 4834,
+          "values": {
+            "refutation_pass_rate": 1.0,
+            "edge_precision": 0.7272727272727273,
+            "edge_recall": 0.6153846153846154,
+            "edge_f1": 0.6666666666666667,
+            "shd": 6.0,
+            "discovered_precision": 0.7272727272727273,
+            "discovered_recall": 0.6153846153846154,
+            "fairness_ratio_abs_err": 0.014018157916647511,
+            "fairness_flag_correct": 1.0,
+            "ate_mae": 0.005365857977195465,
+            "ate_max_abs_err": 0.005365857977195465,
+            "ate_sign_agreement": 1.0,
+            "subgroup_cate_mae": 0.013478809080501305
+          },
+          "effect_rows": [
+            {
+              "treatment": "treat",
+              "estimated": -0.052879857977195466,
+              "true": -0.047514
+            }
+          ],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "age37_49",
+              "terminated_0119"
+            ],
+            [
+              "age50",
+              "age37_49"
+            ],
+            [
+              "age50",
+              "terminated_0119"
+            ],
+            [
+              "male",
+              "prod_index_yr0"
+            ],
+            [
+              "male",
+              "sickleave_0815_0716"
+            ],
+            [
+              "prod_index_yr0",
+              "terminated_0119"
+            ],
+            [
+              "sickleave_0815_0716",
+              "prod_index_yr0"
+            ],
+            [
+              "sickleave_0815_0716",
+              "terminated_0119"
+            ],
+            [
+              "treat",
+              "terminated_0119"
+            ],
+            [
+              "white",
+              "age50"
+            ],
+            [
+              "white",
+              "terminated_0119"
+            ]
+          ],
+          "estimated_ates": {
+            "treat": -0.052879857977195466
+          },
+          "refutation_p_values": {
+            "treat": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "treat": true
+          },
+          "mean_cates": {
+            "treat": -0.05116334845951748
+          },
+          "fairness_ratio": 0.8640039618670298,
+          "fairness_passed": true,
+          "top_choice": "offer_wellness_program",
+          "cate_stds": {
+            "treat": 0.051034461042956725
+          },
+          "subgroup_cates": {
+            "male=0": -0.03282714496301454,
+            "male=1": -0.07606480725671952,
+            "age50=0": -0.05110539472743781,
+            "age50=1": -0.05128048744048352,
+            "age37_49=0": -0.06418754593592697,
+            "age37_49=1": -0.024515856836391032,
+            "white=0": -0.035232375329967994,
+            "white=1": -0.05420510854214887
+          },
+          "subgroup_rows": [
+            {
+              "treatment": "male=0",
+              "estimated": -0.03282714496301454,
+              "true": -0.049005686773889695
+            },
+            {
+              "treatment": "male=1",
+              "estimated": -0.07606480725671952,
+              "true": -0.04551014669353706
+            },
+            {
+              "treatment": "age50=0",
+              "estimated": -0.05110539472743781,
+              "true": -0.04809059463851251
+            },
+            {
+              "treatment": "age50=1",
+              "estimated": -0.05128048744048352,
+              "true": -0.04631930769868797
+            },
+            {
+              "treatment": "age37_49=0",
+              "estimated": -0.06418754593592697,
+              "true": -0.053739965387258226
+            },
+            {
+              "treatment": "age37_49=1",
+              "estimated": -0.024515856836391032,
+              "true": -0.03515094333989198
+            },
+            {
+              "treatment": "white=0",
+              "estimated": -0.035232375329967994,
+              "true": -0.05846021081181041
+            },
+            {
+              "treatment": "white=1",
+              "estimated": -0.05420510854214887,
+              "true": -0.045394320636929
+            }
+          ],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "seed 1004",
+          "n_rows": 4834,
+          "values": {
+            "refutation_pass_rate": 1.0,
+            "edge_precision": 0.7,
+            "edge_recall": 0.5384615384615384,
+            "edge_f1": 0.608695652173913,
+            "shd": 7.0,
+            "discovered_precision": 0.7,
+            "discovered_recall": 0.5384615384615384,
+            "fairness_ratio_abs_err": 0.013299745383883566,
+            "fairness_flag_correct": 1.0,
+            "ate_mae": 0.005278699143506954,
+            "ate_max_abs_err": 0.005278699143506954,
+            "ate_sign_agreement": 1.0,
+            "subgroup_cate_mae": 0.017855613057924206
+          },
+          "effect_rows": [
+            {
+              "treatment": "treat",
+              "estimated": -0.04223530085649305,
+              "true": -0.047514
+            }
+          ],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "age37_49",
+              "terminated_0119"
+            ],
+            [
+              "age50",
+              "age37_49"
+            ],
+            [
+              "age50",
+              "terminated_0119"
+            ],
+            [
+              "male",
+              "prod_index_yr0"
+            ],
+            [
+              "male",
+              "sickleave_0815_0716"
+            ],
+            [
+              "prod_index_yr0",
+              "terminated_0119"
+            ],
+            [
+              "sickleave_0815_0716",
+              "prod_index_yr0"
+            ],
+            [
+              "sickleave_0815_0716",
+              "terminated_0119"
+            ],
+            [
+              "white",
+              "age50"
+            ],
+            [
+              "white",
+              "terminated_0119"
+            ]
+          ],
+          "estimated_ates": {
+            "treat": -0.04223530085649305
+          },
+          "refutation_p_values": {
+            "treat": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "treat": true
+          },
+          "mean_cates": {
+            "treat": -0.04191147574426012
+          },
+          "fairness_ratio": 0.8647223743997937,
+          "fairness_passed": true,
+          "top_choice": "offer_wellness_program",
+          "cate_stds": {
+            "treat": 0.04154878401126998
+          },
+          "subgroup_cates": {
+            "male=0": -0.055183411350224955,
+            "male=1": -0.02313718921274545,
+            "age50=0": -0.03381736635548751,
+            "age50=1": -0.05880263122478943,
+            "age37_49=0": -0.06217047282581237,
+            "age37_49=1": -0.0031041327219380912,
+            "white=0": -0.09177620620485062,
+            "white=1": -0.03164996348933691
+          },
+          "subgroup_rows": [
+            {
+              "treatment": "male=0",
+              "estimated": -0.055183411350224955,
+              "true": -0.049005686773889695
+            },
+            {
+              "treatment": "male=1",
+              "estimated": -0.02313718921274545,
+              "true": -0.04551014669353706
+            },
+            {
+              "treatment": "age50=0",
+              "estimated": -0.03381736635548751,
+              "true": -0.04809059463851251
+            },
+            {
+              "treatment": "age50=1",
+              "estimated": -0.05880263122478943,
+              "true": -0.04631930769868797
+            },
+            {
+              "treatment": "age37_49=0",
+              "estimated": -0.06217047282581237,
+              "true": -0.053739965387258226
+            },
+            {
+              "treatment": "age37_49=1",
+              "estimated": -0.0031041327219380912,
+              "true": -0.03515094333989198
+            },
+            {
+              "treatment": "white=0",
+              "estimated": -0.09177620620485062,
+              "true": -0.05846021081181041
+            },
+            {
+              "treatment": "white=1",
+              "estimated": -0.03164996348933691,
+              "true": -0.045394320636929
+            }
+          ],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "seed 1005",
+          "n_rows": 4834,
+          "values": {
+            "refutation_pass_rate": 1.0,
+            "edge_precision": 0.75,
+            "edge_recall": 0.6923076923076923,
+            "edge_f1": 0.7199999999999999,
+            "shd": 5.0,
+            "discovered_precision": 0.75,
+            "discovered_recall": 0.6923076923076923,
+            "fairness_ratio_abs_err": 0.055326481629087376,
+            "fairness_flag_correct": 1.0,
+            "ate_mae": 0.004768837031746659,
+            "ate_max_abs_err": 0.004768837031746659,
+            "ate_sign_agreement": 1.0,
+            "subgroup_cate_mae": 0.011706084698370815
+          },
+          "effect_rows": [
+            {
+              "treatment": "treat",
+              "estimated": -0.05228283703174666,
+              "true": -0.047514
+            }
+          ],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "age37_49",
+              "age50"
+            ],
+            [
+              "age37_49",
+              "terminated_0119"
+            ],
+            [
+              "age50",
+              "prod_index_yr0"
+            ],
+            [
+              "age50",
+              "terminated_0119"
+            ],
+            [
+              "male",
+              "prod_index_yr0"
+            ],
+            [
+              "male",
+              "sickleave_0815_0716"
+            ],
+            [
+              "prod_index_yr0",
+              "terminated_0119"
+            ],
+            [
+              "sickleave_0815_0716",
+              "prod_index_yr0"
+            ],
+            [
+              "sickleave_0815_0716",
+              "terminated_0119"
+            ],
+            [
+              "treat",
+              "terminated_0119"
+            ],
+            [
+              "white",
+              "age50"
+            ],
+            [
+              "white",
+              "terminated_0119"
+            ]
+          ],
+          "estimated_ates": {
+            "treat": -0.05228283703174666
+          },
+          "refutation_p_values": {
+            "treat": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "treat": true
+          },
+          "mean_cates": {
+            "treat": -0.05270381029923135
+          },
+          "fairness_ratio": 0.9333486014127647,
+          "fairness_passed": true,
+          "top_choice": "offer_wellness_program",
+          "cate_stds": {
+            "treat": 0.0350157599989888
+          },
+          "subgroup_cates": {
+            "male=0": -0.06459255597504976,
+            "male=1": -0.036254194733971755,
+            "age50=0": -0.06609607516160583,
+            "age50=1": -0.02630614993436658,
+            "age37_49=0": -0.05835325145684102,
+            "age37_49=1": -0.04080222410730046,
+            "white=0": -0.04645333531238473,
+            "white=1": -0.05391009643933847
+          },
+          "subgroup_rows": [
+            {
+              "treatment": "male=0",
+              "estimated": -0.06459255597504976,
+              "true": -0.049005686773889695
+            },
+            {
+              "treatment": "male=1",
+              "estimated": -0.036254194733971755,
+              "true": -0.04551014669353706
+            },
+            {
+              "treatment": "age50=0",
+              "estimated": -0.06609607516160583,
+              "true": -0.04809059463851251
+            },
+            {
+              "treatment": "age50=1",
+              "estimated": -0.02630614993436658,
+              "true": -0.04631930769868797
+            },
+            {
+              "treatment": "age37_49=0",
+              "estimated": -0.05835325145684102,
+              "true": -0.053739965387258226
+            },
+            {
+              "treatment": "age37_49=1",
+              "estimated": -0.04080222410730046,
+              "true": -0.03515094333989198
+            },
+            {
+              "treatment": "white=0",
+              "estimated": -0.04645333531238473,
+              "true": -0.05846021081181041
+            },
+            {
+              "treatment": "white=1",
+              "estimated": -0.05391009643933847,
+              "true": -0.045394320636929
+            }
+          ],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "seed 1006",
+          "n_rows": 4834,
+          "values": {
+            "refutation_pass_rate": 1.0,
+            "edge_precision": 0.75,
+            "edge_recall": 0.6923076923076923,
+            "edge_f1": 0.7199999999999999,
+            "shd": 5.0,
+            "discovered_precision": 0.75,
+            "discovered_recall": 0.6923076923076923,
+            "fairness_ratio_abs_err": 0.05395733876177955,
+            "fairness_flag_correct": 1.0,
+            "ate_mae": 0.006212219936486768,
+            "ate_max_abs_err": 0.006212219936486768,
+            "ate_sign_agreement": 1.0,
+            "subgroup_cate_mae": 0.0106233317468386
+          },
+          "effect_rows": [
+            {
+              "treatment": "treat",
+              "estimated": -0.04130178006351323,
+              "true": -0.047514
+            }
+          ],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "age37_49",
+              "terminated_0119"
+            ],
+            [
+              "age50",
+              "age37_49"
+            ],
+            [
+              "age50",
+              "prod_index_yr0"
+            ],
+            [
+              "age50",
+              "terminated_0119"
+            ],
+            [
+              "male",
+              "gym_0815_0716"
+            ],
+            [
+              "male",
+              "prod_index_yr0"
+            ],
+            [
+              "male",
+              "sickleave_0815_0716"
+            ],
+            [
+              "prod_index_yr0",
+              "terminated_0119"
+            ],
+            [
+              "sickleave_0815_0716",
+              "prod_index_yr0"
+            ],
+            [
+              "sickleave_0815_0716",
+              "terminated_0119"
+            ],
+            [
+              "white",
+              "age50"
+            ],
+            [
+              "white",
+              "terminated_0119"
+            ]
+          ],
+          "estimated_ates": {
+            "treat": -0.04130178006351323
+          },
+          "refutation_p_values": {
+            "treat": 0.019801980198019802
+          },
+          "refutation_passed": {
+            "treat": true
+          },
+          "mean_cates": {
+            "treat": -0.04119254087107983
+          },
+          "fairness_ratio": 0.8240647810218977,
+          "fairness_passed": true,
+          "top_choice": "offer_wellness_program",
+          "cate_stds": {
+            "treat": 0.02612859019810058
+          },
+          "subgroup_cates": {
+            "male=0": -0.03321843272427312,
+            "male=1": -0.05197601850610458,
+            "age50=0": -0.04909067209370467,
+            "age50=1": -0.024474575169031256,
+            "age37_49=0": -0.0406532412430226,
+            "age37_49=1": -0.042225602161013356,
+            "white=0": -0.043340338850753855,
+            "white=1": -0.040786857435666735
+          },
+          "subgroup_rows": [
+            {
+              "treatment": "male=0",
+              "estimated": -0.03321843272427312,
+              "true": -0.049005686773889695
+            },
+            {
+              "treatment": "male=1",
+              "estimated": -0.05197601850610458,
+              "true": -0.04551014669353706
+            },
+            {
+              "treatment": "age50=0",
+              "estimated": -0.04909067209370467,
+              "true": -0.04809059463851251
+            },
+            {
+              "treatment": "age50=1",
+              "estimated": -0.024474575169031256,
+              "true": -0.04631930769868797
+            },
+            {
+              "treatment": "age37_49=0",
+              "estimated": -0.0406532412430226,
+              "true": -0.053739965387258226
+            },
+            {
+              "treatment": "age37_49=1",
+              "estimated": -0.042225602161013356,
+              "true": -0.03515094333989198
+            },
+            {
+              "treatment": "white=0",
+              "estimated": -0.043340338850753855,
+              "true": -0.05846021081181041
+            },
+            {
+              "treatment": "white=1",
+              "estimated": -0.040786857435666735,
+              "true": -0.045394320636929
+            }
+          ],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "seed 1007",
+          "n_rows": 4834,
+          "values": {
+            "refutation_pass_rate": 1.0,
+            "edge_precision": 0.75,
+            "edge_recall": 0.6923076923076923,
+            "edge_f1": 0.7199999999999999,
+            "shd": 5.0,
+            "discovered_precision": 0.75,
+            "discovered_recall": 0.6923076923076923,
+            "fairness_ratio_abs_err": 0.0016882757876516274,
+            "fairness_flag_correct": 1.0,
+            "ate_mae": 0.0030662734547220183,
+            "ate_max_abs_err": 0.0030662734547220183,
+            "ate_sign_agreement": 1.0,
+            "subgroup_cate_mae": 0.0174599481466288
+          },
+          "effect_rows": [
+            {
+              "treatment": "treat",
+              "estimated": -0.04444772654527798,
+              "true": -0.047514
+            }
+          ],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "age37_49",
+              "terminated_0119"
+            ],
+            [
+              "age50",
+              "age37_49"
+            ],
+            [
+              "age50",
+              "terminated_0119"
+            ],
+            [
+              "male",
+              "gym_0815_0716"
+            ],
+            [
+              "male",
+              "prod_index_yr0"
+            ],
+            [
+              "male",
+              "sickleave_0815_0716"
+            ],
+            [
+              "prod_index_yr0",
+              "terminated_0119"
+            ],
+            [
+              "sickleave_0815_0716",
+              "prod_index_yr0"
+            ],
+            [
+              "sickleave_0815_0716",
+              "terminated_0119"
+            ],
+            [
+              "treat",
+              "terminated_0119"
+            ],
+            [
+              "white",
+              "age50"
+            ],
+            [
+              "white",
+              "terminated_0119"
+            ]
+          ],
+          "estimated_ates": {
+            "treat": -0.04444772654527798
+          },
+          "refutation_p_values": {
+            "treat": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "treat": true
+          },
+          "mean_cates": {
+            "treat": -0.04470180508753163
+          },
+          "fairness_ratio": 0.8797103955713289,
+          "fairness_passed": true,
+          "top_choice": "offer_wellness_program",
+          "cate_stds": {
+            "treat": 0.036843784594643235
+          },
+          "subgroup_cates": {
+            "male=0": -0.06727614452276161,
+            "male=1": -0.014380188715732182,
+            "age50=0": -0.048351335788106534,
+            "age50=1": -0.037185619707993174,
+            "age37_49=0": -0.04695187903340909,
+            "age37_49=1": -0.04022947022353786,
+            "white=0": 0.0025346613508511143,
+            "white=1": -0.053417575542837235
+          },
+          "subgroup_rows": [
+            {
+              "treatment": "male=0",
+              "estimated": -0.06727614452276161,
+              "true": -0.049005686773889695
+            },
+            {
+              "treatment": "male=1",
+              "estimated": -0.014380188715732182,
+              "true": -0.04551014669353706
+            },
+            {
+              "treatment": "age50=0",
+              "estimated": -0.048351335788106534,
+              "true": -0.04809059463851251
+            },
+            {
+              "treatment": "age50=1",
+              "estimated": -0.037185619707993174,
+              "true": -0.04631930769868797
+            },
+            {
+              "treatment": "age37_49=0",
+              "estimated": -0.04695187903340909,
+              "true": -0.053739965387258226
+            },
+            {
+              "treatment": "age37_49=1",
+              "estimated": -0.04022947022353786,
+              "true": -0.03515094333989198
+            },
+            {
+              "treatment": "white=0",
+              "estimated": 0.0025346613508511143,
+              "true": -0.05846021081181041
+            },
+            {
+              "treatment": "white=1",
+              "estimated": -0.053417575542837235,
+              "true": -0.045394320636929
+            }
+          ],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "seed 1008",
+          "n_rows": 4834,
+          "values": {
+            "refutation_pass_rate": 1.0,
+            "edge_precision": 0.7692307692307693,
+            "edge_recall": 0.7692307692307693,
+            "edge_f1": 0.7692307692307693,
+            "shd": 4.0,
+            "discovered_precision": 0.7692307692307693,
+            "discovered_recall": 0.7692307692307693,
+            "fairness_ratio_abs_err": 0.04564986860529219,
+            "fairness_flag_correct": 1.0,
+            "ate_mae": 0.012369304883309645,
+            "ate_max_abs_err": 0.012369304883309645,
+            "ate_sign_agreement": 1.0,
+            "subgroup_cate_mae": 0.0118179717284807
+          },
+          "effect_rows": [
+            {
+              "treatment": "treat",
+              "estimated": -0.059883304883309646,
+              "true": -0.047514
+            }
+          ],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "age37_49",
+              "terminated_0119"
+            ],
+            [
+              "age50",
+              "age37_49"
+            ],
+            [
+              "age50",
+              "prod_index_yr0"
+            ],
+            [
+              "age50",
+              "terminated_0119"
+            ],
+            [
+              "male",
+              "gym_0815_0716"
+            ],
+            [
+              "male",
+              "prod_index_yr0"
+            ],
+            [
+              "male",
+              "sickleave_0815_0716"
+            ],
+            [
+              "prod_index_yr0",
+              "terminated_0119"
+            ],
+            [
+              "sickleave_0815_0716",
+              "prod_index_yr0"
+            ],
+            [
+              "sickleave_0815_0716",
+              "terminated_0119"
+            ],
+            [
+              "treat",
+              "terminated_0119"
+            ],
+            [
+              "white",
+              "age50"
+            ],
+            [
+              "white",
+              "terminated_0119"
+            ]
+          ],
+          "estimated_ates": {
+            "treat": -0.059883304883309646
+          },
+          "refutation_p_values": {
+            "treat": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "treat": true
+          },
+          "mean_cates": {
+            "treat": -0.05943693279986954
+          },
+          "fairness_ratio": 0.9236719883889695,
+          "fairness_passed": true,
+          "top_choice": "offer_wellness_program",
+          "cate_stds": {
+            "treat": 0.03573161150329195
+          },
+          "subgroup_cates": {
+            "male=0": -0.06377251997275553,
+            "male=1": -0.05363307711173431,
+            "age50=0": -0.06917748678786509,
+            "age50=1": -0.039090689357852,
+            "age37_49=0": -0.07212598864544319,
+            "age37_49=1": -0.03405094459981747,
+            "white=0": -0.05038637444395939,
+            "white=1": -0.061172961991412464
+          },
+          "subgroup_rows": [
+            {
+              "treatment": "male=0",
+              "estimated": -0.06377251997275553,
+              "true": -0.049005686773889695
+            },
+            {
+              "treatment": "male=1",
+              "estimated": -0.05363307711173431,
+              "true": -0.04551014669353706
+            },
+            {
+              "treatment": "age50=0",
+              "estimated": -0.06917748678786509,
+              "true": -0.04809059463851251
+            },
+            {
+              "treatment": "age50=1",
+              "estimated": -0.039090689357852,
+              "true": -0.04631930769868797
+            },
+            {
+              "treatment": "age37_49=0",
+              "estimated": -0.07212598864544319,
+              "true": -0.053739965387258226
+            },
+            {
+              "treatment": "age37_49=1",
+              "estimated": -0.03405094459981747,
+              "true": -0.03515094333989198
+            },
+            {
+              "treatment": "white=0",
+              "estimated": -0.05038637444395939,
+              "true": -0.05846021081181041
+            },
+            {
+              "treatment": "white=1",
+              "estimated": -0.061172961991412464,
+              "true": -0.045394320636929
+            }
+          ],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "seed 1009",
+          "n_rows": 4834,
+          "values": {
+            "refutation_pass_rate": 1.0,
+            "edge_precision": 0.7272727272727273,
+            "edge_recall": 0.6153846153846154,
+            "edge_f1": 0.6666666666666667,
+            "shd": 6.0,
+            "discovered_precision": 0.7272727272727273,
+            "discovered_recall": 0.6153846153846154,
+            "fairness_ratio_abs_err": 0.06050152492246297,
+            "fairness_flag_correct": 1.0,
+            "ate_mae": 0.018304562339693353,
+            "ate_max_abs_err": 0.018304562339693353,
+            "ate_sign_agreement": 1.0,
+            "subgroup_cate_mae": 0.019197612009740357
+          },
+          "effect_rows": [
+            {
+              "treatment": "treat",
+              "estimated": -0.06581856233969335,
+              "true": -0.047514
+            }
+          ],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "age37_49",
+              "age50"
+            ],
+            [
+              "age37_49",
+              "terminated_0119"
+            ],
+            [
+              "age50",
+              "terminated_0119"
+            ],
+            [
+              "male",
+              "sickleave_0815_0716"
+            ],
+            [
+              "male",
+              "terminated_0119"
+            ],
+            [
+              "prod_index_yr0",
+              "terminated_0119"
+            ],
+            [
+              "sickleave_0815_0716",
+              "prod_index_yr0"
+            ],
+            [
+              "sickleave_0815_0716",
+              "terminated_0119"
+            ],
+            [
+              "treat",
+              "terminated_0119"
+            ],
+            [
+              "white",
+              "age50"
+            ],
+            [
+              "white",
+              "terminated_0119"
+            ]
+          ],
+          "estimated_ates": {
+            "treat": -0.06581856233969335
+          },
+          "refutation_p_values": {
+            "treat": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "treat": true
+          },
+          "mean_cates": {
+            "treat": -0.06582120763248853
+          },
+          "fairness_ratio": 0.8175205948612143,
+          "fairness_passed": true,
+          "top_choice": "offer_wellness_program",
+          "cate_stds": {
+            "treat": 0.017347310767459982
+          },
+          "subgroup_cates": {
+            "male=0": -0.06830554083689515,
+            "male=1": -0.06252351545889727,
+            "age50=0": -0.07255134058390077,
+            "age50=1": -0.05205136409547809,
+            "age37_49=0": -0.06283117431240054,
+            "age37_49=1": -0.07219852432491208,
+            "white=0": -0.081842153008479,
+            "white=1": -0.06294845943747682
+          },
+          "subgroup_rows": [
+            {
+              "treatment": "male=0",
+              "estimated": -0.06830554083689515,
+              "true": -0.049005686773889695
+            },
+            {
+              "treatment": "male=1",
+              "estimated": -0.06252351545889727,
+              "true": -0.04551014669353706
+            },
+            {
+              "treatment": "age50=0",
+              "estimated": -0.07255134058390077,
+              "true": -0.04809059463851251
+            },
+            {
+              "treatment": "age50=1",
+              "estimated": -0.05205136409547809,
+              "true": -0.04631930769868797
+            },
+            {
+              "treatment": "age37_49=0",
+              "estimated": -0.06283117431240054,
+              "true": -0.053739965387258226
+            },
+            {
+              "treatment": "age37_49=1",
+              "estimated": -0.07219852432491208,
+              "true": -0.03515094333989198
+            },
+            {
+              "treatment": "white=0",
+              "estimated": -0.081842153008479,
+              "true": -0.05846021081181041
+            },
+            {
+              "treatment": "white=1",
+              "estimated": -0.06294845943747682,
+              "true": -0.045394320636929
+            }
+          ],
+          "baselines": {},
+          "error": null
+        }
+      ],
+      "skipped_reason": null,
+      "truth": {
+        "edges": [
+          [
+            "age50",
+            "white"
+          ],
+          [
+            "male",
+            "prod_index_yr0"
+          ],
+          [
+            "age50",
+            "prod_index_yr0"
+          ],
+          [
+            "prod_index_yr0",
+            "sickleave_0815_0716"
+          ],
+          [
+            "male",
+            "sickleave_0815_0716"
+          ],
+          [
+            "male",
+            "gym_0815_0716"
+          ],
+          [
+            "male",
+            "terminated_0119"
+          ],
+          [
+            "age50",
+            "terminated_0119"
+          ],
+          [
+            "age37_49",
+            "terminated_0119"
+          ],
+          [
+            "white",
+            "terminated_0119"
+          ],
+          [
+            "sickleave_0815_0716",
+            "terminated_0119"
+          ],
+          [
+            "prod_index_yr0",
+            "terminated_0119"
+          ],
+          [
+            "treat",
+            "terminated_0119"
+          ]
+        ],
+        "effects": {
+          "treat": -0.047514
+        },
+        "roi": {
+          "offer_wellness_program": 0.0003125921052631579
+        },
+        "subgroup_effects": {
+          "male=0": -0.049005686773889695,
+          "male=1": -0.04551014669353706,
+          "age50=0": -0.04809059463851251,
+          "age50=1": -0.04631930769868797,
+          "age37_49=0": -0.053739965387258226,
+          "age37_49=1": -0.03515094333989198,
+          "white=0": -0.05846021081181041,
+          "white=1": -0.045394320636929
+        },
+        "fairness_ratio": 0.8780221197836773
+      },
+      "reference": [],
+      "subgroup_reference": [],
+      "stress_id": null,
+      "stress_factor": null,
+      "stress_description": null
+    }
+  ]
+}

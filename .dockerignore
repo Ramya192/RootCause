@@ -1,0 +1,20 @@
+.git
+.github
+.venv
+.env
+.claude
+.vscode
+.idea
+.pytest_cache
+__pycache__
+*.pyc
+notebooks
+docs
+
+# Freddie Mac loan files (1+ GB, registered download) and the regenerable synthetic attachments
+data/freddie_mac
+data/*/attachments
+
+# Feast local state is rebuilt at run time
+rootcause/feature_repo/data
+rootcause/feature_repo/.feast

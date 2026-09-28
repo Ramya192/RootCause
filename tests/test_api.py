@@ -170,3 +170,66 @@ def test_real_direct_run_through_api(config_loader, monkeypatch):
     assert len(result["effect_estimates"]) == 3
     assert len(result["recommendations"]) == 3  # regression guard: never 0
     assert result["explanation"]["narrative"]
+
+
+def test_list_domains_reports_available_datasets(fake_client):
+    domain = {d["id"]: d for d in fake_client.get("/domains").json()}["employee_attrition"]
+    assert domain["datasets"] == ["synthetic"]
+    assert domain["default_dataset"] == "synthetic"
+
+
+def test_omitted_dataset_uses_default_and_runner_gets_it(config_loader):
+    seen = {}
+
+    def spy(domain_id, config, data_path):
+        seen.update(config=config, data_path=data_path)
+        return _fake_result()
+
+    client = TestClient(create_app(config_loader=config_loader, runners={"direct": spy}))
+    job = client.post("/domains/employee_attrition/analyze").json()
+    assert job["dataset"] == "synthetic"
+    assert _wait_for(client, job["id"])["status"] == "succeeded"
+    # the run config is tagged so Stage 2 can keep this dataset's Feast state apart
+    assert seen["config"]["run"] == {"dataset": "synthetic"}
+    assert seen["data_path"].replace("\\", "/").endswith("data/employee_attrition/attrition.csv")
+    # ...without mutating the shared domain config
+    assert "run" not in config_loader.get_domain("employee_attrition").extra
+
+
+def test_dataset_not_configured_for_domain_is_400(fake_client):
+    resp = fake_client.post("/domains/employee_attrition/analyze", json={"dataset": "real"})
+    assert resp.status_code == 400
+    assert "synthetic" in resp.json()["detail"]  # tells the caller what IS available
+
+
+def test_configured_dataset_with_missing_file_is_409():
+    from rootcause.utils.config_loader import ConfigLoader
+
+    loader = ConfigLoader()  # fresh: don't mutate the session-scoped loader
+    ingestion = loader.get_domain("employee_attrition").extra["ingestion"]
+    ingestion["datasets"]["real"] = "data/employee_attrition/not_downloaded_yet.csv"
+    client = TestClient(create_app(config_loader=loader, runners={"direct": lambda *a: _fake_result()}))
+
+    resp = client.post("/domains/employee_attrition/analyze", json={"dataset": "real"})
+    assert resp.status_code == 409
+    assert "not_downloaded_yet.csv" in resp.json()["detail"]
+
+
+def test_selected_dataset_path_is_the_one_run():
+    from rootcause.utils.config_loader import ConfigLoader
+
+    loader = ConfigLoader()
+    ingestion = loader.get_domain("employee_attrition").extra["ingestion"]
+    ingestion["datasets"]["semi_synthetic"] = "data/employee_attrition/ground_truth.json"  # any existing file
+    seen = {}
+
+    def spy(domain_id, config, data_path):
+        seen.update(config=config, data_path=data_path)
+        return _fake_result()
+
+    client = TestClient(create_app(config_loader=loader, runners={"direct": spy}))
+    job = client.post("/domains/employee_attrition/analyze", json={"dataset": "semi_synthetic"}).json()
+    _wait_for(client, job["id"])
+    assert job["dataset"] == "semi_synthetic"
+    assert seen["config"]["run"]["dataset"] == "semi_synthetic"
+    assert seen["data_path"].replace("\\", "/").endswith("ground_truth.json")

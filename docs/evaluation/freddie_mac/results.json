@@ -1,0 +1,5096 @@
+{
+  "settings": {
+    "replicates": 10,
+    "n_rows": null
+  },
+  "scenarios": [
+    {
+      "domain_id": "freddie_mac",
+      "dataset": "real_2007",
+      "source": "committed file",
+      "scored_against_truth": false,
+      "runs": [
+        {
+          "label": "committed file",
+          "n_rows": 31780,
+          "values": {
+            "refutation_pass_rate": 1.0
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "credit_score",
+              "mi_pct"
+            ],
+            [
+              "dti",
+              "default"
+            ],
+            [
+              "dti",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "interest_rate"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "interest_rate",
+              "orig_upb_100k"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "orig_upb_100k",
+              "default"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.11441659841271534,
+            "ltv": 0.0008859508257659243,
+            "dti": 0.0018170577425978829
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": true
+          },
+          "mean_cates": {
+            "ltv": 0.06784098475591066
+          },
+          "fairness_ratio": 0.9482555760007607,
+          "fairness_passed": true,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.11397543967069249
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        }
+      ],
+      "skipped_reason": null,
+      "truth": null,
+      "reference": [],
+      "subgroup_reference": [],
+      "stress_id": null,
+      "stress_factor": null,
+      "stress_description": null
+    },
+    {
+      "domain_id": "freddie_mac",
+      "dataset": "real_2007",
+      "source": "bootstrap of committed file",
+      "scored_against_truth": false,
+      "runs": [
+        {
+          "label": "bootstrap 1000",
+          "n_rows": 31780,
+          "values": {
+            "refutation_pass_rate": 1.0
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "default"
+            ],
+            [
+              "dti",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "interest_rate"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "interest_rate",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "orig_upb_100k"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "orig_upb_100k",
+              "default"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.12050015614098564,
+            "ltv": 0.0010154592402635831,
+            "dti": 0.0017721404818240721
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": true
+          },
+          "mean_cates": {
+            "ltv": 0.08663925097666604
+          },
+          "fairness_ratio": 0.9178875365680997,
+          "fairness_passed": true,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.1465814659448619
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1001",
+          "n_rows": 31780,
+          "values": {
+            "refutation_pass_rate": 1.0
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "default"
+            ],
+            [
+              "dti",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "interest_rate"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "interest_rate",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "orig_upb_100k"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "orig_upb_100k",
+              "default"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.12239882492395382,
+            "ltv": 0.0008931193841154178,
+            "dti": 0.002030047321663689
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": true
+          },
+          "mean_cates": {
+            "ltv": 0.08026870346191871
+          },
+          "fairness_ratio": 0.9751546107368815,
+          "fairness_passed": true,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.13706132270806598
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1002",
+          "n_rows": 31780,
+          "values": {
+            "refutation_pass_rate": 1.0
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "credit_score",
+              "mi_pct"
+            ],
+            [
+              "dti",
+              "default"
+            ],
+            [
+              "dti",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "interest_rate"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "interest_rate",
+              "orig_upb_100k"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "orig_upb_100k",
+              "default"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.107668142699057,
+            "ltv": 0.0010644249315971965,
+            "dti": 0.0019653994521365847
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": true
+          },
+          "mean_cates": {
+            "ltv": 0.07786897059964179
+          },
+          "fairness_ratio": 0.970029078705604,
+          "fairness_passed": true,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.1177236413144914
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1003",
+          "n_rows": 31780,
+          "values": {
+            "refutation_pass_rate": 1.0
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "credit_score",
+              "mi_pct"
+            ],
+            [
+              "dti",
+              "default"
+            ],
+            [
+              "dti",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "default"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "interest_rate",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "orig_upb_100k"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "orig_upb_100k",
+              "default"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.11341995605742683,
+            "ltv": 0.0010074379211411078,
+            "dti": 0.0015327586226774187
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": true
+          },
+          "mean_cates": {
+            "ltv": 0.1065280099879495
+          },
+          "fairness_ratio": 0.8996938537504483,
+          "fairness_passed": true,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.17682810800105622
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1004",
+          "n_rows": 31780,
+          "values": {
+            "refutation_pass_rate": 1.0
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "credit_score",
+              "mi_pct"
+            ],
+            [
+              "dti",
+              "default"
+            ],
+            [
+              "dti",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "default"
+            ],
+            [
+              "first_time_buyer",
+              "interest_rate"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "interest_rate",
+              "orig_upb_100k"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "dti"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "orig_upb_100k",
+              "default"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.12695378751832254,
+            "ltv": 0.001084364358899803,
+            "dti": 0.00173493654292943
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": true
+          },
+          "mean_cates": {
+            "ltv": 0.057953748565679586
+          },
+          "fairness_ratio": 0.8872063208705178,
+          "fairness_passed": true,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.10296636355635731
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1005",
+          "n_rows": 31780,
+          "values": {
+            "refutation_pass_rate": 1.0
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "credit_score",
+              "mi_pct"
+            ],
+            [
+              "dti",
+              "default"
+            ],
+            [
+              "dti",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "interest_rate"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "interest_rate",
+              "orig_upb_100k"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "dti"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "orig_upb_100k",
+              "default"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.11904616839144005,
+            "ltv": 0.0009618505422067658,
+            "dti": 0.0017431128448118366
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": true
+          },
+          "mean_cates": {
+            "ltv": 0.09006840903179511
+          },
+          "fairness_ratio": 0.9250122380831665,
+          "fairness_passed": true,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.14542833990747478
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1006",
+          "n_rows": 31780,
+          "values": {
+            "refutation_pass_rate": 1.0
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "default"
+            ],
+            [
+              "dti",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "interest_rate",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "orig_upb_100k"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "orig_upb_100k",
+              "default"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.11936313053803271,
+            "ltv": 0.0008592158086235813,
+            "dti": 0.0021716704711148976
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": true
+          },
+          "mean_cates": {
+            "ltv": 0.06448987438010839
+          },
+          "fairness_ratio": 0.9868057263879813,
+          "fairness_passed": true,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.11663770539181428
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1007",
+          "n_rows": 31780,
+          "values": {
+            "refutation_pass_rate": 1.0
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "credit_score",
+              "mi_pct"
+            ],
+            [
+              "dti",
+              "default"
+            ],
+            [
+              "dti",
+              "ltv"
+            ],
+            [
+              "dti",
+              "mi_pct"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "interest_rate"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "interest_rate",
+              "orig_upb_100k"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "orig_upb_100k",
+              "default"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.11916785121728357,
+            "ltv": 0.0008985082090396945,
+            "dti": 0.0015021446510224828
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": true
+          },
+          "mean_cates": {
+            "ltv": 0.0864369501001232
+          },
+          "fairness_ratio": 0.9256555636558119,
+          "fairness_passed": true,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.15012820057216306
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1008",
+          "n_rows": 31780,
+          "values": {
+            "refutation_pass_rate": 1.0
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "credit_score",
+              "mi_pct"
+            ],
+            [
+              "dti",
+              "default"
+            ],
+            [
+              "dti",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "default"
+            ],
+            [
+              "first_time_buyer",
+              "interest_rate"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "interest_rate",
+              "orig_upb_100k"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "orig_upb_100k",
+              "default"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.11479480293439087,
+            "ltv": 0.0009661110045952048,
+            "dti": 0.0019159346613485256
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": true
+          },
+          "mean_cates": {
+            "ltv": 0.0779902009366708
+          },
+          "fairness_ratio": 0.9010157641575316,
+          "fairness_passed": true,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.140570593426363
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1009",
+          "n_rows": 31780,
+          "values": {
+            "refutation_pass_rate": 1.0
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "credit_score",
+              "mi_pct"
+            ],
+            [
+              "dti",
+              "default"
+            ],
+            [
+              "dti",
+              "ltv"
+            ],
+            [
+              "dti",
+              "mi_pct"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "interest_rate"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "interest_rate",
+              "orig_upb_100k"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "orig_upb_100k",
+              "default"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.12210740051020119,
+            "ltv": 0.0009021689537962313,
+            "dti": 0.0018237101299379832
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": true
+          },
+          "mean_cates": {
+            "ltv": 0.10118980105683453
+          },
+          "fairness_ratio": 0.9413025737219697,
+          "fairness_passed": true,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.1791018608955256
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        }
+      ],
+      "skipped_reason": null,
+      "truth": null,
+      "reference": [],
+      "subgroup_reference": [],
+      "stress_id": null,
+      "stress_factor": null,
+      "stress_description": null
+    },
+    {
+      "domain_id": "freddie_mac",
+      "dataset": "real_2008",
+      "source": "committed file",
+      "scored_against_truth": false,
+      "runs": [
+        {
+          "label": "committed file",
+          "n_rows": 25531,
+          "values": {
+            "refutation_pass_rate": 1.0
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "default"
+            ],
+            [
+              "dti",
+              "interest_rate"
+            ],
+            [
+              "dti",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "ltv",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "default"
+            ],
+            [
+              "orig_upb_100k",
+              "interest_rate"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.09913770249527709,
+            "ltv": 0.0005775365017991474,
+            "dti": 0.0014866404195634647
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": true
+          },
+          "mean_cates": {
+            "ltv": 0.019678163449053085
+          },
+          "fairness_ratio": 0.9925461278570056,
+          "fairness_passed": true,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.049080808724640136
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        }
+      ],
+      "skipped_reason": null,
+      "truth": null,
+      "reference": [],
+      "subgroup_reference": [],
+      "stress_id": null,
+      "stress_factor": null,
+      "stress_description": null
+    },
+    {
+      "domain_id": "freddie_mac",
+      "dataset": "real_2008",
+      "source": "bootstrap of committed file",
+      "scored_against_truth": false,
+      "runs": [
+        {
+          "label": "bootstrap 1000",
+          "n_rows": 25531,
+          "values": {
+            "refutation_pass_rate": 1.0
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "default"
+            ],
+            [
+              "dti",
+              "interest_rate"
+            ],
+            [
+              "dti",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "interest_rate"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "ltv",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "default"
+            ],
+            [
+              "orig_upb_100k",
+              "interest_rate"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.09570154500339928,
+            "ltv": 0.0004339270891941943,
+            "dti": 0.0011324321040062646
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": true
+          },
+          "mean_cates": {
+            "ltv": 0.04227209475759757
+          },
+          "fairness_ratio": 0.9279726460826442,
+          "fairness_passed": true,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.07837498518623251
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1001",
+          "n_rows": 25531,
+          "values": {
+            "refutation_pass_rate": 1.0
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "default"
+            ],
+            [
+              "dti",
+              "interest_rate"
+            ],
+            [
+              "dti",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "ltv",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "default"
+            ],
+            [
+              "orig_upb_100k",
+              "interest_rate"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.09655472506351714,
+            "ltv": 0.00047393097343582935,
+            "dti": 0.001624166619545793
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": true
+          },
+          "mean_cates": {
+            "ltv": 0.02920133114898526
+          },
+          "fairness_ratio": 0.9805549524534768,
+          "fairness_passed": true,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.07170946895174721
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1002",
+          "n_rows": 25531,
+          "values": {
+            "refutation_pass_rate": 1.0
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "default"
+            ],
+            [
+              "dti",
+              "interest_rate"
+            ],
+            [
+              "dti",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "ltv",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "default"
+            ],
+            [
+              "orig_upb_100k",
+              "interest_rate"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.10600710102536276,
+            "ltv": 0.00045936690450609774,
+            "dti": 0.0014193587273752112
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": true
+          },
+          "mean_cates": {
+            "ltv": 0.12365786808876819
+          },
+          "fairness_ratio": 0.9869836582899806,
+          "fairness_passed": true,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.2341353156159596
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1003",
+          "n_rows": 25531,
+          "values": {
+            "refutation_pass_rate": 1.0
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "default"
+            ],
+            [
+              "dti",
+              "interest_rate"
+            ],
+            [
+              "dti",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "ltv",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "default"
+            ],
+            [
+              "orig_upb_100k",
+              "interest_rate"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.10325659001467025,
+            "ltv": 0.0006434911969964846,
+            "dti": 0.0017052273686505304
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": true
+          },
+          "mean_cates": {
+            "ltv": 0.026456192721140845
+          },
+          "fairness_ratio": 0.9653553113707064,
+          "fairness_passed": true,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.05450111200427981
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1004",
+          "n_rows": 25531,
+          "values": {
+            "refutation_pass_rate": 1.0
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "default"
+            ],
+            [
+              "dti",
+              "interest_rate"
+            ],
+            [
+              "dti",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "ltv",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "default"
+            ],
+            [
+              "orig_upb_100k",
+              "interest_rate"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.09792832098993509,
+            "ltv": 0.0004123578092141422,
+            "dti": 0.0013601461672776288
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": true
+          },
+          "mean_cates": {
+            "ltv": 0.012613423708281729
+          },
+          "fairness_ratio": 0.9820524828928059,
+          "fairness_passed": true,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.047802665865853425
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1005",
+          "n_rows": 25531,
+          "values": {
+            "refutation_pass_rate": 1.0
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "default"
+            ],
+            [
+              "dti",
+              "interest_rate"
+            ],
+            [
+              "dti",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "ltv",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "default"
+            ],
+            [
+              "orig_upb_100k",
+              "interest_rate"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.09691299467462289,
+            "ltv": 0.0005683815429221584,
+            "dti": 0.0015774577827701933
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": true
+          },
+          "mean_cates": {
+            "ltv": 0.013934199130868873
+          },
+          "fairness_ratio": 0.9901085009156212,
+          "fairness_passed": true,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.047920989581162844
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1006",
+          "n_rows": 25531,
+          "values": {
+            "refutation_pass_rate": 1.0
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "default"
+            ],
+            [
+              "dti",
+              "interest_rate"
+            ],
+            [
+              "dti",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "ltv",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "default"
+            ],
+            [
+              "orig_upb_100k",
+              "interest_rate"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.10326143994484838,
+            "ltv": 0.0005088050264848709,
+            "dti": 0.0014594455875600668
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": true
+          },
+          "mean_cates": {
+            "ltv": 0.018451425177647748
+          },
+          "fairness_ratio": 0.9699393230353851,
+          "fairness_passed": true,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.05782476748156835
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1007",
+          "n_rows": 25531,
+          "values": {
+            "refutation_pass_rate": 1.0
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "default"
+            ],
+            [
+              "dti",
+              "interest_rate"
+            ],
+            [
+              "dti",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "ltv",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "default"
+            ],
+            [
+              "orig_upb_100k",
+              "interest_rate"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.09573401649950253,
+            "ltv": 0.0004677013229673621,
+            "dti": 0.001573118091331864
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": true
+          },
+          "mean_cates": {
+            "ltv": 0.005236224467274714
+          },
+          "fairness_ratio": 0.9565403534129056,
+          "fairness_passed": true,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.05254321348228733
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1008",
+          "n_rows": 25531,
+          "values": {
+            "refutation_pass_rate": 1.0
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "default"
+            ],
+            [
+              "dti",
+              "interest_rate"
+            ],
+            [
+              "dti",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "ltv",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "default"
+            ],
+            [
+              "orig_upb_100k",
+              "interest_rate"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.09625989879731661,
+            "ltv": 0.0006094111977802547,
+            "dti": 0.0016032735554971644
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": true
+          },
+          "mean_cates": {
+            "ltv": 0.03202316401339256
+          },
+          "fairness_ratio": 0.9849505018868997,
+          "fairness_passed": true,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.059145818049205545
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1009",
+          "n_rows": 25531,
+          "values": {
+            "refutation_pass_rate": 1.0
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "default"
+            ],
+            [
+              "dti",
+              "interest_rate"
+            ],
+            [
+              "dti",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "ltv",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "default"
+            ],
+            [
+              "orig_upb_100k",
+              "interest_rate"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.10099980623736093,
+            "ltv": 0.0004765060300536833,
+            "dti": 0.0014322551665387484
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.009900990099009901
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": true
+          },
+          "mean_cates": {
+            "ltv": 0.021748163557049727
+          },
+          "fairness_ratio": 0.9730983716261432,
+          "fairness_passed": true,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.06390545295488338
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        }
+      ],
+      "skipped_reason": null,
+      "truth": null,
+      "reference": [],
+      "subgroup_reference": [],
+      "stress_id": null,
+      "stress_factor": null,
+      "stress_description": null
+    },
+    {
+      "domain_id": "freddie_mac",
+      "dataset": "real_2010",
+      "source": "committed file",
+      "scored_against_truth": false,
+      "runs": [
+        {
+          "label": "committed file",
+          "n_rows": 30466,
+          "values": {
+            "refutation_pass_rate": 0.6666666666666666
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "interest_rate"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "dti"
+            ],
+            [
+              "first_time_buyer",
+              "interest_rate"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "first_time_buyer",
+              "orig_upb_100k"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "default"
+            ],
+            [
+              "orig_upb_100k",
+              "interest_rate"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.027996343229063442,
+            "ltv": 0.0003536594505086938,
+            "dti": -0.00011157399029770518
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.27722772277227725
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": false
+          },
+          "mean_cates": {
+            "ltv": 0.007681635271113026
+          },
+          "fairness_ratio": 0.6795649287616876,
+          "fairness_passed": false,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.02968568689269337
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        }
+      ],
+      "skipped_reason": null,
+      "truth": null,
+      "reference": [],
+      "subgroup_reference": [],
+      "stress_id": null,
+      "stress_factor": null,
+      "stress_description": null
+    },
+    {
+      "domain_id": "freddie_mac",
+      "dataset": "real_2010",
+      "source": "bootstrap of committed file",
+      "scored_against_truth": false,
+      "runs": [
+        {
+          "label": "bootstrap 1000",
+          "n_rows": 30466,
+          "values": {
+            "refutation_pass_rate": 0.6666666666666666
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "interest_rate"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "dti"
+            ],
+            [
+              "first_time_buyer",
+              "interest_rate"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "first_time_buyer",
+              "orig_upb_100k"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "default"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.0289195929014283,
+            "ltv": 0.00029980675090990295,
+            "dti": -3.234983856920115e-05
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.7821782178217822
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": false
+          },
+          "mean_cates": {
+            "ltv": 0.00596587835501323
+          },
+          "fairness_ratio": 0.7358895353783443,
+          "fairness_passed": false,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.030459501065646415
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1001",
+          "n_rows": 30466,
+          "values": {
+            "refutation_pass_rate": 1.0
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "interest_rate"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "default"
+            ],
+            [
+              "first_time_buyer",
+              "dti"
+            ],
+            [
+              "first_time_buyer",
+              "interest_rate"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "first_time_buyer",
+              "orig_upb_100k"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "interest_rate"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.0302739324582305,
+            "ltv": 0.00036594470650147754,
+            "dti": -0.00018916312227946
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.039603960396039604
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": true
+          },
+          "mean_cates": {
+            "ltv": 0.007699280398234316
+          },
+          "fairness_ratio": 0.642838016845058,
+          "fairness_passed": false,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.03682396622778393
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1002",
+          "n_rows": 30466,
+          "values": {
+            "refutation_pass_rate": 0.6666666666666666
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "interest_rate"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "default"
+            ],
+            [
+              "first_time_buyer",
+              "dti"
+            ],
+            [
+              "first_time_buyer",
+              "interest_rate"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "first_time_buyer",
+              "orig_upb_100k"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.02821695796820481,
+            "ltv": 0.00044687193439127415,
+            "dti": 0.00012779101493537448
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.2079207920792079
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": false
+          },
+          "mean_cates": {
+            "ltv": 0.007408141024817434
+          },
+          "fairness_ratio": 0.6047296215235146,
+          "fairness_passed": false,
+          "top_choice": "cap_ltv",
+          "cate_stds": {
+            "ltv": 0.027768011329471615
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1003",
+          "n_rows": 30466,
+          "values": {
+            "refutation_pass_rate": 1.0
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "interest_rate"
+            ],
+            [
+              "first_time_buyer",
+              "dti"
+            ],
+            [
+              "first_time_buyer",
+              "interest_rate"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "first_time_buyer",
+              "orig_upb_100k"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "interest_rate",
+              "mi_pct"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "ltv",
+              "mi_pct"
+            ],
+            [
+              "orig_upb_100k",
+              "default"
+            ],
+            [
+              "orig_upb_100k",
+              "dti"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ],
+            [
+              "orig_upb_100k",
+              "mi_pct"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.027514480191646845,
+            "ltv": 0.00036523825751860793,
+            "dti": -0.00021946775374953945
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.019801980198019802
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": true
+          },
+          "mean_cates": {
+            "ltv": 0.007402861480572345
+          },
+          "fairness_ratio": 0.6804487371767953,
+          "fairness_passed": false,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.03443714094009034
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1004",
+          "n_rows": 30466,
+          "values": {
+            "refutation_pass_rate": 1.0
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "interest_rate"
+            ],
+            [
+              "dti",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "dti"
+            ],
+            [
+              "first_time_buyer",
+              "interest_rate"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "first_time_buyer",
+              "orig_upb_100k"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.02368994565462494,
+            "ltv": 0.00027265209044852017,
+            "dti": -0.00022870375371381382
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.0297029702970297
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": true
+          },
+          "mean_cates": {
+            "ltv": 0.010417427185959996
+          },
+          "fairness_ratio": 0.6978926204482835,
+          "fairness_passed": false,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.037477676114068534
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1005",
+          "n_rows": 30466,
+          "values": {
+            "refutation_pass_rate": 0.6666666666666666
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "interest_rate"
+            ],
+            [
+              "dti",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "dti"
+            ],
+            [
+              "first_time_buyer",
+              "interest_rate"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "first_time_buyer",
+              "orig_upb_100k"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "default"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.03110042323715849,
+            "ltv": 0.0003388766884755974,
+            "dti": -9.626635530268768e-05
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.33663366336633666
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": false
+          },
+          "mean_cates": {
+            "ltv": 0.00549948935826542
+          },
+          "fairness_ratio": 0.7437193797907413,
+          "fairness_passed": false,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.030000925025179908
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1006",
+          "n_rows": 30466,
+          "values": {
+            "refutation_pass_rate": 0.6666666666666666
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "interest_rate"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "default"
+            ],
+            [
+              "first_time_buyer",
+              "dti"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "first_time_buyer",
+              "orig_upb_100k"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "ltv",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "interest_rate"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.021004778667614597,
+            "ltv": 0.00038237988693811883,
+            "dti": -0.00011350861974324458
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.24752475247524752
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": false
+          },
+          "mean_cates": {
+            "ltv": 0.010865263219576841
+          },
+          "fairness_ratio": 0.5625239581420965,
+          "fairness_passed": false,
+          "top_choice": "cap_ltv",
+          "cate_stds": {
+            "ltv": 0.037121190599046665
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1007",
+          "n_rows": 30466,
+          "values": {
+            "refutation_pass_rate": 0.6666666666666666
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "interest_rate"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "default"
+            ],
+            [
+              "first_time_buyer",
+              "dti"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "first_time_buyer",
+              "orig_upb_100k"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "ltv",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "interest_rate"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.0313957907646448,
+            "ltv": 0.0004599269936220191,
+            "dti": -0.00010833739772730597
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.39603960396039606
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": false
+          },
+          "mean_cates": {
+            "ltv": 0.010961411156328912
+          },
+          "fairness_ratio": 0.6207703757734079,
+          "fairness_passed": false,
+          "top_choice": "cap_ltv",
+          "cate_stds": {
+            "ltv": 0.02943232694398035
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1008",
+          "n_rows": 30466,
+          "values": {
+            "refutation_pass_rate": 0.6666666666666666
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "interest_rate"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "default"
+            ],
+            [
+              "first_time_buyer",
+              "dti"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "first_time_buyer",
+              "orig_upb_100k"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "ltv",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "interest_rate"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.02618561835382968,
+            "ltv": 0.0003295142342125705,
+            "dti": -8.974726844724126e-05
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.40594059405940597
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": false
+          },
+          "mean_cates": {
+            "ltv": 0.005849268854996948
+          },
+          "fairness_ratio": 0.5204971307914339,
+          "fairness_passed": false,
+          "top_choice": "lower_interest_rate",
+          "cate_stds": {
+            "ltv": 0.02786362776807831
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1009",
+          "n_rows": 30466,
+          "values": {
+            "refutation_pass_rate": 0.6666666666666666
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "interest_rate"
+            ],
+            [
+              "dti",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "default"
+            ],
+            [
+              "first_time_buyer",
+              "dti"
+            ],
+            [
+              "first_time_buyer",
+              "interest_rate"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "first_time_buyer",
+              "orig_upb_100k"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "ltv",
+              "interest_rate"
+            ],
+            [
+              "ltv",
+              "orig_upb_100k"
+            ],
+            [
+              "mi_pct",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "interest_rate"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.024592165809153507,
+            "ltv": 0.0003457559822931391,
+            "dti": -8.670576988289991e-05
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.33663366336633666
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": false
+          },
+          "mean_cates": {
+            "ltv": 0.008674468716049299
+          },
+          "fairness_ratio": 0.5198053195451786,
+          "fairness_passed": false,
+          "top_choice": "cap_ltv",
+          "cate_stds": {
+            "ltv": 0.02759872525391133
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        }
+      ],
+      "skipped_reason": null,
+      "truth": null,
+      "reference": [],
+      "subgroup_reference": [],
+      "stress_id": null,
+      "stress_factor": null,
+      "stress_description": null
+    },
+    {
+      "domain_id": "freddie_mac",
+      "dataset": "real_2011",
+      "source": "committed file",
+      "scored_against_truth": false,
+      "runs": [
+        {
+          "label": "committed file",
+          "n_rows": 33210,
+          "values": {
+            "refutation_pass_rate": 0.6666666666666666
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "dti"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "dti"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.010226761023575972,
+            "ltv": 0.0003795632375203639,
+            "dti": -4.047312826649732e-05
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.693069306930693
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": false
+          },
+          "mean_cates": {
+            "ltv": 0.007601703213875375
+          },
+          "fairness_ratio": 0.9563852995469039,
+          "fairness_passed": true,
+          "top_choice": "cap_ltv",
+          "cate_stds": {
+            "ltv": 0.022401904119472727
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        }
+      ],
+      "skipped_reason": null,
+      "truth": null,
+      "reference": [],
+      "subgroup_reference": [],
+      "stress_id": null,
+      "stress_factor": null,
+      "stress_description": null
+    },
+    {
+      "domain_id": "freddie_mac",
+      "dataset": "real_2011",
+      "source": "bootstrap of committed file",
+      "scored_against_truth": false,
+      "runs": [
+        {
+          "label": "bootstrap 1000",
+          "n_rows": 33210,
+          "values": {
+            "refutation_pass_rate": 0.6666666666666666
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "interest_rate"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "dti"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.012275741472446512,
+            "ltv": 0.0003222460364907245,
+            "dti": -6.441712741708794e-05
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.4752475247524752
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": false
+          },
+          "mean_cates": {
+            "ltv": 0.0065732188198705035
+          },
+          "fairness_ratio": 0.9388315539851281,
+          "fairness_passed": true,
+          "top_choice": "cap_ltv",
+          "cate_stds": {
+            "ltv": 0.02525171277233401
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1001",
+          "n_rows": 33210,
+          "values": {
+            "refutation_pass_rate": 0.6666666666666666
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "first_time_buyer",
+              "orig_upb_100k"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.01027514535534843,
+            "ltv": 0.0004154578029956519,
+            "dti": -2.952631002372738e-05
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.6831683168316832
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": false
+          },
+          "mean_cates": {
+            "ltv": 0.009234009579058648
+          },
+          "fairness_ratio": 0.884667814723018,
+          "fairness_passed": true,
+          "top_choice": "cap_ltv",
+          "cate_stds": {
+            "ltv": 0.026520389765017104
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1002",
+          "n_rows": 33210,
+          "values": {
+            "refutation_pass_rate": 0.6666666666666666
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "interest_rate"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "dti"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "interest_rate"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.01073304488855395,
+            "ltv": 0.00036619497667222944,
+            "dti": -0.00013117572002924183
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.12871287128712872
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": false
+          },
+          "mean_cates": {
+            "ltv": 0.007841856563072673
+          },
+          "fairness_ratio": 0.7607173425718362,
+          "fairness_passed": false,
+          "top_choice": "cap_ltv",
+          "cate_stds": {
+            "ltv": 0.023015562299912827
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1003",
+          "n_rows": 33210,
+          "values": {
+            "refutation_pass_rate": 0.6666666666666666
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.010901463395852101,
+            "ltv": 0.00042718897396196165,
+            "dti": -7.463588673397442e-06
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.9603960396039604
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": false
+          },
+          "mean_cates": {
+            "ltv": 0.0077760847391561165
+          },
+          "fairness_ratio": 0.9637673980880679,
+          "fairness_passed": true,
+          "top_choice": "cap_ltv",
+          "cate_stds": {
+            "ltv": 0.024214802953935365
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1004",
+          "n_rows": 33210,
+          "values": {
+            "refutation_pass_rate": 0.6666666666666666
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "dti"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "dti"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.012744742185162777,
+            "ltv": 0.00040099994100009813,
+            "dti": 1.896669147927188e-05
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.7524752475247525
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": false
+          },
+          "mean_cates": {
+            "ltv": 0.006909965659404572
+          },
+          "fairness_ratio": 0.8854334032047997,
+          "fairness_passed": true,
+          "top_choice": "cap_ltv",
+          "cate_stds": {
+            "ltv": 0.025372230212025153
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1005",
+          "n_rows": 33210,
+          "values": {
+            "refutation_pass_rate": 0.6666666666666666
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "interest_rate"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "dti"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "first_time_buyer",
+              "orig_upb_100k"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.010990726309823395,
+            "ltv": 0.0004015581362955545,
+            "dti": -2.0148844149220357e-05
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.801980198019802
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": false
+          },
+          "mean_cates": {
+            "ltv": 0.007683619943845588
+          },
+          "fairness_ratio": 0.8896532450501968,
+          "fairness_passed": true,
+          "top_choice": "cap_ltv",
+          "cate_stds": {
+            "ltv": 0.022869126267218244
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1006",
+          "n_rows": 33210,
+          "values": {
+            "refutation_pass_rate": 0.6666666666666666
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "interest_rate"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "dti"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.0071577344874348935,
+            "ltv": 0.00032514458583690706,
+            "dti": -8.252266442282732e-05
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.3465346534653465
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": false
+          },
+          "mean_cates": {
+            "ltv": 0.005855860826935906
+          },
+          "fairness_ratio": 0.8305808335104073,
+          "fairness_passed": true,
+          "top_choice": "cap_ltv",
+          "cate_stds": {
+            "ltv": 0.020321422729119385
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1007",
+          "n_rows": 33210,
+          "values": {
+            "refutation_pass_rate": 0.6666666666666666
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "default"
+            ],
+            [
+              "first_time_buyer",
+              "dti"
+            ],
+            [
+              "first_time_buyer",
+              "interest_rate"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.012596627628961382,
+            "ltv": 0.0004466773996456286,
+            "dti": -8.973687614553111e-05
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.32673267326732675
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": false
+          },
+          "mean_cates": {
+            "ltv": 0.00908440367675873
+          },
+          "fairness_ratio": 0.653098088636841,
+          "fairness_passed": false,
+          "top_choice": "cap_ltv",
+          "cate_stds": {
+            "ltv": 0.024449101493277916
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1008",
+          "n_rows": 33210,
+          "values": {
+            "refutation_pass_rate": 0.6666666666666666
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "interest_rate"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "dti"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.012625137968626129,
+            "ltv": 0.0003868172220912753,
+            "dti": -6.876452260671032e-05
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.4752475247524752
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": false
+          },
+          "mean_cates": {
+            "ltv": 0.008515234358166791
+          },
+          "fairness_ratio": 0.9673427685202579,
+          "fairness_passed": true,
+          "top_choice": "cap_ltv",
+          "cate_stds": {
+            "ltv": 0.023407120011958313
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        },
+        {
+          "label": "bootstrap 1009",
+          "n_rows": 33210,
+          "values": {
+            "refutation_pass_rate": 0.6666666666666666
+          },
+          "effect_rows": [],
+          "ranking": null,
+          "predicted_edges": [
+            [
+              "credit_score",
+              "default"
+            ],
+            [
+              "credit_score",
+              "dti"
+            ],
+            [
+              "credit_score",
+              "interest_rate"
+            ],
+            [
+              "credit_score",
+              "ltv"
+            ],
+            [
+              "dti",
+              "orig_upb_100k"
+            ],
+            [
+              "first_time_buyer",
+              "interest_rate"
+            ],
+            [
+              "first_time_buyer",
+              "ltv"
+            ],
+            [
+              "first_time_buyer",
+              "mi_pct"
+            ],
+            [
+              "interest_rate",
+              "default"
+            ],
+            [
+              "interest_rate",
+              "dti"
+            ],
+            [
+              "interest_rate",
+              "ltv"
+            ],
+            [
+              "interest_rate",
+              "orig_upb_100k"
+            ],
+            [
+              "ltv",
+              "default"
+            ],
+            [
+              "mi_pct",
+              "ltv"
+            ],
+            [
+              "mi_pct",
+              "orig_upb_100k"
+            ],
+            [
+              "orig_upb_100k",
+              "ltv"
+            ]
+          ],
+          "estimated_ates": {
+            "interest_rate": 0.013575677912530146,
+            "ltv": 0.0003836863499056542,
+            "dti": -3.46684824208722e-05
+          },
+          "refutation_p_values": {
+            "interest_rate": 0.009900990099009901,
+            "ltv": 0.009900990099009901,
+            "dti": 0.6534653465346535
+          },
+          "refutation_passed": {
+            "interest_rate": true,
+            "ltv": true,
+            "dti": false
+          },
+          "mean_cates": {
+            "ltv": 0.008221192638546341
+          },
+          "fairness_ratio": 0.9997502988846684,
+          "fairness_passed": true,
+          "top_choice": "cap_ltv",
+          "cate_stds": {
+            "ltv": 0.022592040114143418
+          },
+          "subgroup_cates": {},
+          "subgroup_rows": [],
+          "baselines": {},
+          "error": null
+        }
+      ],
+      "skipped_reason": null,
+      "truth": null,
+      "reference": [],
+      "subgroup_reference": [],
+      "stress_id": null,
+      "stress_factor": null,
+      "stress_description": null
+    }
+  ]
+}

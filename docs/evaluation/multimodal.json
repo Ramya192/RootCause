@@ -1,0 +1,229 @@
+[
+  {
+    "domain": "carclaims",
+    "n_rows": 5000,
+    "n_attachment_features": 18,
+    "seconds": 1380.0113466999974,
+    "pdf": [
+      {
+        "domain": "carclaims",
+        "feature": "claim_report__kw_fault",
+        "description": "policy holder at fault",
+        "n": 5000,
+        "agreement": 1.0
+      },
+      {
+        "domain": "carclaims",
+        "feature": "claim_report__kw_rural",
+        "description": "rural accident area",
+        "n": 5000,
+        "agreement": 1.0
+      },
+      {
+        "domain": "carclaims",
+        "feature": "claim_report__kw_witness",
+        "description": "witness present",
+        "n": 5000,
+        "agreement": 1.0
+      }
+    ],
+    "images": [
+      {
+        "domain": "carclaims",
+        "attachment": "damage_photo",
+        "target": "damage level (blotches)",
+        "n": 5000,
+        "r2_stats": 0.9425173217083933,
+        "r2_cnn": 0.9284208678186554,
+        "r2_both": 0.953655990551944,
+        "r2_shuffled": -0.004683546867510602
+      }
+    ],
+    "estimates": [
+      {
+        "domain": "carclaims",
+        "treatment": "police_report_filed",
+        "ate_control": -0.03246996586376759,
+        "ate_multimodal": -0.03393338796161748,
+        "placebo_control": false,
+        "placebo_multimodal": false
+      },
+      {
+        "domain": "carclaims",
+        "treatment": "agent_internal",
+        "ate_control": -0.017040063930400744,
+        "ate_multimodal": -0.01715280648734755,
+        "placebo_control": false,
+        "placebo_multimodal": false
+      },
+      {
+        "domain": "carclaims",
+        "treatment": "deductible_100usd",
+        "ate_control": 0.01684664707162528,
+        "ate_multimodal": 0.01652231389023688,
+        "placebo_control": true,
+        "placebo_multimodal": true
+      }
+    ],
+    "fairness_control": 0.6797191466378611,
+    "fairness_multimodal": 0.6797191466378611,
+    "top_control": "require_police_report",
+    "top_multimodal": "require_police_report",
+    "missing_files": 0
+  },
+  {
+    "domain": "illinois_wellness",
+    "n_rows": 4834,
+    "n_attachment_features": 18,
+    "seconds": 259.9152097999977,
+    "pdf": [
+      {
+        "domain": "illinois_wellness",
+        "feature": "screening_summary__kw_male",
+        "description": "male",
+        "n": 4834,
+        "agreement": 1.0
+      },
+      {
+        "domain": "illinois_wellness",
+        "feature": "screening_summary__kw_age50",
+        "description": "age 50+",
+        "n": 4834,
+        "agreement": 1.0
+      },
+      {
+        "domain": "illinois_wellness",
+        "feature": "screening_summary__kw_age37_49",
+        "description": "age 37-49",
+        "n": 4834,
+        "agreement": 1.0
+      }
+    ],
+    "images": [
+      {
+        "domain": "illinois_wellness",
+        "attachment": "activity_chart",
+        "target": "gym visits (bar height)",
+        "n": 4834,
+        "r2_stats": 0.7303282751467994,
+        "r2_cnn": 0.8883852376031425,
+        "r2_both": 0.9311677915504811,
+        "r2_shuffled": -0.0021933642760343375
+      },
+      {
+        "domain": "illinois_wellness",
+        "attachment": "activity_chart",
+        "target": "sick leave days (bar height)",
+        "n": 4834,
+        "r2_stats": 0.5542361801060975,
+        "r2_cnn": 0.8770470865860174,
+        "r2_both": 0.8968550799466933,
+        "r2_shuffled": -0.0013909871844950406
+      }
+    ],
+    "estimates": [
+      {
+        "domain": "illinois_wellness",
+        "treatment": "treat",
+        "ate_control": 0.0020156499181291088,
+        "ate_multimodal": 0.0012913223253463724,
+        "placebo_control": false,
+        "placebo_multimodal": false
+      }
+    ],
+    "fairness_control": 0.9153498310475054,
+    "fairness_multimodal": 0.9153498310475054,
+    "top_control": "offer_wellness_program",
+    "top_multimodal": "offer_wellness_program",
+    "missing_files": 0
+  },
+  {
+    "domain": "german_credit",
+    "n_rows": 1000,
+    "n_attachment_features": 19,
+    "seconds": 215.9618929999997,
+    "pdf": [
+      {
+        "domain": "german_credit",
+        "feature": "loan_summary__kw_business",
+        "description": "purpose business",
+        "n": 1000,
+        "agreement": 1.0
+      },
+      {
+        "domain": "german_credit",
+        "feature": "loan_summary__kw_education",
+        "description": "purpose education",
+        "n": 1000,
+        "agreement": 1.0
+      },
+      {
+        "domain": "german_credit",
+        "feature": "loan_summary__kw_car",
+        "description": "purpose car",
+        "n": 1000,
+        "agreement": 1.0
+      },
+      {
+        "domain": "german_credit",
+        "feature": "loan_summary__kw_own_home",
+        "description": "owns home",
+        "n": 1000,
+        "agreement": 1.0
+      }
+    ],
+    "images": [
+      {
+        "domain": "german_credit",
+        "attachment": "profile_chart",
+        "target": "applicant age (bar height)",
+        "n": 1000,
+        "r2_stats": 0.37628217774280903,
+        "r2_cnn": 0.940133618137031,
+        "r2_both": 0.9553725983664764,
+        "r2_shuffled": 0.0004062638144837205
+      },
+      {
+        "domain": "german_credit",
+        "attachment": "profile_chart",
+        "target": "years employed, 0-4 (bar height)",
+        "n": 1000,
+        "r2_stats": 0.8441926269796652,
+        "r2_cnn": 0.9770077760206081,
+        "r2_both": 0.9896167104125633,
+        "r2_shuffled": -0.008335822397336212
+      }
+    ],
+    "estimates": [
+      {
+        "domain": "german_credit",
+        "treatment": "duration_months",
+        "ate_control": 0.00472373374942181,
+        "ate_multimodal": 0.0052370926046373945,
+        "placebo_control": true,
+        "placebo_multimodal": true
+      },
+      {
+        "domain": "german_credit",
+        "treatment": "credit_amount_kdm",
+        "ate_control": 0.015873716181788372,
+        "ate_multimodal": 0.013416142919130791,
+        "placebo_control": true,
+        "placebo_multimodal": true
+      },
+      {
+        "domain": "german_credit",
+        "treatment": "installment_rate",
+        "ate_control": 0.04262925694217867,
+        "ate_multimodal": 0.03642499632495386,
+        "placebo_control": true,
+        "placebo_multimodal": true
+      }
+    ],
+    "fairness_control": 0.6860010402419525,
+    "fairness_multimodal": 0.6860010402419525,
+    "top_control": "lower_installment_burden",
+    "top_multimodal": "lower_installment_burden",
+    "missing_files": 0
+  }
+]

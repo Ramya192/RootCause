@@ -26,8 +26,9 @@ def test_extra_contains_every_stage_section(domain_config: dict):
         "explanation",
     }
     assert expected_sections.issubset(domain_config.keys())
-    # "domain" is consumed into DomainConfig's own fields, not left in extra
-    assert "domain" not in domain_config
+    # "domain" is also kept in extra: stages only receive extra, and need the
+    # domain id/name (per-domain Feast paths, domain wording in prompts)
+    assert domain_config["domain"]["id"] == "employee_attrition"
 
 
 def test_unknown_domain_raises_keyerror(config_loader: ConfigLoader):
@@ -63,3 +64,37 @@ def test_missing_domain_section_raises(tmp_path):
     bad_yaml.write_text("ingestion:\n  file_type: csv\n", encoding="utf-8")
     with pytest.raises(ValueError, match="missing required top-level 'domain' section"):
         ConfigLoader(configs_dir=tmp_path)
+
+
+def _write_domain(tmp_path, ingestion_yaml: str):
+    (tmp_path / "d.yaml").write_text(
+        "domain:\n  id: d\n  name: D\ningestion:\n  file_type: csv\n" + ingestion_yaml,
+        encoding="utf-8",
+    )
+
+
+def test_datasets_are_required(tmp_path):
+    _write_domain(tmp_path, "  id_column: id\n")
+    with pytest.raises(ValueError, match="ingestion.datasets must map"):
+        ConfigLoader(configs_dir=tmp_path)
+
+
+def test_unknown_dataset_kind_rejected(tmp_path):
+    _write_domain(tmp_path, "  datasets:\n    made_up: x.csv\n  default_dataset: made_up\n")
+    with pytest.raises(ValueError, match=r"unknown dataset kind\(s\) \['made_up'\]"):
+        ConfigLoader(configs_dir=tmp_path)
+
+
+def test_default_dataset_must_be_configured(tmp_path):
+    _write_domain(tmp_path, "  datasets:\n    real: x.csv\n  default_dataset: synthetic\n")
+    with pytest.raises(ValueError, match="default_dataset='synthetic' is not one of"):
+        ConfigLoader(configs_dir=tmp_path)
+
+
+def test_all_three_dataset_kinds_accepted(tmp_path):
+    _write_domain(
+        tmp_path,
+        "  datasets:\n    real: a.csv\n    synthetic: b.csv\n    semi_synthetic: c.csv\n  default_dataset: real\n",
+    )
+    domain = ConfigLoader(configs_dir=tmp_path).get_domain("d")
+    assert set(domain.extra["ingestion"]["datasets"]) == {"real", "synthetic", "semi_synthetic"}

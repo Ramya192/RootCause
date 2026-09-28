@@ -7,11 +7,18 @@ domain:
     drive employees to leave, and which interventions reduce it.
   status: working
   input_type: tabular
+  entity_noun: employee
+  entity_noun_plural: employees
+  outcome_label: attrition
 
 # --- Stage 1: Ingestion ---
 ingestion:
   file_type: csv
-  data_path: data/employee_attrition/attrition.csv  # relative to the repo root
+  # One schema, several data sources: only the file differs. Paths are relative
+  # to the repo root; keys are real | synthetic | semi_synthetic.
+  datasets:
+    synthetic: data/employee_attrition/attrition.csv
+  default_dataset: synthetic
   id_column: employee_id
   outcome_column: attrition
 
@@ -65,7 +72,11 @@ effect_estimation:
     - name: workload
       confounders: []
   estimator: backdoor.linear_regression
-  refutation: placebo_treatment_refuter
+  # Permutation placebo test: shuffle the treatment, re-estimate, compare. Passed
+  # = the real estimate is distinguishable from that null at `refutation_alpha`.
+  refutation: permutation_placebo
+  refutation_simulations: 100
+  refutation_alpha: 0.05
 
 # --- Stage 5: Counterfactuals ---
 counterfactuals:

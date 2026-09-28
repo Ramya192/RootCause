@@ -1,0 +1,25 @@
+digraph causal_graph {
+  rankdir=TB;
+  node [shape=box, style="rounded,filled", fontname="Helvetica"];
+  "male" [fillcolor="#F58518"];
+  "age50" [fillcolor="#BAB0AC"];
+  "age37_49" [fillcolor="#BAB0AC"];
+  "white" [fillcolor="#BAB0AC"];
+  "sickleave_0815_0716" [fillcolor="#BAB0AC"];
+  "gym_0815_0716" [fillcolor="#BAB0AC"];
+  "prod_index_yr0" [fillcolor="#BAB0AC"];
+  "treat" [fillcolor="#4C78A8"];
+  "terminated_0119" [fillcolor="#E45756"];
+  "male" -> "gym_0815_0716";
+  "male" -> "prod_index_yr0";
+  "male" -> "sickleave_0815_0716";
+  "age50" -> "prod_index_yr0";
+  "age37_49" -> "terminated_0119";
+  "white" -> "gym_0815_0716";
+  "white" -> "terminated_0119";
+  "sickleave_0815_0716" -> "gym_0815_0716";
+  "sickleave_0815_0716" -> "prod_index_yr0";
+  "sickleave_0815_0716" -> "terminated_0119";
+  "prod_index_yr0" -> "gym_0815_0716";
+  "prod_index_yr0" -> "terminated_0119";
+}

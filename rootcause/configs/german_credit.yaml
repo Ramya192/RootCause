@@ -1,0 +1,312 @@
+domain:
+  id: german_credit
+  name: Consumer Credit Default (German Credit)
+  description: >-
+    Which loan terms are associated with default, and does the population the bank lends to
+    show a disparity by age? Real data are 1,000 loan applicants at a German bank (Statlog
+    German Credit, Hofmann 1994): OBSERVATIONAL, with no ground truth, so the pipeline's
+    numbers on it are plausibility and stability checks, not validated effects. A
+    semi-synthetic version keeps the real applicants and simulates only the default outcome
+    with planted lever effects, so the method can be scored where the answer is known.
+  status: working
+  input_type: tabular
+  entity_noun: applicant
+  entity_noun_plural: applicants
+  outcome_label: default
+
+# --- Stage 1: Ingestion ---
+ingestion:
+  file_type: csv
+  # real           = the 1,000 applicants (data/german_credit/credit.csv, built from the raw UCI
+  #                  file by scripts/prepare_german_credit.py)
+  # semi_synthetic = the same applicants, default re-simulated with planted lever effects
+  #                  (scripts/generate_semi_synthetic_credit_data.py)
+  # multimodal = the real applicants plus a SYNTHETIC loan-summary PDF and profile-chart image per
+  #              applicant, rendered from application covariates only (never `default`, and never a
+  #              lever: term, amount, installment rate) by scripts/generate_attachments.py. Shows the
+  #              ingestion path works.
+  datasets:
+    real: data/german_credit/credit.csv
+    semi_synthetic: data/german_credit/credit_semi_synthetic.csv
+    multimodal: data/german_credit/credit.csv
+  default_dataset: real
+  attachments:
+    multimodal:
+      - name: loan_summary
+        kind: pdf
+        directory: data/german_credit/attachments/summaries
+        pattern: "{id}.pdf"
+        keywords:
+          business: ["purpose: business"]
+          education: ["purpose: education"]
+          car: ["purpose: car"]
+          own_home: ["housing: own"]
+      - name: profile_chart
+        kind: image
+        directory: data/german_credit/attachments/charts
+        pattern: "{id}.jpg"
+        model: resnet18
+        embedding_dims: 8
+  id_column: applicant_id
+  outcome_column: default
+
+# --- Stage 2: Feature Store ---
+# Everything known about an applicant when the loan was decided. Nominal columns are one-hot
+# encoded (first level = reference); employment_since is ordered, so it is one ordinal column.
+# `young` (age < 25) duplicates `age` on purpose: it is the sensitive attribute Stage 6 checks,
+# and a linear `age` term cannot absorb a step at 25.
+feature_store:
+  entity: applicant
+  entity_id_column: applicant_id
+  feature_columns:
+    - duration_months
+    - credit_amount_kdm
+    - installment_rate
+    - residence_since
+    - age
+    - young
+    - n_existing_credits
+    - n_dependents
+    - telephone
+    - foreign_worker
+    - female
+  categorical_columns:
+    - {name: employment_since, encoding: ordinal, order: [unemployed, lt_1y, 1_to_4y, 4_to_7y, ge_7y]}
+    - {name: checking_status, encoding: onehot, levels: [none, lt_0, 0_to_200, ge_200]}
+    - name: credit_history
+      encoding: onehot
+      levels: [existing_paid, no_credits_or_all_paid, all_paid_this_bank, past_delay, critical_or_other_credits]
+    - {name: purpose, encoding: onehot, levels: [radio_tv, car_new, car_used, furniture, education, business, other]}
+    - {name: savings, encoding: onehot, levels: [lt_100, 100_to_500, 500_to_1000, ge_1000, unknown]}
+    - {name: other_debtors, encoding: onehot, levels: [none, co_applicant, guarantor]}
+    - {name: property, encoding: onehot, levels: [real_estate, savings_or_insurance, car_or_other, unknown]}
+    - {name: other_plans, encoding: onehot, levels: [none, bank, stores]}
+    - {name: housing, encoding: onehot, levels: [own, rent, free]}
+    - {name: job, encoding: onehot, levels: [skilled, unskilled_nonresident, unskilled_resident, management]}
+
+# --- Stage 3: Causal Discovery ---
+# A compact numeric subset: 40 columns over 1,000 rows would give PC little power, and there is no
+# known graph to score it against on this data. The forbidden edges are timing/design knowledge,
+# not findings: the outcome is observed last, and nothing here causes age, sex or foreign-worker
+# status. On the real data the graph is descriptive only.
+causal_discovery:
+  algorithm: pc
+  alpha: 0.05
+  variables:
+    - age
+    - female
+    - foreign_worker
+    - employment_since
+    - checking_status__lt_0
+    - duration_months
+    - credit_amount_kdm
+    - installment_rate
+    - default
+  forbidden_edges:
+    # the outcome is last
+    - [default, age]
+    - [default, female]
+    - [default, foreign_worker]
+    - [default, employment_since]
+    - [default, checking_status__lt_0]
+    - [default, duration_months]
+    - [default, credit_amount_kdm]
+    - [default, installment_rate]
+    # nothing causes age, sex or foreign-worker status, and they do not cause each other
+    - [female, age]
+    - [foreign_worker, age]
+    - [employment_since, age]
+    - [checking_status__lt_0, age]
+    - [duration_months, age]
+    - [credit_amount_kdm, age]
+    - [installment_rate, age]
+    - [age, female]
+    - [foreign_worker, female]
+    - [employment_since, female]
+    - [checking_status__lt_0, female]
+    - [duration_months, female]
+    - [credit_amount_kdm, female]
+    - [installment_rate, female]
+    - [age, foreign_worker]
+    - [female, foreign_worker]
+    - [employment_since, foreign_worker]
+    - [checking_status__lt_0, foreign_worker]
+    - [duration_months, foreign_worker]
+    - [credit_amount_kdm, foreign_worker]
+    - [installment_rate, foreign_worker]
+
+# --- Stage 4: Effect Estimation ---
+# The three lending levers. Each is adjusted for every other applicant column, INCLUDING the other
+# two levers, so the estimate is the effect of moving one lever with the others held fixed (the
+# quantity Stage 6 multiplies by a shift). On real data this is an association adjusted for what
+# is measured: unmeasured drivers of both loan terms and default (the applicant's finances, the
+# officer's judgement) are not blocked, and the placebo test cannot see them.
+effect_estimation:
+  outcome: default
+  treatments:
+    - name: duration_months
+      confounders:
+        - credit_amount_kdm
+        - installment_rate
+        - residence_since
+        - age
+        - young
+        - n_existing_credits
+        - n_dependents
+        - telephone
+        - foreign_worker
+        - female
+        - employment_since
+        - checking_status__lt_0
+        - checking_status__0_to_200
+        - checking_status__ge_200
+        - credit_history__no_credits_or_all_paid
+        - credit_history__all_paid_this_bank
+        - credit_history__past_delay
+        - credit_history__critical_or_other_credits
+        - purpose__car_new
+        - purpose__car_used
+        - purpose__furniture
+        - purpose__education
+        - purpose__business
+        - purpose__other
+        - savings__100_to_500
+        - savings__500_to_1000
+        - savings__ge_1000
+        - savings__unknown
+        - other_debtors__co_applicant
+        - other_debtors__guarantor
+        - property__savings_or_insurance
+        - property__car_or_other
+        - property__unknown
+        - other_plans__bank
+        - other_plans__stores
+        - housing__rent
+        - housing__free
+        - job__unskilled_nonresident
+        - job__unskilled_resident
+        - job__management
+    - name: credit_amount_kdm
+      confounders:
+        - duration_months
+        - installment_rate
+        - residence_since
+        - age
+        - young
+        - n_existing_credits
+        - n_dependents
+        - telephone
+        - foreign_worker
+        - female
+        - employment_since
+        - checking_status__lt_0
+        - checking_status__0_to_200
+        - checking_status__ge_200
+        - credit_history__no_credits_or_all_paid
+        - credit_history__all_paid_this_bank
+        - credit_history__past_delay
+        - credit_history__critical_or_other_credits
+        - purpose__car_new
+        - purpose__car_used
+        - purpose__furniture
+        - purpose__education
+        - purpose__business
+        - purpose__other
+        - savings__100_to_500
+        - savings__500_to_1000
+        - savings__ge_1000
+        - savings__unknown
+        - other_debtors__co_applicant
+        - other_debtors__guarantor
+        - property__savings_or_insurance
+        - property__car_or_other
+        - property__unknown
+        - other_plans__bank
+        - other_plans__stores
+        - housing__rent
+        - housing__free
+        - job__unskilled_nonresident
+        - job__unskilled_resident
+        - job__management
+    - name: installment_rate
+      confounders:
+        - duration_months
+        - credit_amount_kdm
+        - residence_since
+        - age
+        - young
+        - n_existing_credits
+        - n_dependents
+        - telephone
+        - foreign_worker
+        - female
+        - employment_since
+        - checking_status__lt_0
+        - checking_status__0_to_200
+        - checking_status__ge_200
+        - credit_history__no_credits_or_all_paid
+        - credit_history__all_paid_this_bank
+        - credit_history__past_delay
+        - credit_history__critical_or_other_credits
+        - purpose__car_new
+        - purpose__car_used
+        - purpose__furniture
+        - purpose__education
+        - purpose__business
+        - purpose__other
+        - savings__100_to_500
+        - savings__500_to_1000
+        - savings__ge_1000
+        - savings__unknown
+        - other_debtors__co_applicant
+        - other_debtors__guarantor
+        - property__savings_or_insurance
+        - property__car_or_other
+        - property__unknown
+        - other_plans__bank
+        - other_plans__stores
+        - housing__rent
+        - housing__free
+        - job__unskilled_nonresident
+        - job__unskilled_resident
+        - job__management
+  adjust_for_attachments: true  # PDF/image feature columns (multimodal dataset only) join the adjustment set
+  estimator: backdoor.linear_regression
+  refutation: permutation_placebo
+  refutation_simulations: 100
+  refutation_alpha: 0.05
+
+# --- Stage 5: Counterfactuals ---
+counterfactuals:
+  meta_learner: t_learner
+  treatment: duration_months
+  outcome: default
+  treatment_threshold: 24  # >= 24 months = the "long loan" arm (about 40% of applicants)
+
+# --- Stage 6: Interventions ---
+# The sensitive attribute is age under 25 (149 applicants, default rate 41% vs 28%: ratio 0.69,
+# below the 0.8 threshold). Other attributes one might check on this data, from the real file:
+# female 0.79 (borderline), foreign_worker 0.35 (only 37 non-foreign applicants, so unstable).
+# Costs are ILLUSTRATIVE round numbers in DM per application, not from the dataset: the ranking
+# tests whether the effect estimates reproduce the order those costs imply, and is not lending advice.
+interventions:
+  sensitive_attribute: young
+  fairness_threshold: 0.8
+  candidates:
+    - id: shorten_loan_term
+      target_variable: duration_months
+      expected_shift: -6.0
+      cost: 130
+    - id: cap_credit_amount
+      target_variable: credit_amount_kdm
+      expected_shift: -1.0
+      cost: 140
+    - id: lower_installment_burden
+      target_variable: installment_rate
+      expected_shift: -1.0
+      cost: 100
+
+# --- Stage 7: Explanation ---
+explanation:
+  llm_model: gpt-4o-mini
+  audience: credit risk manager

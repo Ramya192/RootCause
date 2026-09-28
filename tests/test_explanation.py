@@ -9,8 +9,9 @@ OpenAI client construction itself raise, without touching the network.
 from __future__ import annotations
 
 import openai
+import pytest
 
-from rootcause.pipeline import counterfactuals, explanation, interventions
+from rootcause.pipeline import counterfactuals, explanation, interventions, narrative
 
 
 def _run_explanation(feature_df, effect_estimates, raw_df, domain_config):
@@ -30,11 +31,17 @@ def test_template_narrative_when_no_api_key(
     feature_cols = domain_config["feature_store"]["feature_columns"]
     assert set(result.shap_summary.keys()) == set(feature_cols)
     assert all(v >= 0 for v in result.shap_summary.values())  # mean |SHAP|
+    assert result.narrative_tier == "template"
+    assert [(a.tier, a.outcome) for a in result.narrative_log] == [
+        ("autogen", "skipped"), ("llm", "skipped"), ("template", "used")
+    ]
 
 
 def test_llm_failure_falls_back_to_template(
     monkeypatch, feature_df, effect_estimates, raw_df, domain_config
 ):
+    pytest.importorskip("autogen_agentchat")  # tier 1 only errors (rather than "skipped") if AutoGen is installed
+    pytest.importorskip("autogen_ext.models.openai")
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test-fake-does-not-hit-network")
 
     class _RaisingClient:
@@ -42,6 +49,10 @@ def test_llm_failure_falls_back_to_template(
             raise RuntimeError("simulated OpenAI client failure")
 
     monkeypatch.setattr(openai, "OpenAI", _RaisingClient)
+    # tier 1 builds its own client; make that fail too so nothing reaches the network
+    monkeypatch.setattr(narrative, "_make_autogen_client", lambda *a, **k: _RaisingClient())
 
     result = _run_explanation(feature_df, effect_estimates, raw_df, domain_config)
     assert result.narrative.startswith("Top-line drivers of attrition")
+    assert result.narrative_tier == "template"
+    assert [a.outcome for a in result.narrative_log] == ["error", "error", "used"]

@@ -29,6 +29,28 @@ class CausalGraph(BaseModel):
     algorithm: str
 
 
+class SensitivityResult(BaseModel):
+    """How strong an unmeasured confounder must be to explain an estimate away
+    (Cinelli & Hazlett 2020; see pipeline/sensitivity.py). Shares are partial R^2:
+    the fraction of RESIDUAL variance a confounder explains."""
+
+    estimate: float
+    alpha: float
+    partial_r2_treatment_outcome: float
+    # Confounder strength (in BOTH treatment and outcome) that would reduce the estimate to
+    # zero, and that would make it statistically insignificant at `alpha`.
+    robustness_value: float
+    robustness_value_alpha: float
+    # Worst-case benchmark: the observed covariate that would bias the estimate most if an
+    # unobserved confounder were as strong as it. None if there are no covariates.
+    benchmark_covariate: Optional[str] = None
+    benchmark_r2_treatment: Optional[float] = None
+    benchmark_r2_outcome: Optional[float] = None
+    benchmark_bias: Optional[float] = None
+    benchmark_adjusted_estimate: Optional[float] = None
+    robust_to_benchmark: Optional[bool] = None
+
+
 class EffectEstimate(BaseModel):
     """One treatment->outcome estimate, output of Stage 4."""
 
@@ -38,6 +60,23 @@ class EffectEstimate(BaseModel):
     estimator: str
     refuter: Optional[str] = None
     refutation_passed: Optional[bool] = None
+    # Permutation p-value behind `refutation_passed` (see pipeline/effect_estimation.py)
+    refutation_p_value: Optional[float] = None
+    # Omitted-variable-bias sensitivity (linear-regression estimator only; None otherwise)
+    sensitivity: Optional[SensitivityResult] = None
+
+
+class SubgroupEffect(BaseModel):
+    """Mean estimated effect within one level of a subgroup variable (Stage 5)."""
+
+    variable: str
+    level: str  # "0" / "1" for a binary variable
+    n: int
+    mean_cate: float
+
+    @property
+    def key(self) -> str:
+        return f"{self.variable}={self.level}"
 
 
 class CounterfactualResult(BaseModel):
@@ -48,6 +87,13 @@ class CounterfactualResult(BaseModel):
     meta_learner: str
     mean_cate: float
     description: str
+    # Spread of the per-unit effects, and mean effects within the subgroups the domain
+    # config lists under `counterfactuals.subgroups` (empty if it lists none).
+    cate_std: Optional[float] = None
+    subgroups: list[SubgroupEffect] = Field(default_factory=list)
+    # X/R/DR-learners only: share of units whose propensity score was below 0.05 or above 0.95
+    # (treatment nearly determined by the covariates: no overlap, so the estimate is unreliable)
+    extreme_propensity_share: Optional[float] = None
 
 
 class InterventionRecommendation(BaseModel):
@@ -63,11 +109,22 @@ class InterventionRecommendation(BaseModel):
     rank: int
 
 
+class NarrativeAttempt(BaseModel):
+    """What happened to one narrative tier in Stage 7 (see pipeline/narrative.py)."""
+
+    tier: str  # autogen | llm | template
+    outcome: str  # used | rejected | skipped | error
+    detail: str = ""
+
+
 class Explanation(BaseModel):
     """Output of Stage 7."""
 
     narrative: str
     shap_summary: dict[str, float] = Field(default_factory=dict)
+    # Which tier wrote `narrative`, and why each tier tried before it was passed over
+    narrative_tier: str = "template"
+    narrative_log: list[NarrativeAttempt] = Field(default_factory=list)
 
 
 class PipelineResult(BaseModel):

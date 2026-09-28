@@ -1,0 +1,229 @@
+domain:
+  id: freddie_mac
+  name: Mortgage Default (Freddie Mac)
+  description: >-
+    Which loan terms are associated with a mortgage going seriously delinquent within three
+    years, and does the population show a disparity for first-time homebuyers? Real data are
+    50,000-loan random samples of fixed-rate loans that Freddie Mac bought, one sample per
+    origination year (2007, 2008, 2010, 2011; Freddie Mac Single-Family Loan-Level Dataset). The
+    data are OBSERVATIONAL with no ground truth: lenders set the rate and the terms from the
+    borrower's risk, so the levers are confounded by things this file does not record, and the
+    pipeline's numbers are plausibility and stability checks, not validated effects. The outcome
+    is measured among loans that stayed on the books for 36 months (loans that were paid off
+    earlier are excluded), so it is not a lifetime default probability.
+  status: working
+  input_type: tabular
+  entity_noun: loan
+  entity_noun_plural: loans
+  outcome_label: serious delinquency within 36 months
+
+# --- Stage 1: Ingestion ---
+ingestion:
+  file_type: csv
+  # One dataset kind per origination year: the vintages are different populations (2007-08 are
+  # crisis-era loans with 12-16% defaults, 2010-11 a calm, refinance-heavy period with about 2%),
+  # so pooling them would make the vintage a confounder of every lever. Each file is built from
+  # the raw Freddie Mac sample by scripts/prepare_freddie_mac.py and is gitignored, together
+  # with the raw files (a registered download; see data/freddie_mac/README.md).
+  datasets:
+    real_2007: data/freddie_mac/loans_2007.csv
+    real_2008: data/freddie_mac/loans_2008.csv
+    real_2010: data/freddie_mac/loans_2010.csv
+    real_2011: data/freddie_mac/loans_2011.csv
+  default_dataset: real_2007  # the most defaults, so the most stable estimates
+  id_column: loan_id
+  outcome_column: default
+
+# --- Stage 2: Feature Store ---
+# Everything known about the loan when it was made. Nominal columns are one-hot with the first
+# level as reference. `dti` is filled with the vintage median where it is not disclosed and
+# `dti_missing` marks those loans (in 2010-11 that is essentially the relief-refinance program).
+# `channel: tpo_unspecified` exists only in 2007-08, so it is an all-zero column in 2010-11.
+feature_store:
+  entity: loan
+  entity_id_column: loan_id
+  feature_columns:
+    - credit_score
+    - ltv
+    - dti
+    - dti_missing
+    - interest_rate
+    - orig_upb_100k
+    - term_years
+    - mi_pct
+    - n_units
+    - two_plus_borrowers
+    - first_time_buyer
+  categorical_columns:
+    - {name: orig_quarter, encoding: onehot, levels: [q1, q2, q3, q4]}
+    - {name: occupancy, encoding: onehot, levels: [primary, investment, second_home]}
+    - {name: channel, encoding: onehot, levels: [retail, broker, correspondent, tpo_unspecified]}
+    - {name: purpose, encoding: onehot, levels: [purchase, refi_cash_out, refi_no_cash_out]}
+    - {name: property_type, encoding: onehot, levels: [single_family, condo, pud, manufactured, coop]}
+
+# --- Stage 3: Causal Discovery ---
+# A compact numeric subset. There is no known graph to score it against, so on this data the graph
+# is descriptive only. The forbidden edges are timing knowledge, not findings: the outcome is
+# observed three years later, and the borrower's credit score and first-time-buyer status exist
+# before the loan terms are set.
+causal_discovery:
+  algorithm: pc
+  alpha: 0.05
+  variables:
+    - credit_score
+    - first_time_buyer
+    - orig_upb_100k
+    - ltv
+    - dti
+    - mi_pct
+    - interest_rate
+    - default
+  forbidden_edges:
+    # the outcome is last
+    - [default, credit_score]
+    - [default, first_time_buyer]
+    - [default, orig_upb_100k]
+    - [default, ltv]
+    - [default, dti]
+    - [default, mi_pct]
+    - [default, interest_rate]
+    # borrower characteristics precede the loan terms
+    - [orig_upb_100k, credit_score]
+    - [ltv, credit_score]
+    - [dti, credit_score]
+    - [mi_pct, credit_score]
+    - [interest_rate, credit_score]
+    - [orig_upb_100k, first_time_buyer]
+    - [ltv, first_time_buyer]
+    - [dti, first_time_buyer]
+    - [mi_pct, first_time_buyer]
+    - [interest_rate, first_time_buyer]
+
+# --- Stage 4: Effect Estimation ---
+# The three levers a lender controls: the rate, the loan-to-value ratio and the debt-to-income
+# ratio. Each is adjusted for every other encoded column, INCLUDING the other two levers, so the
+# estimate is the effect of moving one lever with the others held fixed (the quantity Stage 6
+# multiplies by a shift). This is an association adjusted for what is measured: how the lender
+# priced the loan (points, pricing adjustments, the underwriter's judgement, the borrower's
+# finances beyond score/LTV/DTI) is not recorded, and the placebo test cannot see it.
+effect_estimation:
+  outcome: default
+  treatments:
+    - name: interest_rate
+      confounders:
+        - credit_score
+        - ltv
+        - dti
+        - dti_missing
+        - orig_upb_100k
+        - term_years
+        - mi_pct
+        - n_units
+        - two_plus_borrowers
+        - first_time_buyer
+        - orig_quarter__q2
+        - orig_quarter__q3
+        - orig_quarter__q4
+        - occupancy__investment
+        - occupancy__second_home
+        - channel__broker
+        - channel__correspondent
+        - channel__tpo_unspecified
+        - purpose__refi_cash_out
+        - purpose__refi_no_cash_out
+        - property_type__condo
+        - property_type__pud
+        - property_type__manufactured
+        - property_type__coop
+    - name: ltv
+      confounders:
+        - credit_score
+        - dti
+        - dti_missing
+        - interest_rate
+        - orig_upb_100k
+        - term_years
+        - mi_pct
+        - n_units
+        - two_plus_borrowers
+        - first_time_buyer
+        - orig_quarter__q2
+        - orig_quarter__q3
+        - orig_quarter__q4
+        - occupancy__investment
+        - occupancy__second_home
+        - channel__broker
+        - channel__correspondent
+        - channel__tpo_unspecified
+        - purpose__refi_cash_out
+        - purpose__refi_no_cash_out
+        - property_type__condo
+        - property_type__pud
+        - property_type__manufactured
+        - property_type__coop
+    - name: dti
+      confounders:
+        - credit_score
+        - ltv
+        - dti_missing
+        - interest_rate
+        - orig_upb_100k
+        - term_years
+        - mi_pct
+        - n_units
+        - two_plus_borrowers
+        - first_time_buyer
+        - orig_quarter__q2
+        - orig_quarter__q3
+        - orig_quarter__q4
+        - occupancy__investment
+        - occupancy__second_home
+        - channel__broker
+        - channel__correspondent
+        - channel__tpo_unspecified
+        - purpose__refi_cash_out
+        - purpose__refi_no_cash_out
+        - property_type__condo
+        - property_type__pud
+        - property_type__manufactured
+        - property_type__coop
+  estimator: backdoor.linear_regression
+  refutation: permutation_placebo
+  refutation_simulations: 100
+  refutation_alpha: 0.05
+
+# --- Stage 5: Counterfactuals ---
+counterfactuals:
+  meta_learner: t_learner
+  treatment: ltv
+  outcome: default
+  treatment_threshold: 80  # >= 80 = the "high LTV" arm (34-49% of loans, depending on the vintage)
+
+# --- Stage 6: Interventions ---
+# The sensitive attribute is first-time-homebuyer status. It is NOT a legally protected class and
+# this file has no race, sex or age, so the flag says only that default rates differ between
+# first-time and repeat buyers (ratio 0.68 in 2010, 0.95-0.99 in the other vintages), never that
+# anyone was treated unfairly. Costs are ILLUSTRATIVE round numbers in dollars per loan, not from
+# the dataset: the ranking tests whether the effect estimates reproduce the order those costs
+# imply, and is not lending advice.
+interventions:
+  sensitive_attribute: first_time_buyer
+  fairness_threshold: 0.8
+  candidates:
+    - id: lower_interest_rate
+      target_variable: interest_rate
+      expected_shift: -0.5
+      cost: 1500
+    - id: cap_ltv
+      target_variable: ltv
+      expected_shift: -10.0
+      cost: 400
+    - id: cap_dti
+      target_variable: dti
+      expected_shift: -5.0
+      cost: 300
+
+# --- Stage 7: Explanation ---
+explanation:
+  llm_model: gpt-4o-mini
+  audience: mortgage credit risk manager

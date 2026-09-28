@@ -1,0 +1,30 @@
+digraph causal_graph {
+  rankdir=TB;
+  node [shape=box, style="rounded,filled", fontname="Helvetica"];
+  "female" [fillcolor="#F58518"];
+  "policyholder_age_group" [fillcolor="#BAB0AC"];
+  "base_policy__liability" [fillcolor="#BAB0AC"];
+  "vehicle_price" [fillcolor="#BAB0AC"];
+  "fault_policy_holder" [fillcolor="#BAB0AC"];
+  "deductible_100usd" [fillcolor="#4C78A8"];
+  "agent_internal" [fillcolor="#4C78A8"];
+  "police_report_filed" [fillcolor="#4C78A8"];
+  "fraud_found" [fillcolor="#E45756"];
+  "female" -> "base_policy__liability";
+  "female" -> "vehicle_price";
+  "policyholder_age_group" -> "deductible_100usd";
+  "policyholder_age_group" -> "fraud_found";
+  "policyholder_age_group" -> "vehicle_price";
+  "base_policy__liability" -> "fraud_found";
+  "vehicle_price" -> "fraud_found";
+  "fault_policy_holder" -> "base_policy__liability";
+  "fault_policy_holder" -> "fraud_found";
+  "fault_policy_holder" -> "police_report_filed";
+  "fault_policy_holder" -> "vehicle_price";
+  "deductible_100usd" -> "base_policy__liability";
+  "deductible_100usd" -> "fraud_found";
+  "agent_internal" -> "base_policy__liability";
+  "agent_internal" -> "police_report_filed";
+  "agent_internal" -> "vehicle_price";
+  "police_report_filed" -> "base_policy__liability";
+}

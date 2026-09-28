@@ -1,0 +1,16 @@
+digraph causal_graph {
+  rankdir=TB;
+  node [shape=box, style="rounded,filled", fontname="Helvetica"];
+  "compensation" [fillcolor="#4C78A8"];
+  "manager_quality" [fillcolor="#4C78A8"];
+  "workload" [fillcolor="#4C78A8"];
+  "job_satisfaction" [fillcolor="#BAB0AC"];
+  "burnout" [fillcolor="#BAB0AC"];
+  "attrition" [fillcolor="#E45756"];
+  "compensation" -> "job_satisfaction";
+  "manager_quality" -> "burnout";
+  "manager_quality" -> "job_satisfaction";
+  "workload" -> "burnout";
+  "job_satisfaction" -> "attrition" [style=dashed];
+  "burnout" -> "attrition" [style=dashed];
+}

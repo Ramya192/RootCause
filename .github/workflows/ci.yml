@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# One run per branch/PR at a time; a newer push cancels the older run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      # Python 3.11 is required (causal-learn / DoWhy / CausalML wheel support lags on newer versions).
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential libgomp1
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+          # AutoGen last, then protobuf back to 6.x (see requirements-autogen.txt); otherwise
+          # tests/test_narrative.py is skipped whole
+          pip install -r requirements-autogen.txt
+          pip install --no-deps "protobuf>=6.33.5,<7"
+
+      # No secrets: the suite never calls OpenAI (LLM tiers run against replay clients and stubs).
+      # Tests that need optional pieces skip themselves: the CNN tests without torch/weights, and the
+      # Freddie Mac real-file tests without the registered download (data/freddie_mac is gitignored;
+      # its rule tests run on a small fake file).
+      - name: Run tests
+        run: python -m pytest -q -p no:cacheprovider
+
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build the API image (not pushed)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

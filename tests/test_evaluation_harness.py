@@ -129,6 +129,22 @@ def test_filters_select_only_the_requested_domain_and_dataset(monkeypatch, tmp_p
     assert all(s.skipped_reason for s in only)
 
 
+def test_a_twin_whose_source_download_is_absent_is_skipped_not_a_crash(monkeypatch, tmp_path, config_loader):
+    from rootcause.evaluation import scms
+
+    monkeypatch.setattr(runner, "REPO_ROOT", tmp_path)
+    monkeypatch.setattr(scms, "FREDDIE_DATA_PATH", tmp_path / "loans_2007.csv")
+    scms._real_freddie_loans.cache_clear()
+    try:
+        (scenario,) = harness.run_evaluation(
+            domains=["freddie_mac"], datasets=["semi_synthetic"], replicates=2, loader=config_loader
+        )
+    finally:
+        scms._real_freddie_loans.cache_clear()
+    assert scenario.skipped_reason and "not found" in scenario.skipped_reason
+    assert not scenario.runs
+
+
 def test_replicates_are_fresh_draws_scored_against_the_scm(
     monkeypatch, tmp_path, config_loader, isolated_feast_root
 ):

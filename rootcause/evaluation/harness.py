@@ -288,7 +288,10 @@ def evaluate_dataset(
     is re-drawn at its own size), or DEFAULT_N_ROWS if that file is absent."""
     cfg = runner.with_dataset(domain_config, EVAL_DATASET_PREFIX + dataset)
     factory = SCM_REGISTRY.get((domain_id, dataset))
-    scm = factory() if factory else None
+    try:
+        scm = factory() if factory else None
+    except FileNotFoundError as exc:  # a twin built from a registered download that is not here
+        return [ScenarioResult(domain_id, dataset, "committed file", False, skipped_reason=str(exc))]
     truth = compute_truth(scm, domain_config) if scm else None
     scenarios: list[ScenarioResult] = []
 

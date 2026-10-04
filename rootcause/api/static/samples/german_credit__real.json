@@ -1,0 +1,259 @@
+{
+ "meta": {
+  "domain_id": "german_credit",
+  "domain_name": "Consumer Credit Default (German Credit)",
+  "description": "Which loan terms are associated with default, and does the population the bank lends to show a disparity by age? Real data are 1,000 loan applicants at a German bank (Statlog German Credit, Hofmann 1994): OBSERVATIONAL, with no ground truth, so the pipeline's numbers on it are plausibility and stability checks, not validated effects. A semi-synthetic version keeps the real applicants and simulates only the default outcome with planted lever effects, so the method can be scored where the answer is known.",
+  "dataset": "real",
+  "label": "Real credit data",
+  "n_rows": 1000,
+  "outcome": "default",
+  "treatments": [
+   "duration_months",
+   "credit_amount_kdm",
+   "installment_rate"
+  ],
+  "sensitive_attribute": "young",
+  "observational": true,
+  "entity_noun_plural": "applicants",
+  "built": "2026-10-04"
+ },
+ "result": {
+  "domain_id": "german_credit",
+  "causal_graph": {
+   "nodes": [
+    "age",
+    "female",
+    "foreign_worker",
+    "employment_since",
+    "checking_status__lt_0",
+    "duration_months",
+    "credit_amount_kdm",
+    "installment_rate",
+    "default"
+   ],
+   "edges": [
+    [
+     "age",
+     "employment_since"
+    ],
+    [
+     "checking_status__lt_0",
+     "default"
+    ],
+    [
+     "duration_months",
+     "credit_amount_kdm"
+    ],
+    [
+     "duration_months",
+     "default"
+    ],
+    [
+     "employment_since",
+     "default"
+    ],
+    [
+     "female",
+     "employment_since"
+    ],
+    [
+     "female",
+     "installment_rate"
+    ],
+    [
+     "foreign_worker",
+     "duration_months"
+    ],
+    [
+     "foreign_worker",
+     "installment_rate"
+    ],
+    [
+     "installment_rate",
+     "credit_amount_kdm"
+    ],
+    [
+     "installment_rate",
+     "employment_since"
+    ]
+   ],
+   "algorithm": "pc"
+  },
+  "effect_estimates": [
+   {
+    "treatment": "duration_months",
+    "outcome": "default",
+    "ate": 0.004723733749421782,
+    "estimator": "backdoor.linear_regression",
+    "refuter": "permutation_placebo",
+    "refutation_passed": true,
+    "refutation_p_value": 0.009900990099009901,
+    "sensitivity": {
+     "estimate": 0.004723733749421848,
+     "alpha": 0.05,
+     "partial_r2_treatment_outcome": 0.010278792387114816,
+     "robustness_value": 0.09684892626810139,
+     "robustness_value_alpha": 0.037739664022460255,
+     "benchmark_covariate": "credit_amount_kdm",
+     "benchmark_r2_treatment": 0.6102902400590102,
+     "benchmark_r2_outcome": 0.021797179228804586,
+     "benchmark_bias": 0.008563839526408075,
+     "benchmark_adjusted_estimate": -0.003840105776986227,
+     "robust_to_benchmark": false
+    }
+   },
+   {
+    "treatment": "credit_amount_kdm",
+    "outcome": "default",
+    "ate": 0.015873716181788344,
+    "estimator": "backdoor.linear_regression",
+    "refuter": "permutation_placebo",
+    "refutation_passed": true,
+    "refutation_p_value": 0.009900990099009901,
+    "sensitivity": {
+     "estimate": 0.015873716181788525,
+     "alpha": 0.05,
+     "partial_r2_treatment_outcome": 0.0052475001084628875,
+     "robustness_value": 0.07004073133332062,
+     "robustness_value_alpha": 0.009151414015634112,
+     "benchmark_covariate": "duration_months",
+     "benchmark_r2_treatment": 0.6102902400590157,
+     "benchmark_r2_outcome": 0.04291331811446681,
+     "benchmark_bias": 0.0566569930563343,
+     "benchmark_adjusted_estimate": -0.040783276874545776,
+     "robust_to_benchmark": false
+    }
+   },
+   {
+    "treatment": "installment_rate",
+    "outcome": "default",
+    "ate": 0.04262925694217873,
+    "estimator": "backdoor.linear_regression",
+    "refuter": "permutation_placebo",
+    "refutation_passed": true,
+    "refutation_p_value": 0.009900990099009901,
+    "sensitivity": {
+     "estimate": 0.04262925694217864,
+     "alpha": 0.05,
+     "partial_r2_treatment_outcome": 0.010820236944141273,
+     "robustness_value": 0.09926134909903045,
+     "robustness_value_alpha": 0.04031288373794452,
+     "benchmark_covariate": "credit_amount_kdm",
+     "benchmark_r2_treatment": 0.2189345643221384,
+     "benchmark_r2_outcome": 0.008232474414558892,
+     "benchmark_bias": 0.019579682235203365,
+     "benchmark_adjusted_estimate": 0.023049574706975273,
+     "robust_to_benchmark": true
+    }
+   }
+  ],
+  "counterfactuals": [
+   {
+    "treatment": "duration_months",
+    "outcome": "default",
+    "meta_learner": "t_learner (causalml.BaseTRegressor)",
+    "mean_cate": 0.05514110587032681,
+    "description": "If applicants below the duration_months threshold were shifted to match those above it, mean predicted default would change by +0.0551",
+    "cate_std": 0.19688135170133242,
+    "subgroups": [],
+    "extreme_propensity_share": null
+   }
+  ],
+  "recommendations": [
+   {
+    "id": "lower_installment_burden",
+    "target_variable": "installment_rate",
+    "expected_effect": 0.04262925694217873,
+    "cost": 100.0,
+    "roi": 0.0004262925694217873,
+    "fairness_ratio": 0.6860010402419525,
+    "fairness_pass": false,
+    "rank": 1
+   },
+   {
+    "id": "shorten_loan_term",
+    "target_variable": "duration_months",
+    "expected_effect": 0.028342402496530694,
+    "cost": 130.0,
+    "roi": 0.0002180184807425438,
+    "fairness_ratio": 0.6860010402419525,
+    "fairness_pass": false,
+    "rank": 2
+   },
+   {
+    "id": "cap_credit_amount",
+    "target_variable": "credit_amount_kdm",
+    "expected_effect": 0.015873716181788344,
+    "cost": 140.0,
+    "roi": 0.00011338368701277388,
+    "fairness_ratio": 0.6860010402419525,
+    "fairness_pass": false,
+    "rank": 3
+   }
+  ],
+  "explanation": {
+   "narrative": "Associations with default in observational data (not proven causes), ranked by estimated effect size:\n- installment_rate: ATE=+0.0426 (backdoor.linear_regression)\n- credit_amount_kdm: ATE=+0.0159 (backdoor.linear_regression)\n- duration_months: ATE=+0.0047 (backdoor.linear_regression)\nSHAP attribution agrees 'checking_status__lt_0' carries the most predictive weight.\n- If applicants below the duration_months threshold were shifted to match those above it, mean predicted default would change by +0.0551\nRecommended action: 'lower_installment_burden' (ROI=0.000426, cost=$100) -- FAIRNESS FLAG: population-level disparity detected (group ratio 0.69)",
+   "shap_summary": {
+    "duration_months": 0.35579233198833854,
+    "credit_amount_kdm": 0.2621463498955679,
+    "installment_rate": 0.08109035867105964,
+    "residence_since": 0.03375386117212579,
+    "age": 0.1537807082611356,
+    "young": 0.0020468517280290365,
+    "n_existing_credits": 0.020210307902280934,
+    "n_dependents": 0.011979689345092609,
+    "telephone": 0.02350102633675256,
+    "foreign_worker": 0.03343972787683201,
+    "female": 0.0381612345945235,
+    "employment_since": 0.19020718860317232,
+    "checking_status__lt_0": 0.48859113869515286,
+    "checking_status__0_to_200": 0.30490254748569273,
+    "checking_status__ge_200": 0.020074533163695844,
+    "credit_history__no_credits_or_all_paid": 0.055944949820095374,
+    "credit_history__all_paid_this_bank": 0.05599648659798074,
+    "credit_history__past_delay": 0.011619623967278914,
+    "credit_history__critical_or_other_credits": 0.19850606728619677,
+    "purpose__car_new": 0.15941116509351413,
+    "purpose__car_used": 0.145513864602355,
+    "purpose__furniture": 0.018270376816507717,
+    "purpose__education": 0.05029477700984173,
+    "purpose__business": 0.019945565454572753,
+    "purpose__other": 0.00531647576555009,
+    "savings__100_to_500": 0.003093436785933998,
+    "savings__500_to_1000": 0.004602592966019806,
+    "savings__ge_1000": 0.04898757099671154,
+    "savings__unknown": 0.12577747832400168,
+    "other_debtors__co_applicant": 0.019354479848105625,
+    "other_debtors__guarantor": 0.08157289816359807,
+    "property__savings_or_insurance": 0.017308373342006213,
+    "property__car_or_other": 0.0299206867871868,
+    "property__unknown": 0.06613480906803539,
+    "other_plans__bank": 0.10093851831623561,
+    "other_plans__stores": 0.0104267769042999,
+    "housing__rent": 0.055372184859050155,
+    "housing__free": 0.006256336196401866,
+    "job__unskilled_nonresident": 0.0,
+    "job__unskilled_resident": 0.006932630431106909,
+    "job__management": 0.021045557174061563
+   },
+   "narrative_tier": "template",
+   "narrative_log": [
+    {
+     "tier": "autogen",
+     "outcome": "skipped",
+     "detail": "no OPENAI_API_KEY"
+    },
+    {
+     "tier": "llm",
+     "outcome": "skipped",
+     "detail": "no OPENAI_API_KEY"
+    },
+    {
+     "tier": "template",
+     "outcome": "used",
+     "detail": ""
+    }
+   ]
+  }
+ }
+}

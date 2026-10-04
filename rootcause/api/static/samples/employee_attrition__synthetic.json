@@ -1,0 +1,234 @@
+{
+ "meta": {
+  "domain_id": "employee_attrition",
+  "domain_name": "Employee Attrition",
+  "description": "Root-causes voluntary attrition from HR survey/HRIS data: which factors (compensation, manager quality, workload, satisfaction, burnout) actually drive employees to leave, and which interventions reduce it.",
+  "dataset": "synthetic",
+  "label": "Known-answer simulation",
+  "n_rows": 2000,
+  "outcome": "attrition",
+  "treatments": [
+   "compensation",
+   "manager_quality",
+   "workload"
+  ],
+  "sensitive_attribute": "gender",
+  "observational": false,
+  "entity_noun_plural": "employees",
+  "built": "2026-10-04",
+  "truth": {
+   "edges": [
+    [
+     "compensation",
+     "job_satisfaction"
+    ],
+    [
+     "manager_quality",
+     "job_satisfaction"
+    ],
+    [
+     "manager_quality",
+     "burnout"
+    ],
+    [
+     "workload",
+     "burnout"
+    ],
+    [
+     "job_satisfaction",
+     "attrition"
+    ],
+    [
+     "burnout",
+     "attrition"
+    ]
+   ],
+   "effects": {
+    "compensation": -0.123834,
+    "manager_quality": -0.13695600000000002,
+    "workload": 0.12059800000000004
+   },
+   "fairness_ratio": 0.9988578549172502
+  }
+ },
+ "result": {
+  "domain_id": "employee_attrition",
+  "causal_graph": {
+   "nodes": [
+    "compensation",
+    "manager_quality",
+    "workload",
+    "job_satisfaction",
+    "burnout",
+    "attrition"
+   ],
+   "edges": [
+    [
+     "burnout",
+     "attrition"
+    ],
+    [
+     "compensation",
+     "job_satisfaction"
+    ],
+    [
+     "job_satisfaction",
+     "attrition"
+    ],
+    [
+     "manager_quality",
+     "burnout"
+    ],
+    [
+     "manager_quality",
+     "job_satisfaction"
+    ],
+    [
+     "workload",
+     "burnout"
+    ]
+   ],
+   "algorithm": "pc"
+  },
+  "effect_estimates": [
+   {
+    "treatment": "compensation",
+    "outcome": "attrition",
+    "ate": -0.1286417985615826,
+    "estimator": "backdoor.linear_regression",
+    "refuter": "permutation_placebo",
+    "refutation_passed": true,
+    "refutation_p_value": 0.009900990099009901,
+    "sensitivity": {
+     "estimate": -0.12864179856158278,
+     "alpha": 0.05,
+     "partial_r2_treatment_outcome": 0.06657451149600159,
+     "robustness_value": 0.23377231900323206,
+     "robustness_value_alpha": 0.19965872317049782,
+     "benchmark_covariate": null,
+     "benchmark_r2_treatment": null,
+     "benchmark_r2_outcome": null,
+     "benchmark_bias": null,
+     "benchmark_adjusted_estimate": null,
+     "robust_to_benchmark": null
+    }
+   },
+   {
+    "treatment": "manager_quality",
+    "outcome": "attrition",
+    "ate": -0.1351765837127778,
+    "estimator": "backdoor.linear_regression",
+    "refuter": "permutation_placebo",
+    "refutation_passed": true,
+    "refutation_p_value": 0.009900990099009901,
+    "sensitivity": {
+     "estimate": -0.1351765837127775,
+     "alpha": 0.05,
+     "partial_r2_treatment_outcome": 0.07271719796036026,
+     "robustness_value": 0.24355697750127112,
+     "robustness_value_alpha": 0.20990663789025898,
+     "benchmark_covariate": null,
+     "benchmark_r2_treatment": null,
+     "benchmark_r2_outcome": null,
+     "benchmark_bias": null,
+     "benchmark_adjusted_estimate": null,
+     "robust_to_benchmark": null
+    }
+   },
+   {
+    "treatment": "workload",
+    "outcome": "attrition",
+    "ate": 0.11888094089854495,
+    "estimator": "backdoor.linear_regression",
+    "refuter": "permutation_placebo",
+    "refutation_passed": true,
+    "refutation_p_value": 0.009900990099009901,
+    "sensitivity": {
+     "estimate": 0.11888094089854519,
+     "alpha": 0.05,
+     "partial_r2_treatment_outcome": 0.05770024603689854,
+     "robustness_value": 0.21872404229541706,
+     "robustness_value_alpha": 0.18390001136114104,
+     "benchmark_covariate": null,
+     "benchmark_r2_treatment": null,
+     "benchmark_r2_outcome": null,
+     "benchmark_bias": null,
+     "benchmark_adjusted_estimate": null,
+     "robust_to_benchmark": null
+    }
+   }
+  ],
+  "counterfactuals": [
+   {
+    "treatment": "job_satisfaction",
+    "outcome": "attrition",
+    "meta_learner": "t_learner (causalml.BaseTRegressor)",
+    "mean_cate": -0.17868158092103104,
+    "description": "If employees below the job_satisfaction threshold were shifted to match those above it, mean predicted attrition would change by -0.1787",
+    "cate_std": 0.03921056993811567,
+    "subgroups": [],
+    "extreme_propensity_share": null
+   }
+  ],
+  "recommendations": [
+   {
+    "id": "manager_training",
+    "target_variable": "manager_quality",
+    "expected_effect": 0.1351765837127778,
+    "cost": 15000.0,
+    "roi": 9.01177224751852e-06,
+    "fairness_ratio": 0.9993501729378472,
+    "fairness_pass": true,
+    "rank": 1
+   },
+   {
+    "id": "workload_rebalancing",
+    "target_variable": "workload",
+    "expected_effect": 0.11888094089854495,
+    "cost": 20000.0,
+    "roi": 5.944047044927248e-06,
+    "fairness_ratio": 0.9993501729378472,
+    "fairness_pass": true,
+    "rank": 2
+   },
+   {
+    "id": "compensation_adjustment",
+    "target_variable": "compensation",
+    "expected_effect": 0.1286417985615826,
+    "cost": 40000.0,
+    "roi": 3.2160449640395647e-06,
+    "fairness_ratio": 0.9993501729378472,
+    "fairness_pass": true,
+    "rank": 3
+   }
+  ],
+  "explanation": {
+   "narrative": "Top-line drivers of attrition, ranked by causal effect size:\n- manager_quality: ATE=-0.1352 (backdoor.linear_regression)\n- compensation: ATE=-0.1286 (backdoor.linear_regression)\n- workload: ATE=+0.1189 (backdoor.linear_regression)\nSHAP attribution agrees 'job_satisfaction' carries the most predictive weight.\n- If employees below the job_satisfaction threshold were shifted to match those above it, mean predicted attrition would change by -0.1787\nRecommended action: 'manager_training' (ROI=9.01e-06, cost=$15,000) -- fairness check passed",
+   "shap_summary": {
+    "compensation": 0.13738857987406497,
+    "manager_quality": 0.10491454465158578,
+    "workload": 0.166072736110934,
+    "job_satisfaction": 0.7762776159284364,
+    "burnout": 0.5620710002454878
+   },
+   "narrative_tier": "template",
+   "narrative_log": [
+    {
+     "tier": "autogen",
+     "outcome": "skipped",
+     "detail": "no OPENAI_API_KEY"
+    },
+    {
+     "tier": "llm",
+     "outcome": "skipped",
+     "detail": "no OPENAI_API_KEY"
+    },
+    {
+     "tier": "template",
+     "outcome": "used",
+     "detail": ""
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,275 @@
+{
+ "meta": {
+  "domain_id": "carclaims",
+  "domain_name": "Vehicle Insurance Claim Fraud (carclaims)",
+  "description": "Which insurer-side choices are associated with fraud being found on a claim, and does the population show a disparity by sex? Real data are 15,420 vehicle claims from 1994-96 at an unnamed US insurer (the `carclaims` sample distributed with Angoss KnowledgeSEEKER). The data are OBSERVATIONAL with no ground truth, so the pipeline's numbers here are plausibility and stability checks, not validated effects. The outcome is fraud that was FOUND, which depends on investigation as well as on fraud.",
+  "dataset": "real",
+  "label": "Real insurance claims",
+  "n_rows": 15420,
+  "outcome": "fraud_found",
+  "treatments": [
+   "police_report_filed",
+   "agent_internal",
+   "deductible_100usd"
+  ],
+  "sensitive_attribute": "female",
+  "observational": true,
+  "entity_noun_plural": "claims",
+  "built": "2026-10-04"
+ },
+ "result": {
+  "domain_id": "carclaims",
+  "causal_graph": {
+   "nodes": [
+    "female",
+    "policyholder_age_group",
+    "base_policy__liability",
+    "vehicle_price",
+    "fault_policy_holder",
+    "deductible_100usd",
+    "agent_internal",
+    "police_report_filed",
+    "fraud_found"
+   ],
+   "edges": [
+    [
+     "agent_internal",
+     "base_policy__liability"
+    ],
+    [
+     "agent_internal",
+     "police_report_filed"
+    ],
+    [
+     "agent_internal",
+     "vehicle_price"
+    ],
+    [
+     "base_policy__liability",
+     "fraud_found"
+    ],
+    [
+     "deductible_100usd",
+     "base_policy__liability"
+    ],
+    [
+     "deductible_100usd",
+     "fraud_found"
+    ],
+    [
+     "fault_policy_holder",
+     "base_policy__liability"
+    ],
+    [
+     "fault_policy_holder",
+     "fraud_found"
+    ],
+    [
+     "fault_policy_holder",
+     "police_report_filed"
+    ],
+    [
+     "fault_policy_holder",
+     "vehicle_price"
+    ],
+    [
+     "female",
+     "base_policy__liability"
+    ],
+    [
+     "female",
+     "vehicle_price"
+    ],
+    [
+     "police_report_filed",
+     "base_policy__liability"
+    ],
+    [
+     "policyholder_age_group",
+     "deductible_100usd"
+    ],
+    [
+     "policyholder_age_group",
+     "fraud_found"
+    ],
+    [
+     "policyholder_age_group",
+     "vehicle_price"
+    ],
+    [
+     "vehicle_price",
+     "fraud_found"
+    ]
+   ],
+   "algorithm": "pc"
+  },
+  "effect_estimates": [
+   {
+    "treatment": "police_report_filed",
+    "outcome": "fraud_found",
+    "ate": -0.02479440637154825,
+    "estimator": "backdoor.linear_regression",
+    "refuter": "permutation_placebo",
+    "refutation_passed": true,
+    "refutation_p_value": 0.019801980198019802,
+    "sensitivity": {
+     "estimate": -0.02479440637154835,
+     "alpha": 0.05,
+     "partial_r2_treatment_outcome": 0.00030099628863489847,
+     "robustness_value": 0.01720196581398276,
+     "robustness_value_alpha": 0.0015478763450723681,
+     "benchmark_covariate": "fault_policy_holder",
+     "benchmark_r2_treatment": 6.162398053735501e-05,
+     "benchmark_r2_outcome": 0.02977194582235006,
+     "benchmark_bias": 0.0019355288091947032,
+     "benchmark_adjusted_estimate": -0.022858877562353646,
+     "robust_to_benchmark": true
+    }
+   },
+   {
+    "treatment": "agent_internal",
+    "outcome": "fraud_found",
+    "ate": -0.009915252508769207,
+    "estimator": "backdoor.linear_regression",
+    "refuter": "permutation_placebo",
+    "refutation_passed": false,
+    "refutation_p_value": 0.5346534653465347,
+    "sensitivity": {
+     "estimate": -0.009915252508769028,
+     "alpha": 0.05,
+     "partial_r2_treatment_outcome": 2.828930349756416e-05,
+     "robustness_value": 0.0053047179739133124,
+     "robustness_value_alpha": 0.0,
+     "benchmark_covariate": "base_policy__all_perils",
+     "benchmark_r2_treatment": 0.005000528756017785,
+     "benchmark_r2_outcome": 0.004321069959764611,
+     "benchmark_bias": 0.008687177527440295,
+     "benchmark_adjusted_estimate": -0.0012280749813287327,
+     "robust_to_benchmark": true
+    }
+   },
+   {
+    "treatment": "deductible_100usd",
+    "outcome": "fraud_found",
+    "ate": 0.009242014065164228,
+    "estimator": "backdoor.linear_regression",
+    "refuter": "permutation_placebo",
+    "refutation_passed": true,
+    "refutation_p_value": 0.04950495049504951,
+    "sensitivity": {
+     "estimate": 0.009242014065164188,
+     "alpha": 0.05,
+     "partial_r2_treatment_outcome": 0.00030235307172075574,
+     "robustness_value": 0.01724036722967519,
+     "robustness_value_alpha": 0.0015868908812761958,
+     "benchmark_covariate": "address_change",
+     "benchmark_r2_treatment": 0.025285190967215487,
+     "benchmark_r2_outcome": 0.0020813012894401106,
+     "benchmark_bias": 0.0039048610167950436,
+     "benchmark_adjusted_estimate": 0.0053371530483691445,
+     "robust_to_benchmark": true
+    }
+   }
+  ],
+  "counterfactuals": [
+   {
+    "treatment": "police_report_filed",
+    "outcome": "fraud_found",
+    "meta_learner": "t_learner (causalml.BaseTRegressor)",
+    "mean_cate": -0.02611205448321443,
+    "description": "If claims below the police_report_filed threshold were shifted to match those above it, mean predicted fraud found would change by -0.0261",
+    "cate_std": 0.06898208216727475,
+    "subgroups": [],
+    "extreme_propensity_share": null
+   }
+  ],
+  "recommendations": [
+   {
+    "id": "require_police_report",
+    "target_variable": "police_report_filed",
+    "expected_effect": 0.02479440637154825,
+    "cost": 50.0,
+    "roi": 0.000495888127430965,
+    "fairness_ratio": 0.6895471720988502,
+    "fairness_pass": false,
+    "rank": 1
+   },
+   {
+    "id": "sell_through_internal_agents",
+    "target_variable": "agent_internal",
+    "expected_effect": 0.009915252508769207,
+    "cost": 80.0,
+    "roi": 0.00012394065635961508,
+    "fairness_ratio": 0.6895471720988502,
+    "fairness_pass": false,
+    "rank": 2
+   },
+   {
+    "id": "raise_deductible_by_100",
+    "target_variable": "deductible_100usd",
+    "expected_effect": -0.009242014065164228,
+    "cost": 30.0,
+    "roi": -0.0003080671355054743,
+    "fairness_ratio": 0.6895471720988502,
+    "fairness_pass": false,
+    "rank": 3
+   }
+  ],
+  "explanation": {
+   "narrative": "Associations with fraud found in observational data (not proven causes), ranked by estimated effect size:\n- police_report_filed: ATE=-0.0248 (backdoor.linear_regression)\n- agent_internal: ATE=-0.0099 (backdoor.linear_regression) -- placebo check FAILED (permutation p=0.535): no evidence of an effect beyond noise\n- deductible_100usd: ATE=+0.0092 (backdoor.linear_regression)\nSHAP attribution agrees 'fault_policy_holder' carries the most predictive weight.\n- If claims below the police_report_filed threshold were shifted to match those above it, mean predicted fraud found would change by -0.0261\nRecommended action: 'require_police_report' (ROI=0.000496, cost=$50) -- FAIRNESS FLAG: population-level disparity detected (group ratio 0.69)",
+   "shap_summary": {
+    "female": 0.037689180627794576,
+    "deductible_100usd": 0.04237225235277042,
+    "driver_rating": 0.011401546415984499,
+    "agent_internal": 0.012585254884659922,
+    "fault_policy_holder": 1.1944328549299161,
+    "accident_rural": 0.031017555729661788,
+    "witness_present": 0.0,
+    "police_report_filed": 0.015369935280294242,
+    "policyholder_age_group": 0.06664154982045768,
+    "vehicle_price": 0.0393142041423492,
+    "vehicle_age": 0.08094873071924555,
+    "n_cars": 0.007134541655655004,
+    "past_claims": 0.024181759158267698,
+    "days_policy_to_accident": 0.004250657698969341,
+    "days_policy_to_claim": 0.0044933924148323505,
+    "address_change": 0.05147795433599663,
+    "n_supplements": 0.04182014169433194,
+    "year__1995": 0.017332124918534322,
+    "year__1996": 0.03179971524620353,
+    "marital_status__single": 0.017916136285349018,
+    "marital_status__divorced": 0.0026780801508565102,
+    "marital_status__widow": 0.0004084185565040127,
+    "make__toyota": 0.04671816421436118,
+    "make__honda": 0.006100695292283144,
+    "make__mazda": 0.002982134577075328,
+    "make__chevrolet": 0.0,
+    "make__acura": 0.02759301123095479,
+    "make__ford": 0.010546150410647121,
+    "make__other": 0.012434682829227479,
+    "vehicle_category__sport": 0.05832479340141198,
+    "vehicle_category__utility": 0.011285835572858257,
+    "base_policy__all_perils": 0.11968420106600709,
+    "base_policy__liability": 0.8552061558784664
+   },
+   "narrative_tier": "template",
+   "narrative_log": [
+    {
+     "tier": "autogen",
+     "outcome": "skipped",
+     "detail": "no OPENAI_API_KEY"
+    },
+    {
+     "tier": "llm",
+     "outcome": "skipped",
+     "detail": "no OPENAI_API_KEY"
+    },
+    {
+     "tier": "template",
+     "outcome": "used",
+     "detail": ""
+    }
+   ]
+  }
+ }
+}

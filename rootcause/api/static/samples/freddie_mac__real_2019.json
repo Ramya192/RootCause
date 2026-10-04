@@ -1,0 +1,266 @@
+{
+ "meta": {
+  "domain_id": "freddie_mac",
+  "domain_name": "Mortgage Default (Freddie Mac)",
+  "description": "Which loan terms are associated with a mortgage going seriously delinquent within three years, and does the population show a disparity for first-time homebuyers? Real data are 50,000-loan random samples of fixed-rate loans that Freddie Mac bought, one sample per origination year (2007, 2008, 2010, 2011, 2016, 2019, 2022; Freddie Mac Single-Family Loan-Level Dataset). The data are OBSERVATIONAL with no ground truth: lenders set the rate and the terms from the borrower's risk, so the levers are confounded by things this file does not record, and the pipeline's numbers are plausibility and stability checks, not validated effects. The outcome is measured among loans that stayed on the books for 36 months (loans that were paid off earlier are excluded), so it is not a lifetime default probability. In 2019 most 90+ day delinquencies were pandemic forbearance, so 2016, 2019 and 2022 also have a relief-adjusted outcome (relief-flagged delinquencies that never liquidated are not counted).",
+  "dataset": "real_2019",
+  "label": "Mortgages 2019, 90+ day outcome",
+  "n_rows": 19654,
+  "outcome": "default",
+  "treatments": [
+   "interest_rate",
+   "ltv",
+   "dti"
+  ],
+  "sensitive_attribute": "first_time_buyer",
+  "observational": true,
+  "entity_noun_plural": "loans",
+  "built": "2026-10-04"
+ },
+ "result": {
+  "domain_id": "freddie_mac",
+  "causal_graph": {
+   "nodes": [
+    "credit_score",
+    "first_time_buyer",
+    "orig_upb_100k",
+    "ltv",
+    "dti",
+    "mi_pct",
+    "interest_rate",
+    "default"
+   ],
+   "edges": [
+    [
+     "credit_score",
+     "default"
+    ],
+    [
+     "credit_score",
+     "dti"
+    ],
+    [
+     "credit_score",
+     "interest_rate"
+    ],
+    [
+     "dti",
+     "default"
+    ],
+    [
+     "first_time_buyer",
+     "ltv"
+    ],
+    [
+     "first_time_buyer",
+     "mi_pct"
+    ],
+    [
+     "interest_rate",
+     "default"
+    ],
+    [
+     "interest_rate",
+     "dti"
+    ],
+    [
+     "interest_rate",
+     "ltv"
+    ],
+    [
+     "interest_rate",
+     "orig_upb_100k"
+    ],
+    [
+     "ltv",
+     "default"
+    ],
+    [
+     "mi_pct",
+     "default"
+    ],
+    [
+     "mi_pct",
+     "dti"
+    ],
+    [
+     "mi_pct",
+     "ltv"
+    ],
+    [
+     "orig_upb_100k",
+     "default"
+    ],
+    [
+     "orig_upb_100k",
+     "dti"
+    ],
+    [
+     "orig_upb_100k",
+     "ltv"
+    ]
+   ],
+   "algorithm": "pc"
+  },
+  "effect_estimates": [
+   {
+    "treatment": "interest_rate",
+    "outcome": "default",
+    "ate": 0.06234799532380679,
+    "estimator": "backdoor.linear_regression",
+    "refuter": "permutation_placebo",
+    "refutation_passed": true,
+    "refutation_p_value": 0.009900990099009901,
+    "sensitivity": {
+     "estimate": 0.0623479953238074,
+     "alpha": 0.05,
+     "partial_r2_treatment_outcome": 0.004795502588557634,
+     "robustness_value": 0.0670487037572736,
+     "robustness_value_alpha": 0.05391087498152619,
+     "benchmark_covariate": "credit_score",
+     "benchmark_r2_treatment": 0.13381005839840915,
+     "benchmark_r2_outcome": 0.028485880371987998,
+     "benchmark_bias": 0.0595818836781836,
+     "benchmark_adjusted_estimate": 0.002766111645623799,
+     "robust_to_benchmark": true
+    }
+   },
+   {
+    "treatment": "ltv",
+    "outcome": "default",
+    "ate": 0.0006517314268004171,
+    "estimator": "backdoor.linear_regression",
+    "refuter": "permutation_placebo",
+    "refutation_passed": true,
+    "refutation_p_value": 0.009900990099009901,
+    "sensitivity": {
+     "estimate": 0.0006517314268004077,
+     "alpha": 0.05,
+     "partial_r2_treatment_outcome": 0.0006299828425951738,
+     "robustness_value": 0.024794157196063298,
+     "robustness_value_alpha": 0.01105513313130538,
+     "benchmark_covariate": "mi_pct",
+     "benchmark_r2_treatment": 0.4404379858123609,
+     "benchmark_r2_outcome": 0.003160515368086563,
+     "benchmark_bias": 0.001294686695593978,
+     "benchmark_adjusted_estimate": -0.0006429552687935703,
+     "robust_to_benchmark": false
+    }
+   },
+   {
+    "treatment": "dti",
+    "outcome": "default",
+    "ate": 0.0024969136168596084,
+    "estimator": "backdoor.linear_regression",
+    "refuter": "permutation_placebo",
+    "refutation_passed": true,
+    "refutation_p_value": 0.009900990099009901,
+    "sensitivity": {
+     "estimate": 0.002496913616859635,
+     "alpha": 0.05,
+     "partial_r2_treatment_outcome": 0.0052756417818272325,
+     "robustness_value": 0.07022242249050675,
+     "robustness_value_alpha": 0.05713000600970207,
+     "benchmark_covariate": "orig_upb_100k",
+     "benchmark_r2_treatment": 0.015794756544606613,
+     "benchmark_r2_outcome": 0.02987201517723958,
+     "benchmark_bias": 0.0007506943308464346,
+     "benchmark_adjusted_estimate": 0.0017462192860132003,
+     "robust_to_benchmark": true
+    }
+   }
+  ],
+  "counterfactuals": [
+   {
+    "treatment": "ltv",
+    "outcome": "default",
+    "meta_learner": "t_learner (causalml.BaseTRegressor)",
+    "mean_cate": 0.05487754659462325,
+    "description": "If loans below the ltv threshold were shifted to match those above it, mean predicted serious delinquency within 36 months would change by +0.0549",
+    "cate_std": 0.0774672773208804,
+    "subgroups": [],
+    "extreme_propensity_share": null
+   }
+  ],
+  "recommendations": [
+   {
+    "id": "cap_dti",
+    "target_variable": "dti",
+    "expected_effect": 0.012484568084298042,
+    "cost": 300.0,
+    "roi": 4.161522694766014e-05,
+    "fairness_ratio": 0.8283579654854782,
+    "fairness_pass": true,
+    "rank": 1
+   },
+   {
+    "id": "lower_interest_rate",
+    "target_variable": "interest_rate",
+    "expected_effect": 0.031173997661903395,
+    "cost": 1500.0,
+    "roi": 2.0782665107935597e-05,
+    "fairness_ratio": 0.8283579654854782,
+    "fairness_pass": true,
+    "rank": 2
+   },
+   {
+    "id": "cap_ltv",
+    "target_variable": "ltv",
+    "expected_effect": 0.006517314268004171,
+    "cost": 400.0,
+    "roi": 1.6293285670010428e-05,
+    "fairness_ratio": 0.8283579654854782,
+    "fairness_pass": true,
+    "rank": 3
+   }
+  ],
+  "explanation": {
+   "narrative": "Associations with serious delinquency within 36 months in observational data (not proven causes), ranked by estimated effect size:\n- interest_rate: ATE=+0.0623 (backdoor.linear_regression)\n- dti: ATE=+0.0025 (backdoor.linear_regression)\n- ltv: ATE=+0.0007 (backdoor.linear_regression)\nSHAP attribution agrees 'credit_score' carries the most predictive weight.\n- If loans below the ltv threshold were shifted to match those above it, mean predicted serious delinquency within 36 months would change by +0.0549\nRecommended action: 'cap_dti' (ROI=4.16e-05, cost=$300) -- fairness check passed",
+   "shap_summary": {
+    "credit_score": 0.4446912648235271,
+    "ltv": 0.18865247580295494,
+    "dti": 0.2692873007927228,
+    "dti_missing": 0.0007034827183622558,
+    "interest_rate": 0.21854858353700035,
+    "orig_upb_100k": 0.3794339828441025,
+    "term_years": 0.05844908465202226,
+    "mi_pct": 0.010633981353278721,
+    "n_units": 0.0033214931775705676,
+    "two_plus_borrowers": 0.2535807033860361,
+    "first_time_buyer": 0.0020587600667145945,
+    "orig_quarter__q2": 0.002534031487955007,
+    "orig_quarter__q3": 0.0003468246389376543,
+    "orig_quarter__q4": 0.0014668644978528321,
+    "occupancy__investment": 0.0,
+    "occupancy__second_home": 7.620860342607418e-05,
+    "channel__broker": 0.0,
+    "channel__correspondent": 0.04807003495822603,
+    "channel__tpo_unspecified": 0.0,
+    "purpose__refi_cash_out": 0.06757222299949726,
+    "purpose__refi_no_cash_out": 0.07278483439516077,
+    "property_type__condo": 0.015394694013675936,
+    "property_type__pud": 6.450072978663726e-05,
+    "property_type__manufactured": 0.0,
+    "property_type__coop": 0.0
+   },
+   "narrative_tier": "template",
+   "narrative_log": [
+    {
+     "tier": "autogen",
+     "outcome": "skipped",
+     "detail": "no OPENAI_API_KEY"
+    },
+    {
+     "tier": "llm",
+     "outcome": "skipped",
+     "detail": "no OPENAI_API_KEY"
+    },
+    {
+     "tier": "template",
+     "outcome": "used",
+     "detail": ""
+    }
+   ]
+  }
+ }
+}

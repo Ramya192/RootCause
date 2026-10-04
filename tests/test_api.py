@@ -59,11 +59,35 @@ def test_health(fake_client):
     assert fake_client.get("/health").json() == {"status": "ok"}
 
 
+def test_domains_carry_the_facts_the_ui_needs(fake_client):
+    domain = {d["id"]: d for d in fake_client.get("/domains").json()}["employee_attrition"]
+    assert domain["outcome"] == "attrition"
+    assert {"compensation", "manager_quality", "workload"} <= set(domain["treatments"])
+    assert domain["sensitive_attribute"] == "gender"
+    assert domain["observational"] is False
+
+
+def test_bundled_ui_samples_are_valid_results(fake_client):
+    from rootcause.models.schemas import PipelineResult
+
+    index = fake_client.get("/static/samples/index.json").json()
+    assert index, "run scripts/build_ui_samples.py"
+    for meta in index:
+        sample = fake_client.get(f"/static/samples/{meta['domain_id']}__{meta['dataset']}.json").json()
+        result = PipelineResult.model_validate(sample["result"])  # same schema the API returns
+        graph = result.causal_graph
+        assert all(a in graph.nodes and b in graph.nodes for a, b in graph.edges)
+        assert sample["meta"]["outcome"] in graph.nodes
+        assert {e.treatment for e in result.effect_estimates} <= set(sample["meta"]["treatments"])
+        if "truth" in sample["meta"]:  # known-answer sample: the overlay needs the true edges
+            assert sample["meta"]["truth"]["edges"]
+
+
 def test_root_serves_the_browser_ui(fake_client):
     response = fake_client.get("/")
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/html")
-    assert "<title>RootCause</title>" in response.text
+    assert "<title>RootCause" in response.text and "Ramya A" in response.text
     assert "/domains" in response.text and "/analyze" in response.text
 
 

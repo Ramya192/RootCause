@@ -1,0 +1,126 @@
+[
+ {
+  "domain_id": "employee_attrition",
+  "domain_name": "Employee Attrition",
+  "description": "Root-causes voluntary attrition from HR survey/HRIS data: which factors (compensation, manager quality, workload, satisfaction, burnout) actually drive employees to leave, and which interventions reduce it.",
+  "dataset": "synthetic",
+  "label": "Known-answer simulation",
+  "n_rows": 2000,
+  "outcome": "attrition",
+  "treatments": [
+   "compensation",
+   "manager_quality",
+   "workload"
+  ],
+  "sensitive_attribute": "gender",
+  "observational": false,
+  "entity_noun_plural": "employees",
+  "built": "2026-10-04",
+  "truth": {
+   "edges": [
+    [
+     "compensation",
+     "job_satisfaction"
+    ],
+    [
+     "manager_quality",
+     "job_satisfaction"
+    ],
+    [
+     "manager_quality",
+     "burnout"
+    ],
+    [
+     "workload",
+     "burnout"
+    ],
+    [
+     "job_satisfaction",
+     "attrition"
+    ],
+    [
+     "burnout",
+     "attrition"
+    ]
+   ],
+   "effects": {
+    "compensation": -0.123834,
+    "manager_quality": -0.13695600000000002,
+    "workload": 0.12059800000000004
+   },
+   "fairness_ratio": 0.9988578549172502
+  }
+ },
+ {
+  "domain_id": "german_credit",
+  "domain_name": "Consumer Credit Default (German Credit)",
+  "description": "Which loan terms are associated with default, and does the population the bank lends to show a disparity by age? Real data are 1,000 loan applicants at a German bank (Statlog German Credit, Hofmann 1994): OBSERVATIONAL, with no ground truth, so the pipeline's numbers on it are plausibility and stability checks, not validated effects. A semi-synthetic version keeps the real applicants and simulates only the default outcome with planted lever effects, so the method can be scored where the answer is known.",
+  "dataset": "real",
+  "label": "Real credit data",
+  "n_rows": 1000,
+  "outcome": "default",
+  "treatments": [
+   "duration_months",
+   "credit_amount_kdm",
+   "installment_rate"
+  ],
+  "sensitive_attribute": "young",
+  "observational": true,
+  "entity_noun_plural": "applicants",
+  "built": "2026-10-04"
+ },
+ {
+  "domain_id": "freddie_mac",
+  "domain_name": "Mortgage Default (Freddie Mac)",
+  "description": "Which loan terms are associated with a mortgage going seriously delinquent within three years, and does the population show a disparity for first-time homebuyers? Real data are 50,000-loan random samples of fixed-rate loans that Freddie Mac bought, one sample per origination year (2007, 2008, 2010, 2011, 2016, 2019, 2022; Freddie Mac Single-Family Loan-Level Dataset). The data are OBSERVATIONAL with no ground truth: lenders set the rate and the terms from the borrower's risk, so the levers are confounded by things this file does not record, and the pipeline's numbers are plausibility and stability checks, not validated effects. The outcome is measured among loans that stayed on the books for 36 months (loans that were paid off earlier are excluded), so it is not a lifetime default probability. In 2019 most 90+ day delinquencies were pandemic forbearance, so 2016, 2019 and 2022 also have a relief-adjusted outcome (relief-flagged delinquencies that never liquidated are not counted).",
+  "dataset": "real_2019",
+  "label": "Mortgages 2019, 90+ day outcome",
+  "n_rows": 19654,
+  "outcome": "default",
+  "treatments": [
+   "interest_rate",
+   "ltv",
+   "dti"
+  ],
+  "sensitive_attribute": "first_time_buyer",
+  "observational": true,
+  "entity_noun_plural": "loans",
+  "built": "2026-10-04"
+ },
+ {
+  "domain_id": "freddie_mac",
+  "domain_name": "Mortgage Default (Freddie Mac)",
+  "description": "Which loan terms are associated with a mortgage going seriously delinquent within three years, and does the population show a disparity for first-time homebuyers? Real data are 50,000-loan random samples of fixed-rate loans that Freddie Mac bought, one sample per origination year (2007, 2008, 2010, 2011, 2016, 2019, 2022; Freddie Mac Single-Family Loan-Level Dataset). The data are OBSERVATIONAL with no ground truth: lenders set the rate and the terms from the borrower's risk, so the levers are confounded by things this file does not record, and the pipeline's numbers are plausibility and stability checks, not validated effects. The outcome is measured among loans that stayed on the books for 36 months (loans that were paid off earlier are excluded), so it is not a lifetime default probability. In 2019 most 90+ day delinquencies were pandemic forbearance, so 2016, 2019 and 2022 also have a relief-adjusted outcome (relief-flagged delinquencies that never liquidated are not counted).",
+  "dataset": "real_2019_relief_adjusted",
+  "label": "Mortgages 2019, forbearance excluded",
+  "n_rows": 19654,
+  "outcome": "default",
+  "treatments": [
+   "interest_rate",
+   "ltv",
+   "dti"
+  ],
+  "sensitive_attribute": "first_time_buyer",
+  "observational": true,
+  "entity_noun_plural": "loans",
+  "built": "2026-10-04"
+ },
+ {
+  "domain_id": "carclaims",
+  "domain_name": "Vehicle Insurance Claim Fraud (carclaims)",
+  "description": "Which insurer-side choices are associated with fraud being found on a claim, and does the population show a disparity by sex? Real data are 15,420 vehicle claims from 1994-96 at an unnamed US insurer (the `carclaims` sample distributed with Angoss KnowledgeSEEKER). The data are OBSERVATIONAL with no ground truth, so the pipeline's numbers here are plausibility and stability checks, not validated effects. The outcome is fraud that was FOUND, which depends on investigation as well as on fraud.",
+  "dataset": "real",
+  "label": "Real insurance claims",
+  "n_rows": 15420,
+  "outcome": "fraud_found",
+  "treatments": [
+   "police_report_filed",
+   "agent_internal",
+   "deductible_100usd"
+  ],
+  "sensitive_attribute": "female",
+  "observational": true,
+  "entity_noun_plural": "claims",
+  "built": "2026-10-04"
+ }
+]

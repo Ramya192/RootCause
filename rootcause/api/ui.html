@@ -3,120 +3,747 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RootCause</title>
+<title>RootCause · Ramya A</title>
+<meta name="description" content="RootCause estimates what would happen if you acted, and shows how far to trust the answer.">
 <style>
-  :root { --bg:#fafafa; --fg:#1a1a1a; --muted:#666; --card:#fff; --line:#ddd; --accent:#2457d6; --bad:#b3261e; --ok:#1b7f3b; }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg:#141414; --fg:#eee; --muted:#9a9a9a; --card:#1e1e1e; --line:#333; --accent:#7aa2ff; --bad:#ff8a80; --ok:#6fd48c; }
+  :root {
+    color-scheme: light;
+    --bg:#ffffff; --panel:#ffffff; --fg:#17181a; --muted:#5f6368; --line:#e3e5e8;
+    --accent:#2457d6; --accent-soft:#eaf0fe; --good:#1b7f3b; --good-soft:#e5f4ea;
+    --bad:#b3261e; --bad-soft:#fbe9e7; --warn:#8a5a00; --warn-soft:#fff3d6;
+    --lever:#2457d6; --outcome:#b3261e; --sens:#7a3ea1; --node:#f1f3f6; --track:#eceef1;
+  }  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.55 system-ui,-apple-system,Segoe UI,sans-serif; }
+  a { color:var(--accent); }
+  .wrap { max-width:1120px; margin:0 auto; padding:0 16px; }
+  nav { position:sticky; top:0; z-index:5; background:color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter:blur(6px); border-bottom:1px solid var(--line); }
+  nav .wrap { display:flex; gap:20px; align-items:center; height:52px; overflow-x:auto; white-space:nowrap; }
+  nav b { font-size:17px; margin-right:auto; }
+  nav a { text-decoration:none; color:var(--muted); font-size:14px; }
+  nav a:hover { color:var(--fg); }
+  section { padding:56px 0 8px; }
+  h1 { font-size:clamp(22px,3.3vw,38px); line-height:1.2; margin:0 0 14px; letter-spacing:-.02em; }
+  .eyebrow.hero-eyebrow { font-size:17px; margin-bottom:12px; }
+  section, #result { scroll-margin-top:64px; }
+  .lede { max-width:none !important; font-size:18px; }
+  .runstrip { display:flex; flex-wrap:wrap; gap:12px 18px; align-items:center; margin-top:22px; padding:14px 16px; background:var(--accent-soft); border:1px solid var(--line); border-radius:12px; position:relative; overflow:hidden; }
+  .rs-text { flex:1 1 380px; font-size:14.5px; }
+  .rs-ctl { display:flex; gap:8px; flex-wrap:wrap; }
+  .rs-bar { position:absolute; left:0; right:0; bottom:0; height:3px; display:none; }
+  .rs-bar i { display:block; height:100%; width:30%; background:var(--accent); animation:slide 1.2s infinite ease-in-out; }
+  .navrun { margin-left:12px; font-size:12.5px; padding:3px 10px; border-radius:99px; border:1px solid var(--line); color:var(--muted); white-space:nowrap; cursor:default; }
+  .navrun.busy { color:var(--accent); background:var(--accent-soft); border-color:transparent; }
+  .navrun.done { color:#fff; background:var(--good); border-color:transparent; cursor:pointer; font-weight:600; }
+  .navrun.err { color:var(--bad); background:var(--bad-soft); border-color:transparent; }
+  h2 { font-size:26px; margin:0 0 6px; letter-spacing:-.01em; }
+  h3 { font-size:16px; margin:0 0 6px; }
+  .lede { font-size:19px; color:var(--muted); max-width:760px; }
+  .eyebrow { text-transform:uppercase; letter-spacing:.08em; font-size:12px; color:var(--accent); font-weight:600; margin-bottom:8px; }
+  .sub { color:var(--muted); max-width:760px; margin:0 0 20px; }
+  .grid { display:grid; gap:14px; }
+  .g3 { grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); }
+  .g4 { grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px; box-shadow:0 1px 2px rgba(20,24,30,.04); }
+  .by { font-weight:500; color:var(--muted); }
+
+  /* at-a-glance charts */
+  .glance { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+  @media (max-width:760px){ .glance { grid-template-columns:1fr; } }
+  .glance .card h3 { margin-bottom:2px; }
+  .glance .why { font-size:13px; color:var(--muted); margin:0 0 10px; }
+  .lg { display:flex; gap:12px; flex-wrap:wrap; font-size:12px; color:var(--muted); margin-top:8px; }
+  .lg i { display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:4px; vertical-align:-1px; }
+  .hb { display:grid; grid-template-columns:104px 1fr; gap:8px; align-items:center; font-size:12.5px; margin:5px 0; }
+  .hb .pair { display:flex; flex-direction:column; gap:3px; }
+  .hb .bar { height:11px; border-radius:4px; position:relative; min-width:2px; }
+  .hb .bar b { position:absolute; left:calc(100% + 6px); top:-3px; font-weight:600; font-size:11.5px; white-space:nowrap; color:var(--fg); }
+  .hb .wrap2 { position:relative; padding-right:96px; }
+  .hb .bar { max-width:100%; }
+  .flow { display:flex; align-items:stretch; gap:6px; flex-wrap:wrap; margin:8px 0 12px; }
+  .flow .box { flex:1 1 90px; border:1px solid var(--line); border-radius:10px; padding:8px; font-size:12px; text-align:center; background:var(--node); }
+  .flow .box b { display:block; font-size:12.5px; }
+  .flow .arrow { align-self:center; color:var(--muted); }
+  .flow .gate { flex-basis:100%; text-align:center; font-size:12px; color:var(--good); background:var(--good-soft); border-radius:8px; padding:5px; }
+  .stack { display:flex; height:30px; border-radius:8px; overflow:hidden; margin:10px 0 6px; font-size:12px; font-weight:600; color:#fff; }
+  .stack span { display:flex; align-items:center; justify-content:center; white-space:nowrap; }
+  .tourhint { font-size:13px; color:var(--muted); margin:22px 0 10px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .stage { animation:glow 7s infinite; }
+    .stage:nth-child(1){animation-delay:0s} .stage:nth-child(2){animation-delay:1s} .stage:nth-child(3){animation-delay:2s}
+    .stage:nth-child(4){animation-delay:3s} .stage:nth-child(5){animation-delay:4s} .stage:nth-child(6){animation-delay:5s} .stage:nth-child(7){animation-delay:6s}
+    @keyframes glow { 0%,14%{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)} 18%,100%{border-color:var(--line); box-shadow:none} }
   }
-  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.5 system-ui,sans-serif; }
-  main { max-width:960px; margin:0 auto; padding:24px 16px 64px; }
-  h1 { margin:0 0 4px; } h2 { margin:28px 0 8px; font-size:18px; }
-  .sub { color:var(--muted); margin-bottom:20px; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:16px; }
-  .row { display:flex; flex-wrap:wrap; gap:12px; align-items:end; }
-  label { display:flex; flex-direction:column; font-size:13px; color:var(--muted); gap:4px; }
-  select, button { font:inherit; padding:8px 10px; border-radius:6px; border:1px solid var(--line); background:var(--card); color:var(--fg); }
-  button { background:var(--accent); color:#fff; border-color:var(--accent); cursor:pointer; }
-  button:disabled { opacity:.5; cursor:wait; }
-  table { width:100%; border-collapse:collapse; font-size:14px; }
-  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); }
-  .pass { color:var(--ok); } .fail { color:var(--bad); }
-  img { max-width:100%; border:1px solid var(--line); border-radius:8px; background:#fff; }
-  #status { margin-top:12px; color:var(--muted); } #status.err { color:var(--bad); }
-  #domdesc { color:var(--muted); font-size:13px; margin-top:8px; }
+  .stat { font-size:34px; font-weight:700; letter-spacing:-.02em; line-height:1.1; }
+  .cap { color:var(--muted); font-size:13.5px; margin-top:6px; }
+  .pill { display:inline-block; padding:2px 9px; border-radius:99px; font-size:12px; border:1px solid var(--line); color:var(--muted); background:var(--panel); }
+  .pill.good { color:var(--good); background:var(--good-soft); border-color:transparent; }
+  .pill.bad { color:var(--bad); background:var(--bad-soft); border-color:transparent; }
+  .pill.warn { color:var(--warn); background:var(--warn-soft); border-color:transparent; }
+  .pill.acc { color:var(--accent); background:var(--accent-soft); border-color:transparent; }
+  .tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:18px; }
+  .note { font-size:13px; color:var(--muted); margin-top:8px; }
+  .callout { border-left:4px solid var(--warn); background:var(--warn-soft); padding:10px 14px; border-radius:6px; font-size:14.5px; }
+  .callout.info { border-color:var(--accent); background:var(--accent-soft); }
+
+  /* pipeline */
+  .stages { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; counter-reset:s; }
+  .stage { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px; position:relative; }
+  .stage::before { counter-increment:s; content:counter(s); position:absolute; top:-10px; left:12px; background:var(--accent); color:#fff; width:22px; height:22px; border-radius:50%; font-size:12px; display:grid; place-items:center; font-weight:700; }
+  .stage h3 { margin-top:4px; font-size:14.5px; }
+  .stage p { margin:0; font-size:13px; color:var(--muted); }
+  .stage .tech { margin-top:8px; font-size:11.5px; color:var(--accent); }
+
+  /* concept */
+  .concept { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; align-items:stretch; }
+  svg text { font-family:inherit; }
+
+  /* workspace */
+  .picker { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:10px; margin:14px 0; }
+  .opt { text-align:left; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px; cursor:pointer; color:var(--fg); font:inherit; }
+  .opt:hover { border-color:var(--accent); }
+  .opt[aria-pressed="true"] { border-color:var(--accent); background:var(--accent-soft); }
+  .opt b { display:block; font-size:14.5px; }
+  .opt span { font-size:12.5px; color:var(--muted); }
+  .live { display:flex; flex-wrap:wrap; gap:12px; align-items:end; }
+  label { display:flex; flex-direction:column; font-size:12.5px; color:var(--muted); gap:4px; }
+  select, button.btn { font:inherit; font-size:14.5px; padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:var(--fg); }
+  button.btn { background:var(--accent); border-color:var(--accent); color:#fff; cursor:pointer; font-weight:600; }
+  button.btn:disabled { opacity:.55; cursor:wait; }
+  #status { margin-top:10px; font-size:14px; color:var(--muted); min-height:20px; }
+  #status.err { color:var(--bad); }
+  .bar-anim { height:4px; background:var(--line); border-radius:4px; overflow:hidden; margin-top:8px; display:none; }
+  .bar-anim i { display:block; height:100%; width:30%; background:var(--accent); animation:slide 1.2s infinite ease-in-out; }
+  @keyframes slide { 0%{margin-left:-30%} 100%{margin-left:100%} }
+
+  .result { margin-top:22px; }
+  .head { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:10px; }
+  .answer { font-size:17px; }
+  .views { display:grid; grid-template-columns:minmax(0,5fr) minmax(0,3fr); gap:14px; margin-top:14px; align-items:start; }
+  @media (max-width:860px){ .views { grid-template-columns:1fr; } }
+  .view-title { display:flex; justify-content:space-between; align-items:baseline; gap:8px; margin-bottom:2px; }
+  .view-title h3 { margin:0; }
+  .howto { font-size:12.5px; color:var(--muted); margin:0 0 8px; }
+  .graphbox { overflow-x:auto; }
+  .legend { display:flex; flex-wrap:wrap; gap:12px; font-size:12px; color:var(--muted); margin-top:8px; }
+  .legend i { display:inline-block; width:12px; height:12px; border-radius:3px; vertical-align:-2px; margin-right:4px; }
+  .node rect { fill:var(--node); stroke:var(--line); stroke-width:1.2; cursor:pointer; }
+  .node.lever rect { stroke:var(--lever); stroke-width:2; }
+  .node.outcome rect { stroke:var(--outcome); stroke-width:2.5; fill:var(--bad-soft); }
+  .node.sens rect { stroke:var(--sens); stroke-width:2; stroke-dasharray:4 3; }
+  .node.sel rect { fill:var(--accent-soft); stroke:var(--accent); stroke-width:3; }
+  .node text { font-size:12px; fill:var(--fg); pointer-events:none; }
+  .edge { fill:none; stroke:var(--muted); stroke-width:1.3; opacity:.55; }
+  .edge.hl { stroke:var(--accent); stroke-width:2.4; opacity:1; }
+  .edge.dim { opacity:.15; }
+  .edge.ok { stroke:var(--good); stroke-width:2; }
+  .edge.spur { stroke:#d07a00; stroke-width:2; }
+  .edge.miss { stroke:var(--bad); stroke-width:2; stroke-dasharray:5 4; }
+  .tgl { display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--fg); flex-direction:row; }
+
+  .ibars .row { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,2fr) auto; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid var(--line); cursor:pointer; }
+  .ibars .row:last-child { border:0; }
+  .ibars .row:hover .nm { color:var(--accent); }
+  .ibars .nm { font-size:13.5px; font-weight:600; }
+  .ibars .nm small { display:block; font-weight:400; color:var(--muted); font-size:12px; }
+  .track { background:var(--track); border-radius:5px; height:12px; position:relative; }
+  .fill { position:absolute; top:0; bottom:0; border-radius:5px; background:var(--accent); }
+  .fill.neg { background:var(--bad); }
+  .val { font-size:12.5px; text-align:right; white-space:nowrap; }
+  table.t { width:100%; border-collapse:collapse; font-size:13.5px; }
+  table.t th, table.t td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  table.t th { color:var(--muted); font-weight:600; font-size:12.5px; }
+  .kv { display:grid; grid-template-columns:auto 1fr; gap:4px 12px; font-size:14px; margin:8px 0; }
+  .kv dt { color:var(--muted); } .kv dd { margin:0; }
+  .ev h4 { margin:12px 0 4px; font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  .ev p { margin:4px 0; font-size:14.5px; }
+  .feat { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; }
+  .mini { display:grid; grid-template-columns:170px 1fr 64px; gap:8px; align-items:center; font-size:13px; margin:6px 0; }
+  .mini .track { height:14px; }
+  .mini span:first-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .skills h3 { display:flex; align-items:center; gap:8px; }
+  .skills ul { margin:6px 0 0; padding-left:18px; font-size:14px; color:var(--muted); }
+  footer { padding:40px 0 60px; color:var(--muted); font-size:14px; }
+  .compare { margin-top:10px; }
 </style>
 </head>
 <body>
-<main>
-  <h1>RootCause</h1>
-  <div class="sub">Causal decision intelligence &mdash; pick a domain and run the pipeline.</div>
+<nav><div class="wrap">
+  <b>RootCause <span class="by">&middot; Ramya A</span></b>
+  <a href="#glance">At a glance</a><a href="#concept">Concept</a><a href="#how">How it works</a><a href="#try">Try it</a><a href="#finding">A real finding</a><a href="#proof">Does it work?</a><a href="#skills">Skills</a>
+  <span class="navrun" id="navRun" hidden></span>
+</div></nav>
+
+<header class="wrap" style="padding-top:56px">
+  <div class="eyebrow hero-eyebrow">Causal decision intelligence</div>
+  <h1>From &ldquo;what happened?&rdquo; to &ldquo;what would happen if we acted?&rdquo;</h1>
+  <p class="lede">Dashboards and prediction models show what is <em>associated</em> with an outcome. RootCause goes further: it learns the causal structure of a domain, estimates what each lever really moves, and ranks interventions by return and fairness, saying how far to trust each answer.</p>
+  <div class="runstrip">
+    <div class="rs-text"><b>Visiting from my resume?</b> Start a live analysis (about 30&ndash;90 s) and read on while it runs. A pill in the top bar tells you when the result is ready.</div>
+    <div class="rs-ctl">
+      <select id="heroDomain" aria-label="Domain for the live run"></select>
+      <button class="btn" id="heroRun" disabled>Start live analysis</button>
+    </div>
+    <div class="rs-bar" id="heroBar"><i></i></div>
+  </div>
+  <div class="grid g4" style="margin-top:28px">
+    <div class="card"><div class="stat">0.97 / 0.93</div><div class="cap">Edge precision / recall of the discovered causal graph, on 10 simulated datasets where the true graph is known.</div></div>
+    <div class="card"><div class="stat">0.007</div><div class="cap">Mean absolute error of the estimated effects, where the true effects are about &plusmn;0.12&ndash;0.14. The top-ranked intervention was the true best 10 of 10 times.</div></div>
+    <div class="card"><div class="stat">+0.0020</div><div class="cap">Estimate on a real randomized trial (a workplace wellness programme) versus the trial's own +0.0022 [&minus;0.022, +0.027]. Both say: no effect.</div></div>
+    <div class="card"><div class="stat">490</div><div class="cap">Automated tests, run on every push in CI and in a clean Linux container. No test calls a paid API.</div></div>
+  </div>
+  <div class="tags">
+    <span class="pill acc">Causal discovery (PC, GES, LiNGAM)</span><span class="pill acc">DoWhy &middot; CausalML</span><span class="pill acc">Sensitivity analysis</span>
+    <span class="pill acc">Feast feature store</span><span class="pill acc">CrewAI &middot; AutoGen</span><span class="pill acc">Fairness checks</span><span class="pill acc">FastAPI &middot; Docker &middot; CI</span>
+  </div>
+</header>
+
+<main class="wrap">
+
+<section id="glance">
+  <div class="eyebrow">At a glance</div>
+  <h2>What it does, in four charts</h2>
+  <p class="sub">Drawn from the project's own evaluation results. The sections below explain each idea and let you run it yourself.</p>
+  <div class="glance">
+    <div class="card"><h3>It recovers effects it cannot see</h3><p class="why">Simulated HR data with planted effects: estimate vs the true value (change in attrition per +1 of each lever).</p><div id="chA"></div></div>
+    <div class="card"><h3>Which graph-learning method to trust?</h3><p class="why">Edge precision and recall on 10 simulated datasets with a known graph (the default setting). Benchmarked, not assumed.</p><div id="chB"></div></div>
+    <div class="card"><h3>The answer changes with the definition</h3><p class="why">Estimated effect of +1 pt of interest rate on mortgage default, by origination year. 2019 is a pandemic vintage.</p><div id="chC"></div></div>
+    <div class="card"><h3>AI writes it, code checks it</h3><p class="why">The plain-language answer comes from the first tier that passes a number-check against the results.</p><div id="chD"></div></div>
+  </div>
+</section>
+
+<section id="concept">
+  <div class="eyebrow">The idea</div>
+  <h2>Why correlation is not enough</h2>
+  <p class="sub">A lender charges higher rates to riskier borrowers, so loans with high rates default more. Is the rate causing defaults, or is risk causing both? Predictive models cannot tell; a causal model is built to.</p>
+  <div class="concept">
+    <div class="card">
+      <h3>What a prediction model sees</h3>
+      <svg viewBox="0 0 320 130" width="100%" role="img" aria-label="Interest rate and default are correlated">
+        <rect x="20" y="45" width="110" height="38" rx="8" fill="var(--node)" stroke="var(--lever)" stroke-width="2"/><text x="75" y="69" text-anchor="middle" font-size="13" fill="var(--fg)">interest rate</text>
+        <rect x="190" y="45" width="110" height="38" rx="8" fill="var(--bad-soft)" stroke="var(--outcome)" stroke-width="2.5"/><text x="245" y="69" text-anchor="middle" font-size="13" fill="var(--fg)">default</text>
+        <path d="M132 64 H188" stroke="var(--muted)" stroke-width="2" stroke-dasharray="4 4"/>
+        <text x="160" y="108" text-anchor="middle" font-size="12" fill="var(--muted)">strongly associated &rarr; &ldquo;cut rates to cut defaults?&rdquo;</text>
+      </svg>
+    </div>
+    <div class="card">
+      <h3>What RootCause models</h3>
+      <svg viewBox="0 0 320 130" width="100%" role="img" aria-label="Borrower risk causes both rate and default">
+        <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs>
+        <rect x="105" y="8" width="110" height="34" rx="8" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="2"/><text x="160" y="30" text-anchor="middle" font-size="12.5" fill="var(--fg)">borrower risk</text>
+        <rect x="20" y="82" width="110" height="34" rx="8" fill="var(--node)" stroke="var(--lever)" stroke-width="2"/><text x="75" y="104" text-anchor="middle" font-size="12.5" fill="var(--fg)">interest rate</text>
+        <rect x="190" y="82" width="110" height="34" rx="8" fill="var(--bad-soft)" stroke="var(--outcome)" stroke-width="2.5"/><text x="245" y="104" text-anchor="middle" font-size="12.5" fill="var(--fg)">default</text>
+        <path d="M135 44 L90 80" stroke="var(--muted)" stroke-width="1.8" marker-end="url(#ah)" fill="none"/>
+        <path d="M185 44 L230 80" stroke="var(--muted)" stroke-width="1.8" marker-end="url(#ah)" fill="none"/>
+        <path d="M132 99 H186" stroke="var(--accent)" stroke-width="2" marker-end="url(#ah)" fill="none"/>
+        <text x="159" y="94" text-anchor="middle" font-size="11" fill="var(--accent)">how much?</text>
+      </svg>
+    </div>
+    <div class="card">
+      <h3>What it adds on top</h3>
+      <p style="font-size:14.5px;margin:6px 0">It adjusts for the shared causes, then <b>tries to break its own answer</b>: a shuffled-lever noise check, and how strong a hidden confounder would have to be to erase the effect. Where the data are observational, results are labelled <b>associations, not proven causes</b>.</p>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="eyebrow">Under the hood</div>
+  <h2>Seven stages, each a testable function</h2>
+  <p class="sub">The same pipeline runs on any domain from a config file: HR attrition, credit, insurance claims, mortgages, a randomized trial.</p>
+  <div class="stages">
+    <div class="stage"><h3>Ingestion</h3><p>Validate the data; optionally read PDFs and images.</p><div class="tech">pandas &middot; pypdf &middot; OpenCV</div></div>
+    <div class="stage"><h3>Feature store</h3><p>Write and serve causal features the way production does.</p><div class="tech">Feast</div></div>
+    <div class="stage"><h3>Causal discovery</h3><p>Learn the graph, seeded with domain rules.</p><div class="tech">causal-learn &middot; LiNGAM</div></div>
+    <div class="stage"><h3>Effect estimation</h3><p>Effect of each lever, with noise and confounder checks.</p><div class="tech">DoWhy &middot; statsmodels</div></div>
+    <div class="stage"><h3>Counterfactuals</h3><p>&ldquo;What if&rdquo; effects per person and subgroup.</p><div class="tech">CausalML meta-learners</div></div>
+    <div class="stage"><h3>Interventions</h3><p>Rank actions by ROI with a fairness check.</p><div class="tech">fairlearn</div></div>
+    <div class="stage"><h3>Explanation</h3><p>Plain-language answer, machine-checked against the numbers.</p><div class="tech">SHAP &middot; AutoGen &middot; OpenAI</div></div>
+  </div>
+</section>
+
+<section id="try">
+  <div class="eyebrow">Try it</div>
+  <h2>Run an analysis and read it</h2>
+  <p class="sub">Open a saved example instantly, or run the pipeline live on a bundled dataset (30&ndash;90 seconds). Click any node in the graph, or any row in the interventions, to see the evidence behind it.</p>
+
+  <h3>Saved examples</h3>
+  <div class="picker" id="samples"></div>
 
   <div class="card">
-    <div class="row">
+    <h3>Run it live <span class="pill" id="liveBadge">checking API&hellip;</span></h3>
+    <div class="live">
       <label>Domain <select id="domain"></select></label>
       <label>Dataset <select id="dataset"></select></label>
-      <label>Orchestration
-        <select id="orch"><option value="direct">direct (fast)</option><option value="crew">crew (needs OPENAI_API_KEY)</option></select>
-      </label>
-      <button id="run">Run analysis</button>
+      <button class="btn" id="run" disabled>Run analysis</button>
     </div>
-    <div id="domdesc"></div>
+    <div class="bar-anim" id="barAnim"><i></i></div>
     <div id="status"></div>
+    <div class="note">Runs the full pipeline on the server (the &ldquo;direct&rdquo; orchestration, no paid API needed; the narrative then comes from the template tier).</div>
   </div>
 
-  <div id="out" hidden>
-    <h2>Narrative</h2><div class="card" id="narrative"></div>
-    <h2>Causal graph</h2><div id="graph"></div>
-    <h2>Effect estimates</h2><div class="card" id="effects"></div>
-    <h2>Recommendations</h2><div class="card" id="recs"></div>
-    <h2>Counterfactuals</h2><div class="card" id="cfs"></div>
+  <div class="result" id="result" hidden></div>
+</section>
+
+<section id="finding">
+  <div class="eyebrow">A real finding</div>
+  <h2>Same loans, different outcome definition, different answer</h2>
+  <p class="sub">Freddie Mac mortgages originated in 2019. &ldquo;Seriously delinquent&rdquo; (90+ days late) looks like credit risk, but most of those 2019 delinquencies were COVID forbearance: borrowers who paused payments with relief and later caught up. About 92% of them were relief-flagged and 0.5% ended in liquidation. Excluding relief-flagged loans changes what the pipeline concludes.</p>
+  <div class="card" style="margin-bottom:14px">
+    <h3>What the 2019 &ldquo;defaults&rdquo; actually were</h3>
+    <div class="stack" role="img" aria-label="92.4 percent of 2019 serious delinquencies were relief-flagged"><span style="width:92.4%;background:var(--warn)">92.4% relief-flagged (forbearance, deferral, assistance plan)</span><span style="width:7.6%;background:var(--accent)">7.6%</span></div>
+    <div class="note">Of the 2,473 seriously delinquent loans in the 2019 sample, 97.4% later returned to current and 0.5% were ever liquidated. For comparison, 47% of 2007's delinquent loans were liquidated. Source: Freddie Mac loan performance files, aggregates only.</div>
   </div>
+  <div class="feat" id="featured"></div>
+</section>
+
+<section id="proof">
+  <div class="eyebrow">Does it work?</div>
+  <h2>How it is checked, including where it falls short</h2>
+  <div class="grid g3" style="margin-top:14px">
+    <div class="card"><h3>Against a known answer</h3><p style="font-size:14.5px;margin:0">Simulated data with a planted graph and effects. Over 10 fresh draws: edge precision 0.97, recall 0.93, exact graph in 8 of 10; effect error 0.007; top intervention correct 10/10. The simulated Freddie Mac twin recovered the planted rate effect to about 13%.</p></div>
+    <div class="card"><h3>Against a real experiment</h3><p style="font-size:14.5px;margin:0">On the Illinois workplace wellness randomized trial (4,834 employees), the pipeline's adjusted estimate (+0.0020) sat inside the trial's confidence interval, its noise check correctly failed, and it reproduced the trial's sex-subgroup estimates (women &minus;0.031, men +0.046).</p></div>
+    <div class="card"><h3>Where it does not work</h3><p style="font-size:14.5px;margin:0">LiNGAM drops to 0.51 edge precision once a binary outcome is included, so PC stays the default. The robustness value cannot detect confounding. Causal anomaly detection is no better than a Mahalanobis baseline at spotting swapped values. On real data there is no ground truth, so those estimates stay associations.</p></div>
+  </div>
+</section>
+
+<section id="skills">
+  <div class="eyebrow">What this project demonstrates</div>
+  <h2>Skills and depth</h2>
+  <div class="grid g3 skills" style="margin-top:14px">
+    <div class="card"><h3>Causal inference</h3><ul><li>Backdoor adjustment with refutation (DoWhy)</li><li>T/S/X/R/doubly-robust learners (CausalML)</li><li>Cinelli&ndash;Hazlett sensitivity, cross-checked against PySensemakr</li></ul></div>
+    <div class="card"><h3>Causal discovery</h3><ul><li>PC, GES and DirectLiNGAM, benchmarked</li><li>Domain priors as required / forbidden edges</li><li>Stress tests: small n, non-Gaussian, nonlinear</li></ul></div>
+    <div class="card"><h3>Evaluation rigour</h3><ul><li>Truth-scored simulations, true ATE by simulating <code>do()</code></li><li>Real-trial benchmark; bootstrap stability</li><li>Negative results written up, not hidden</li></ul></div>
+    <div class="card"><h3>LLM and agents</h3><ul><li>CrewAI hierarchical crew (7 agents + manager)</li><li>AutoGen analyst &rarr; skeptic &rarr; writer</li><li>Programmatic grounding check on every number</li></ul></div>
+    <div class="card"><h3>Data and ML engineering</h3><ul><li>Feast offline/online feature store</li><li>Multimodal ingestion (PDF, image, CNN/ViT)</li><li>Five real and simulated domains from one config format</li></ul></div>
+    <div class="card"><h3>Software engineering</h3><ul><li>FastAPI service with async job queue</li><li>Docker image and GitHub Actions CI</li><li>490 tests; bugs found by CI fixed with regression tests</li></ul></div>
+  </div>
+</section>
+
+<footer>
+  <div class="callout">On real, non-experimental data (credit, claims, mortgages) the numbers are <b>associations adjusted for measured factors, not proven causes</b>: lenders and insurers set terms based on risk, so unmeasured confounding is expected. The pipeline labels these results as such, and its checks show how sensitive they are.</div>
+  <p>Source and write-ups: <a href="https://github.com/Ramya192/RootCause">github.com/Ramya192/RootCause</a> &middot; API docs: <a href="/docs">/docs</a></p>
+</footer>
 </main>
+
 <script>
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const num = (x, d=4) => typeof x === "number" ? x.toFixed(d) : "";
-let domains = [];
+const nice = s => String(s).replace(/__/g, " · ").replace(/_/g, " ");
+const f = (x, d=4) => (typeof x === "number" && isFinite(x)) ? x.toFixed(d) : "n/a";
+const sgn = (x, d=4) => (typeof x === "number") ? (x >= 0 ? "+" : "−") + Math.abs(x).toFixed(d) : "n/a";
+const pp = x => (typeof x === "number") ? (x >= 0 ? "+" : "−") + Math.abs(x * 100).toFixed(2) + " pts" : "n/a";
+const TIER = {autogen:"AutoGen analyst → skeptic → writer team", llm:"single LLM call", template:"deterministic template"};
 
-function setStatus(msg, err=false) { $("status").textContent = msg; $("status").className = err ? "err" : ""; }
+let samples = [], domains = [], current = null, selected = null, showTruth = false;
 
-function fillDatasets() {
-  const d = domains.find(x => x.id === $("domain").value);
-  $("dataset").innerHTML = d.datasets.map(x => `<option ${x===d.default_dataset?"selected":""}>${esc(x)}</option>`).join("");
-  $("domdesc").textContent = d.description || "";
+/* ---------- loading ---------- */
+async function loadSamples() {
+  try {
+    samples = await (await fetch("/static/samples/index.json")).json();
+  } catch (e) { samples = []; }
+  $("samples").innerHTML = samples.length ? samples.map((m, i) =>
+    `<button class="opt" data-i="${i}" aria-pressed="false"><b>${esc(m.label)}</b><span>${esc(m.domain_name)} &middot; ${esc(m.dataset)}${m.n_rows ? " &middot; " + m.n_rows.toLocaleString() + " " + esc(m.entity_noun_plural) : ""}</span></button>`
+  ).join("") : `<div class="note">Saved examples are not available. Run <code>python scripts/build_ui_samples.py</code>.</div>`;
+  document.querySelectorAll(".opt").forEach(b => b.onclick = () => openSample(+b.dataset.i));
+  renderFeatured();
+  // deep link: #example=german_credit__real opens that saved example on load
+  const want = (location.hash.match(/example=([\w]+__[\w]+)/) || [])[1];
+  const i = samples.findIndex(m => `${m.domain_id}__${m.dataset}` === want);
+  if (i >= 0) {
+    await openSample(i);
+    // optional: &truth=1 shows the true-graph overlay, &node=<variable> selects a node
+    const node = (location.hash.match(/node=([\w]+)/) || [])[1];
+    if (/truth=1/.test(location.hash) && current.meta.truth) { showTruth = true; render(); }
+    if (node && current.res.causal_graph.nodes.includes(node)) select(node);
+  }
 }
-
-async function init() {
+async function getSample(m) {
+  return (await fetch(`/static/samples/${m.domain_id}__${m.dataset}.json`)).json();
+}
+async function openSample(i) {
+  document.querySelectorAll(".opt").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.i === i)));
+  const s = await getSample(samples[i]);
+  show(s.meta, s.result, null);
+}
+async function loadDomains() {
   try {
     domains = await (await fetch("/domains")).json();
-    $("domain").innerHTML = domains.map(d => `<option value="${esc(d.id)}" ${d.runnable?"":"disabled"}>${esc(d.name || d.id)}</option>`).join("");
+    const opts = domains.map(d => `<option value="${esc(d.id)}" ${d.runnable ? "" : "disabled"}>${esc(d.name)}</option>`).join("");
+    $("domain").innerHTML = opts; $("heroDomain").innerHTML = opts;
+    if (domains.some(d => d.id === "german_credit")) $("heroDomain").value = "german_credit"; // the quickest run
     fillDatasets();
-  } catch (e) { setStatus("Could not load domains: " + e, true); }
+    $("run").disabled = false; $("heroRun").disabled = false;
+    $("liveBadge").textContent = "API connected"; $("liveBadge").className = "pill good";
+  } catch (e) {
+    $("liveBadge").textContent = "API not reachable: saved examples only"; $("liveBadge").className = "pill warn";
+    $("heroRun").textContent = "Live run unavailable (saved examples below)";
+  }
+}
+function fillDatasets() {
+  const d = domains.find(x => x.id === $("domain").value);
+  if (!d) return;
+  $("dataset").innerHTML = d.datasets.map(x => `<option ${x === d.default_dataset ? "selected" : ""}>${esc(x)}</option>`).join("");
 }
 $("domain").onchange = fillDatasets;
 
-async function run() {
-  $("run").disabled = true; $("out").hidden = true;
-  setStatus("Submitting...");
+function status(msg, err=false) { $("status").textContent = msg; $("status").className = err ? "err" : ""; }
+function pill(text, kind) { const p = $("navRun"); p.hidden = !text; p.textContent = text || ""; p.className = "navrun " + (kind || ""); }
+$("navRun").onclick = () => {
+  if ($("navRun").classList.contains("done")) { $("result").scrollIntoView({behavior:"smooth", block:"start"}); pill(""); }
+};
+
+let running = false;
+function setBusy(on) {
+  running = on;
+  $("run").disabled = on; $("heroRun").disabled = on;
+  $("barAnim").style.display = on ? "block" : "none"; $("heroBar").style.display = on ? "block" : "none";
+}
+
+// One run function behind both buttons. From the Try-it card the result is scrolled into view;
+// from the top strip it is not (the visitor is reading elsewhere): the nav pill announces it instead.
+async function runLive(domainId, dataset, scrollToResult) {
+  if (running) return;
+  const d = domains.find(x => x.id === domainId);
+  setBusy(true);
+  document.querySelectorAll(".opt").forEach(b => b.setAttribute("aria-pressed", "false"));
+  status("Submitting..."); pill("Starting analysis…", "busy");
   try {
-    const r = await fetch(`/domains/${$("domain").value}/analyze`, {
-      method: "POST", headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({orchestration: $("orch").value, dataset: $("dataset").value})
-    });
+    const r = await fetch(`/domains/${d.id}/analyze`, {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({orchestration:"direct", dataset})});
     if (!r.ok) throw new Error((await r.json()).detail || r.statusText);
-    let job = await r.json();
-    const t0 = Date.now();
+    let job = await r.json(); const t0 = Date.now();
     while (job.status === "queued" || job.status === "running") {
-      setStatus(`Job ${job.id.slice(0,8)} ${job.status}... ${Math.round((Date.now()-t0)/1000)}s`);
+      const s = Math.round((Date.now() - t0) / 1000);
+      status(`Job ${job.id.slice(0,8)} ${job.status}… ${s}s (typically 30–90 s)`);
+      pill(`Analysing ${d.name.split(" (")[0]}… ${s}s · keep exploring`, "busy");
       await new Promise(r => setTimeout(r, 2000));
       job = await (await fetch(`/jobs/${job.id}`)).json();
     }
     if (job.status === "failed") throw new Error(job.error || "job failed");
-    setStatus(`Done in ${Math.round((Date.now()-t0)/1000)}s.`);
-    render(job);
-  } catch (e) { setStatus("Error: " + e.message, true); }
-  finally { $("run").disabled = false; }
+    status(`Finished in ${Math.round((Date.now() - t0) / 1000)} s.`);
+    const known = samples.find(s => s.domain_id === d.id && s.dataset === dataset);
+    const meta = {domain_id:d.id, domain_name:d.name, description:d.description, dataset, label:"Live run",
+      outcome:d.outcome, treatments:d.treatments, sensitive_attribute:d.sensitive_attribute,
+      observational:d.observational, entity_noun_plural:d.entity_noun_plural, truth: known?.truth, live:true};
+    show(meta, job.result, job.id, scrollToResult);
+    pill(scrollToResult ? "" : "Result ready · view ↓", scrollToResult ? "" : "done");
+  } catch (e) { status("Error: " + e.message, true); pill("Run failed: " + e.message, "err"); }
+  finally { setBusy(false); }
 }
-$("run").onclick = run;
+$("run").onclick = () => runLive($("domain").value, $("dataset").value, true);
+$("heroRun").onclick = () => {
+  const d = domains.find(x => x.id === $("heroDomain").value);
+  runLive(d.id, d.default_dataset, false);
+};
+/* ---------- result ---------- */
+function show(meta, res, jobId, scroll = true) {
+  current = {meta, res, jobId}; selected = null; showTruth = false;
+  render();
+  $("result").hidden = false;
+  if (scroll) $("result").scrollIntoView({behavior:"smooth", block:"start"});
+}
 
-function render(job) {
-  const res = job.result;
-  $("narrative").textContent = res.explanation?.narrative || "(none)";
-  $("graph").innerHTML = `<img alt="causal graph" src="/jobs/${job.id}/graph">`;
-  $("effects").innerHTML = table(["Treatment","Outcome","ATE","Estimator","Refutation"],
-    (res.effect_estimates||[]).map(e => [esc(e.treatment), esc(e.outcome), num(e.ate), esc(e.estimator),
-      `<span class="${e.refutation_passed?"pass":"fail"}">${e.refutation_passed?"passed":"failed"}</span> (p=${num(e.refutation_p_value,3)})`]));
-  $("recs").innerHTML = table(["#","Action","Target","Effect","Cost","ROI","Fairness"],
-    (res.recommendations||[]).map(r => [r.rank, esc(r.id), esc(r.target_variable), num(r.expected_effect), r.cost, num(r.roi,6),
-      `<span class="${r.fairness_pass?"pass":"fail"}">${r.fairness_pass?"pass":"fail"}</span> (${num(r.fairness_ratio,2)})`]));
-  $("cfs").innerHTML = (res.counterfactuals||[]).map(c => `<p>${esc(c.description)}</p>`).join("") || "(none)";
-  $("out").hidden = false;
+function render() {
+  const {meta, res, jobId} = current, ex = res.explanation || {};
+  const tier = ex.narrative_tier || "template";
+  $("result").innerHTML = `
+    <div class="head">
+      <h2 style="margin:0">${esc(meta.domain_name)}</h2>
+      <span class="pill">${esc(meta.dataset)}</span>
+      <span class="pill ${meta.observational ? "warn" : "good"}">${meta.observational ? "Observational data: associations, not proven causes" : (meta.truth ? "Known-answer simulation" : "Experiment / simulation")}</span>
+      <span class="pill acc">graph: ${esc(res.causal_graph.algorithm.toUpperCase())}</span>
+    </div>
+    <div class="card answer">
+      <div class="eyebrow">The answer, in plain language</div>
+      <div style="white-space:pre-line">${esc(ex.narrative || "")}</div>
+      <div class="note">Written by: ${esc(TIER[tier] || tier)}. ${tier === "template" ? "It is filled in directly from the results below, so every number matches them." : "Its text was accepted only after a programmatic check that every number matches the results below."}</div>
+    </div>
+    <div class="views">
+      <div class="card">
+        <div class="view-title"><h3>1 &middot; Causal graph</h3>
+          ${meta.truth ? `<label class="tgl"><input type="checkbox" id="tgl" ${showTruth ? "checked" : ""}> compare with the true graph</label>` : ""}</div>
+        <p class="howto">Arrows point from cause to effect. Click a node for its evidence.</p>
+        <div class="graphbox" id="graph"></div>
+        <div class="legend" id="legend"></div>
+        ${jobId ? `<div class="note"><a href="/jobs/${esc(jobId)}/graph" target="_blank">Open as PNG</a> &middot; <a href="/jobs/${esc(jobId)}/graph?format=dot" target="_blank">Graphviz DOT</a></div>` : ""}
+      </div>
+      <div class="card ev" id="evidence"></div>
+    </div>
+    <div class="views" style="grid-template-columns:minmax(0,1fr)">
+      <div class="card">
+        <div class="view-title"><h3>2 &middot; What to do about it: interventions compared</h3></div>
+        <p class="howto">Bars show the expected change in <b>${esc(nice(meta.outcome))}</b> rate (percentage points; blue = reduction, red = increase) if the action is taken. Ranked by return on cost. Click a row for its evidence.</p>
+        <div class="ibars" id="ibars"></div>
+      </div>
+    </div>
+    <div class="views" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
+      <div class="card"><h3>3 &middot; Counterfactual: &ldquo;what if&rdquo;</h3><div id="cf"></div></div>
+      <div class="card"><h3>What predicts ${esc(nice(meta.outcome))} <span class="pill">not causal</span></h3>
+        <p class="howto">SHAP shows which inputs a prediction model leans on. Strong predictors are not necessarily causes.</p><div id="shap"></div></div>
+    </div>`;
+  drawGraph(); drawEvidence(); drawInterventions(); drawCounterfactuals(); drawShap();
+  const t = $("tgl"); if (t) t.onchange = () => { showTruth = t.checked; drawGraph(); };
 }
-function table(head, rows) {
-  return `<table><tr>${head.map(h=>`<th>${h}</th>`).join("")}</tr>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</table>`;
+
+/* ---------- graph ---------- */
+function layout(nodes, edges) {
+  const layer = Object.fromEntries(nodes.map(n => [n, 0]));
+  for (let k = 0; k < nodes.length; k++)
+    for (const [a, b] of edges) if (layer[b] < layer[a] + 1 && layer[a] < nodes.length) layer[b] = layer[a] + 1;
+  const cols = [];
+  nodes.forEach(n => (cols[layer[n]] = cols[layer[n]] || []).push(n));
+  const W = 142, H = 34, GX = 40, GY = 14, PAD = 6, LANE = 9;
+  const pos = {}; const maxN = Math.max(...cols.filter(Boolean).map(c => c.length));
+  const nodesH = maxN * (H + GY) + PAD * 2;
+  cols.forEach((col, ci) => {
+    if (!col) return;
+    col.sort((a, b) => bary(a) - bary(b));
+    function bary(n) { const ps = edges.filter(e => e[1] === n && pos[e[0]]).map(e => pos[e[0]].y); return ps.length ? ps.reduce((s, v) => s + v, 0) / ps.length : 0; }
+    const total = col.length * (H + GY) - GY, y0 = (nodesH - total) / 2;
+    col.forEach((n, i) => pos[n] = {x: PAD + ci * (W + GX), y: y0 + i * (H + GY)});
+  });
+  // An edge that skips a column would be drawn straight through the nodes in between and look as if
+  // it started or ended there. Route those along a lane above or below all nodes instead.
+  // Long edges that end at the same variable share one lane (like a bus), which keeps busy graphs readable.
+  const long = edges.filter(([a, b]) => layer[b] - layer[a] > 1);
+  const byTarget = {};
+  long.forEach(e => (byTarget[e[1]] = byTarget[e[1]] || []).push(e));
+  const upper = [], lower = [];
+  Object.entries(byTarget).forEach(([t, es]) => {
+    const mid = es.reduce((s, e) => s + (pos[e[0]].y + pos[t].y) / 2, 0) / es.length;
+    (mid < nodesH / 2 ? upper : lower).push(es);
+  });
+  const top = upper.length ? upper.length * LANE + 6 : 0, bottom = lower.length ? lower.length * LANE + 6 : 0;
+  Object.values(pos).forEach(p => p.y += top);
+  const lanes = {};
+  upper.forEach((es, i) => es.forEach(e => lanes[e.join("\u0001")] = top - 6 - i * LANE));
+  lower.forEach((es, i) => es.forEach(e => lanes[e.join("\u0001")] = top + nodesH + 6 + i * LANE));
+  return {pos, lanes, W, H, GX, width: PAD * 2 + cols.length * (W + GX) - GX, height: nodesH + top + bottom};
 }
-init();
+function drawGraph() {
+  const {meta, res} = current, g = res.causal_graph;
+  const found = g.edges.map(e => e.join("\u0001")), foundSet = new Set(found);
+  const truth = (showTruth && meta.truth) ? meta.truth.edges : null;
+  const truthSet = truth ? new Set(truth.map(e => e.join("\u0001"))) : null;
+  let edges = g.edges.map(e => ({e, st: truth ? (truthSet.has(e.join("\u0001")) ? "ok" : "spur") : ""}));
+  if (truth) truth.forEach(e => { if (!foundSet.has(e.join("\u0001"))) edges.push({e, st: "miss"}); });
+  const connected = new Set(edges.flatMap(x => x.e));
+  const nodes = g.nodes.filter(n => connected.has(n));
+  const isolated = g.nodes.filter(n => !connected.has(n));
+  const L = layout(nodes, edges.map(x => x.e));
+  const role = n => n === meta.outcome ? "outcome" : meta.treatments.includes(n) ? "lever" : n === meta.sensitive_attribute ? "sens" : "";
+  const selEdges = selected ? new Set(edges.filter(x => x.e.includes(selected)).map(x => x.e.join("\u0001"))) : null;
+  const paths = edges.map(({e, st}) => {
+    const a = L.pos[e[0]], b = L.pos[e[1]];
+    const x1 = a.x + L.W, y1 = a.y + L.H / 2, x2 = b.x, y2 = b.y + L.H / 2, mx = (x1 + x2) / 2;
+    const cls = ["edge", st, selEdges ? (selEdges.has(e.join("\u0001")) ? "hl" : "dim") : ""].join(" ");
+    const lane = L.lanes[e.join("\u0001")];
+    const d = lane === undefined ? `M${x1} ${y1} C${mx} ${y1} ${mx} ${y2} ${x2 - 3} ${y2}`
+      : `M${x1} ${y1} C${x1 + L.GX / 2} ${y1} ${x1 + L.GX / 2} ${lane} ${x1 + L.GX} ${lane} L${x2 - L.GX} ${lane} C${x2 - L.GX / 2} ${lane} ${x2 - L.GX / 2} ${y2} ${x2 - 3} ${y2}`;
+    return `<path class="${cls}" data-s="${esc(e[0])}" data-t="${esc(e[1])}" d="${d}" marker-end="url(#arr)"/>`;
+  }).join("");
+  const boxes = nodes.map(n => {
+    const p = L.pos[n], label = nice(n), short = label.length > 23 ? label.slice(0, 22) + "…" : label;
+    return `<g class="node ${role(n)} ${n === selected ? "sel" : ""}" data-n="${esc(n)}" tabindex="0"><title>${esc(label)}</title>
+      <rect x="${p.x}" y="${p.y}" width="${L.W}" height="${L.H}" rx="8"/><text x="${p.x + L.W / 2}" y="${p.y + L.H / 2 + 4}" text-anchor="middle">${esc(short)}</text></g>`;
+  }).join("");
+  $("graph").innerHTML = `<svg viewBox="0 0 ${L.width} ${L.height}" style="width:100%;height:auto" role="img" aria-label="Causal graph">
+    <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs>${paths}${boxes}</svg>`;
+  document.querySelectorAll("#graph .node").forEach(el => {
+    el.onmouseenter = () => hoverNode(el.dataset.n);
+    el.onmouseleave = () => hoverNode(selected);
+    el.onclick = () => select(el.dataset.n);
+    el.onkeydown = ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); select(el.dataset.n); } };
+  });
+  const leg = [`<span><i style="background:var(--outcome)"></i>outcome</span>`, `<span><i style="background:var(--lever)"></i>lever (estimated)</span>`];
+  if (meta.sensitive_attribute) leg.push(`<span><i style="border:2px dashed var(--sens)"></i>fairness attribute</span>`);
+  if (truth) {
+    const tp = edges.filter(x => x.st === "ok").length, fp = edges.filter(x => x.st === "spur").length, fn = edges.filter(x => x.st === "miss").length;
+    leg.push(`<span><i style="background:var(--good)"></i>correct (${tp})</span>`, `<span><i style="background:#d07a00"></i>not in truth (${fp})</span>`, `<span><i style="background:var(--bad)"></i>missed (${fn})</span>`);
+  }
+  $("legend").innerHTML = leg.join("") + (isolated.length ? `<span>not connected: ${esc(isolated.map(nice).join(", "))}</span>` : "");
+}
+
+// Highlight the edges touching a node (hover or selection) and fade the rest; null restores the plain view.
+function hoverNode(n) {
+  document.querySelectorAll("#graph .edge").forEach(p => {
+    p.classList.remove("hl", "dim");
+    if (n) p.classList.add(p.dataset.s === n || p.dataset.t === n ? "hl" : "dim");
+  });
+}
+function select(n) { selected = n; drawGraph(); drawEvidence(); $("evidence").scrollIntoView({block:"nearest", behavior:"smooth"}); }
+
+/* ---------- evidence ---------- */
+function drawEvidence() {
+  const {meta, res} = current, n = selected;
+  const el = $("evidence");
+  if (!n) {
+    el.innerHTML = `<h3>Evidence and assumptions</h3><p class="howto">Click a node in the graph, or a row in the interventions, to see what supports it.</p>
+      <h4>Assumptions behind every number</h4>
+      <p>&bull; The graph comes from the <b>${esc(res.causal_graph.algorithm.toUpperCase())}</b> algorithm plus domain rules (forbidden and required edges), and is a model, not a measurement.</p>
+      <p>&bull; Effects assume the factors adjusted for capture the shared causes (no unmeasured confounding).</p>
+      <p>&bull; ${meta.observational ? "These data are <b>observational</b>, so read results as associations." : meta.truth ? "These data come from a simulation with a known answer, so results can be checked against the truth." : "These data come from a randomized or simulated source."}</p>
+      <p>&bull; Predictive importance (SHAP) is not causal importance.</p>`;
+    return;
+  }
+  const est = res.effect_estimates.find(e => e.treatment === n);
+  const rec = res.recommendations.find(r => r.target_variable === n);
+  const parents = res.causal_graph.edges.filter(e => e[1] === n).map(e => e[0]);
+  const kids = res.causal_graph.edges.filter(e => e[0] === n).map(e => e[1]);
+  let h = `<h3>${esc(nice(n))}</h3>`;
+  h += `<dl class="kv"><dt>Direct causes found</dt><dd>${parents.length ? esc(parents.map(nice).join(", ")) : "none"}</dd><dt>Direct effects found</dt><dd>${kids.length ? esc(kids.map(nice).join(", ")) : "none"}</dd></dl>`;
+  if (est) {
+    const o = nice(meta.outcome), s = est.sensitivity;
+    h += `<h4>Estimated effect</h4><p><b>${sgn(est.ate)}</b> change in ${esc(o)} for each +1 in ${esc(nice(n))} (${pp(est.ate)} of ${esc(o)} rate), holding the adjustment set fixed.</p>`;
+    if (meta.truth && meta.truth.effects && n in meta.truth.effects)
+      h += `<p>Simulated truth: <b>${sgn(meta.truth.effects[n])}</b>. Estimation error ${f(Math.abs(est.ate - meta.truth.effects[n]), 4)}.</p>`;
+    h += `<h4>Noise check (permutation placebo)</h4>`;
+    h += est.refutation_passed === true
+      ? `<p><span class="pill good">passed</span> Shuffling ${esc(nice(n))} makes the effect vanish, so the estimate stands out from random noise (p = ${f(est.refutation_p_value, 3)}).</p>`
+      : est.refutation_passed === false
+        ? `<p><span class="pill bad">failed</span> The estimate cannot be told apart from noise (p = ${f(est.refutation_p_value, 3)}). Read it as <b>no evidence of an effect</b>.</p>`
+        : `<p>Not run.</p>`;
+    if (s) {
+      h += `<h4>How strong would a hidden confounder have to be?</h4>
+        <p>An unmeasured factor would need to explain at least <b>${(s.robustness_value * 100).toFixed(1)}%</b> of the remaining variation in <i>both</i> ${esc(nice(n))} and ${esc(o)} to push this estimate to zero (robustness value).</p>`;
+      if (s.benchmark_covariate)
+        h += `<p>For scale: a factor as strong as <b>${esc(nice(s.benchmark_covariate))}</b> would move the estimate to ${sgn(s.benchmark_adjusted_estimate)} ${s.robust_to_benchmark ? `<span class="pill good">same conclusion</span>` : `<span class="pill bad">conclusion would change</span>`}.</p>`;
+    }
+  } else if (n === meta.outcome) {
+    h += `<p>This is the outcome the analysis explains. Its direct causes in the discovered graph are listed above.</p>`;
+  } else {
+    h += `<p>Not one of the levers whose effect is estimated. Its role here is as a cause or confounder in the graph.</p>`;
+  }
+  if (rec) h += `<h4>Intervention on this lever</h4><p><b>${esc(nice(rec.id))}</b>: rank ${rec.rank}, cost ${rec.cost.toLocaleString()}, ROI ${f(rec.roi, 6)} (benefit per unit cost).</p>`;
+  el.innerHTML = h;
+}
+
+/* ---------- interventions ---------- */
+function drawInterventions() {
+  const {meta, res} = current, recs = [...res.recommendations].sort((a, b) => a.rank - b.rank);
+  if (!recs.length) { $("ibars").innerHTML = "<p>No interventions configured.</p>"; return; }
+  const max = Math.max(...recs.map(r => Math.abs(r.expected_effect)), 1e-9);
+  const s = meta.sensitive_attribute ? nice(meta.sensitive_attribute) : null;
+  $("ibars").innerHTML = recs.map(r => {
+    const w = Math.abs(r.expected_effect) / max * 100, neg = r.expected_effect < 0;
+    const fair = r.fairness_ratio == null ? "" : r.fairness_pass
+      ? `<span class="pill good" title="lowest group outcome rate / highest, must be at least 0.80">fairness OK (${esc(s)}): ${f(r.fairness_ratio, 2)}</span>`
+      : `<span class="pill bad" title="lowest group outcome rate / highest, must be at least 0.80">fairness flag (${esc(s)}): ${f(r.fairness_ratio, 2)}</span>`;
+    return `<div class="row" data-v="${esc(r.target_variable)}">
+      <div class="nm">#${r.rank} ${esc(nice(r.id))}<small>acts on ${esc(nice(r.target_variable))} &middot; cost ${r.cost.toLocaleString()} &middot; ROI ${f(r.roi, 6)}</small></div>
+      <div><div class="track"><div class="fill ${neg ? "neg" : ""}" style="left:0;width:${w}%"></div></div><div style="margin-top:4px">${fair}</div></div>
+      <div class="val"><b>${neg ? "+" : "−"}${Math.abs(r.expected_effect * 100).toFixed(2)} pts</b><br><span class="note">${neg ? "raises" : "lowers"} ${esc(nice(meta.outcome))}</span></div></div>`;
+  }).join("") + `<div class="note">Costs are illustrative inputs set in each domain's config, not measured. A fairness flag means the groups' outcome rates differ by more than the four-fifths rule allows; it is a prompt to look closer, not a verdict.</div>`;
+  document.querySelectorAll("#ibars .row").forEach(r => r.onclick = () => select(r.dataset.v));
+}
+
+/* ---------- counterfactual + shap ---------- */
+function drawCounterfactuals() {
+  const {meta, res} = current, cfs = res.counterfactuals || [];
+  const o = nice(meta.outcome);
+  $("cf").innerHTML = cfs.length ? cfs.map(c => {
+    const m = c.mean_cate, sd = c.cate_std || 0;
+    const R = Math.max(Math.abs(m) + sd, 0.05) * 1.15, W = 420, H = 74, x = v => W / 2 + v / R * (W / 2 - 14);
+    const chart = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Average counterfactual effect with the spread across individuals">
+      <line x1="14" y1="38" x2="${W - 14}" y2="38" stroke="var(--line)" stroke-width="2"/>
+      <line x1="${x(0)}" y1="26" x2="${x(0)}" y2="50" stroke="var(--muted)" stroke-width="1.5"/>
+      <text x="${x(0)}" y="64" text-anchor="middle" font-size="11" fill="var(--muted)">no change</text>
+      ${sd ? `<line x1="${x(m - sd)}" y1="38" x2="${x(m + sd)}" y2="38" stroke="#8aa8ee" stroke-width="7" stroke-linecap="round" opacity=".55"/>` : ""}
+      <circle cx="${x(m)}" cy="38" r="8" fill="${m < 0 ? "var(--good)" : "var(--bad)"}"/>
+      <text x="${x(m)}" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="var(--fg)">${pp(m)}</text>
+      <text x="14" y="64" font-size="10.5" fill="var(--muted)">lowers ${esc(o)}</text>
+      <text x="${W - 14}" y="64" text-anchor="end" font-size="10.5" fill="var(--muted)">raises ${esc(o)}</text></svg>`;
+    return `<p style="margin:6px 0">${esc(c.description)}</p>${chart}
+      <div class="note"><b>How to read it:</b> the dot is the average change in the ${esc(o)} rate; the shaded bar is how much the model's individual-level estimates vary around it${sd ? ` (&plusmn;${(sd * 100).toFixed(1)} pts)` : ""}, so the effect is not the same for everyone. Learner: ${esc(c.meta_learner)}.${c.extreme_propensity_share != null ? ` ${(c.extreme_propensity_share * 100).toFixed(0)}% of units have extreme propensity (poor overlap).` : ""}</div>
+      ${c.subgroups && c.subgroups.length ? `<h4 style="margin:12px 0 4px;font-size:13px;color:var(--muted)">By subgroup</h4><table class="t"><tr><th>Subgroup</th><th>n</th><th>Mean effect</th></tr>${c.subgroups.map(g => `<tr><td>${esc(nice(g.variable))} = ${esc(g.level)}</td><td>${g.n.toLocaleString()}</td><td>${sgn(g.mean_cate)} (${pp(g.mean_cate)})</td></tr>`).join("")}</table>` : ""}`;
+  }).join("") : "<p>None configured.</p>";
+}function drawShap() {
+  const sh = current.res.explanation?.shap_summary || {};
+  const top = Object.entries(sh).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  if (!top.length) { $("shap").innerHTML = "<p>Not available.</p>"; return; }
+  const m = top[0][1] || 1;
+  $("shap").innerHTML = top.map(([k, v]) => `<div class="mini"><span title="${esc(k)}">${esc(nice(k))}</span><div class="track"><div class="fill" style="left:0;width:${v / m * 100}%"></div></div><span>${v.toFixed(3)}</span></div>`).join("");
+}
+
+/* ---------- at-a-glance charts ---------- */
+const hbar = (label, v, max, color, txt) =>
+  `<div class="hb"><span>${label}</span><div class="wrap2"><div class="bar" style="width:${Math.max(v / max * 100, 0.5)}%;background:${color}"><b>${txt}</b></div></div></div>`;
+
+async function renderGlance() {
+  // A: estimated vs true effects, from the known-answer sample
+  const m = samples.find(s => s.truth);
+  if (m) {
+    const s = await getSample(m), tr = m.truth.effects;
+    const rows = s.result.effect_estimates.filter(e => e.treatment in tr);
+    const mx = Math.max(...rows.flatMap(e => [Math.abs(e.ate), Math.abs(tr[e.treatment])]));
+    $("chA").innerHTML = rows.map(e => `<div class="hb" style="align-items:start"><span>${esc(nice(e.treatment))}</span><div class="pair">
+        <div class="wrap2"><div class="bar" style="width:${Math.abs(tr[e.treatment]) / mx * 100}%;background:#b7bdc6"><b>true ${sgn(tr[e.treatment], 3)}</b></div></div>
+        <div class="wrap2"><div class="bar" style="width:${Math.abs(e.ate) / mx * 100}%;background:var(--accent)"><b>est. ${sgn(e.ate, 3)}</b></div></div></div></div>`).join("")
+      + `<div class="lg"><span><i style="background:#b7bdc6"></i>true (simulated)</span><span><i style="background:var(--accent)"></i>pipeline estimate</span></div>
+         <div class="note">Bar length = size of effect; the sign is in the label (negative = lowers attrition).</div>`;
+  } else $("chA").innerHTML = `<div class="note">Build the samples to show this chart.</div>`;
+
+  // B: discovery algorithms, baseline row of the README benchmark (docs/evaluation/stress*.md)
+  const algs = [["PC (default)", .97, .93], ["GES", .96, .95], ["LiNGAM", .51, .92]];
+  $("chB").innerHTML = algs.map(([n, p, r]) => `<div class="hb" style="align-items:start"><span>${n}</span><div class="pair">
+      <div class="wrap2"><div class="bar" style="width:${p * 100}%;background:${p < .6 ? "var(--bad)" : "var(--accent)"}"><b>precision ${p.toFixed(2)}</b></div></div>
+      <div class="wrap2"><div class="bar" style="width:${r * 100}%;background:#8aa8ee"><b>recall ${r.toFixed(2)}</b></div></div></div></div>`).join("")
+    + `<div class="note">LiNGAM's precision falls to 0.51 once a binary outcome is in the data, so PC stays the default. On mixed data (Illinois mirror) GES drops to 0.60 / 0.29 vs PC 0.94 / 0.77.</div>`;
+
+  // C: interest-rate effect by vintage (docs/evaluation/freddie_mac*/results.md, full-sample estimates)
+  const v = [["2007", .1174, null], ["2008", .0991, null], ["2010", .0280, null], ["2011", .0102, null],
+             ["2016", .0154, .0053], ["2019", .0623, .0090], ["2022", .0088, .0040]];
+  const W = 460, H = 190, L = 8, B = 28, T = 16, bw = 22, gap = (W - L - v.length * bw * 2) / v.length, top = .12;
+  const y = x => H - B - x / top * (H - B - T);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Interest-rate effect by vintage">
+    <line x1="${L}" y1="${H - B}" x2="${W}" y2="${H - B}" stroke="var(--line)"/>`;
+  v.forEach(([yr, a, b], i) => {
+    const x0 = L + i * (bw * 2 + gap) + gap / 2;
+    svg += `<rect x="${x0}" y="${y(a)}" width="${bw}" height="${H - B - y(a)}" rx="3" fill="${yr === "2019" ? "var(--bad)" : "var(--accent)"}"/>
+      <text x="${x0 + bw / 2}" y="${y(a) - 4}" text-anchor="middle" font-size="9.5" fill="var(--fg)">${a.toFixed(3).replace(/^0/, "")}</text>`;
+    if (b != null) svg += `<rect x="${x0 + bw + 2}" y="${y(b)}" width="${bw}" height="${H - B - y(b)}" rx="3" fill="#8aa8ee"/>
+      <text x="${x0 + bw + 2 + bw / 2}" y="${y(b) - 4}" text-anchor="middle" font-size="9.5" fill="var(--muted)">${b.toFixed(3).replace(/^0/, "")}</text>`;
+    svg += `<text x="${x0 + (b != null ? bw + 1 : bw / 2)}" y="${H - 10}" text-anchor="middle" font-size="11" fill="var(--muted)">${yr}</text>`;
+  });
+  $("chC").innerHTML = svg + `</svg><div class="lg"><span><i style="background:var(--accent)"></i>90+ days late</span><span><i style="background:var(--bad)"></i>2019, 90+ days late (mostly COVID forbearance)</span><span><i style="background:#8aa8ee"></i>forbearance excluded</span></div>
+    <div class="note">Excluding forbearance cuts the 2019 estimate about 7&times;. Relief-adjusted outcomes were evaluated for 2016, 2019 and 2022 only. All are associations: lenders price on risk.</div>`;
+
+  // D: narrative tiers and the number-check gate (live runs on gpt-4o-mini, 10 runs x 4 domains)
+  $("chD").innerHTML = `<div class="flow">
+      <div class="box"><b>1 &middot; AutoGen team</b>analyst &rarr; skeptic &rarr; writer</div><span class="arrow">&rarr;</span>
+      <div class="box"><b>2 &middot; single LLM call</b>if tier 1 fails</div><span class="arrow">&rarr;</span>
+      <div class="box"><b>3 &middot; template</b>always correct</div>
+      <div class="gate">gate: every number and caveat must match the results, or the next tier is used</div></div>
+    ${hbar("AutoGen team", 37, 40, "var(--accent)", "37 / 40 passed")}${hbar("single call", 34, 40, "#8aa8ee", "34 / 40 passed")}
+    <div class="note">40 live runs each across 4 domains. The check catches wrong numbers, dropped caveats and jargon; it cannot catch correct numbers with the wrong meaning, so keyword rules cover the known cases.</div>`;
+}
+
+/* ---------- featured finding ---------- */
+async function renderFeatured() {
+  const a = samples.find(s => s.domain_id === "freddie_mac" && s.dataset === "real_2019");
+  const b = samples.find(s => s.domain_id === "freddie_mac" && s.dataset === "real_2019_relief_adjusted");
+  if (!a || !b) { $("featured").innerHTML = `<div class="note">Build the Freddie Mac samples to show this comparison.</div>`; return; }
+  const [A, B] = await Promise.all([getSample(a), getSample(b)]);
+  const rate = s => s.result.effect_estimates.find(e => e.treatment === "interest_rate");
+  const top = s => [...s.result.recommendations].sort((x, y) => x.rank - y.rank)[0];
+  const par = s => s.result.causal_graph.edges.filter(e => e[1] === "default").length;
+  const ra = rate(A), rb = rate(B), m = Math.max(Math.abs(ra?.ate || 0), Math.abs(rb?.ate || 0), 1e-9);
+  const row = (lbl, v) => `<div class="mini"><span>${lbl}</span><div class="track"><div class="fill" style="left:0;width:${Math.abs(v) / m * 100}%"></div></div><span>${sgn(v, 4)}</span></div>`;
+  $("featured").innerHTML = `
+    <div class="card"><h3>Estimated effect of +1 pt interest rate on default</h3>
+      ${ra ? row("90+ days late", ra.ate) : ""}${rb ? row("forbearance excl.", rb.ate) : ""}
+      <div class="note">Single run of each. The 10-resample evaluation gives +0.062 &rarr; +0.009, about 7&times; smaller.</div></div>
+    <div class="card"><h3>Top-ranked intervention</h3>
+      <p style="margin:6px 0"><span class="pill">90+ days late</span> ${esc(nice(top(A).id))}</p>
+      <p style="margin:6px 0"><span class="pill">forbearance excluded</span> ${esc(nice(top(B).id))}</p>
+      <div class="note">The recommendation depends on how the outcome is defined.</div></div>
+    <div class="card"><h3>Direct causes of default in the graph</h3>
+      <p style="margin:6px 0"><span class="pill">90+ days late</span> ${par(A)} variables</p>
+      <p style="margin:6px 0"><span class="pill">forbearance excluded</span> ${par(B)} variables</p>
+      <div class="note">Open both from the saved examples above and compare the graphs.</div></div>
+    <div class="card" style="grid-column:1/-1"><div class="callout info"><b>What this shows:</b> the pipeline cannot detect that an outcome is mostly forbearance, because it never sees the relief flags. This is a <b>sensitivity of the conclusion to the outcome definition</b>, found by checking the data behind the label, and it is a caution against trusting any single definition. It is not evidence that the pipeline handles pandemics.</div></div>`;
+}
+
+loadSamples().then(renderGlance); loadDomains();
 </script>
 </body>
 </html>

@@ -26,6 +26,7 @@ from typing import Callable, Literal, Optional
 
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from rootcause.api.jobs import Job, JobStatus, JobStore
@@ -56,6 +57,12 @@ class DomainSummary(BaseModel):
     runnable: bool
     datasets: list[str]
     default_dataset: str
+    # facts the browser UI needs to explain a result in plain language
+    outcome: str
+    treatments: list[str]
+    sensitive_attribute: Optional[str] = None
+    observational: bool = False
+    entity_noun_plural: str = "records"
 
 
 def create_app(
@@ -72,6 +79,8 @@ def create_app(
         jobs.shutdown()
 
     app = FastAPI(title="RootCause", description="Causal Decision Intelligence Agent", lifespan=lifespan)
+
+    app.mount("/static", StaticFiles(directory=Path(__file__).with_name("static")), name="static")
 
     @app.get("/", include_in_schema=False)
     def index() -> FileResponse:
@@ -92,6 +101,11 @@ def create_app(
                 runnable=d.is_runnable,
                 datasets=runner.available_datasets(d.extra),
                 default_dataset=d.extra["ingestion"]["default_dataset"],
+                outcome=d.extra["effect_estimation"]["outcome"],
+                treatments=[t["name"] for t in d.extra["effect_estimation"]["treatments"]],
+                sensitive_attribute=d.extra["interventions"].get("sensitive_attribute"),
+                observational=bool(d.extra.get("explanation", {}).get("observational", False)),
+                entity_noun_plural=d.extra["domain"].get("entity_noun_plural", "records"),
             )
             for d in loader.list_domains()
         ]

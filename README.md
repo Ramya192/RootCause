@@ -143,7 +143,7 @@ None of the three is a result. The signs are mostly stable, but the internal-age
 .venv/Scripts/python.exe -m rootcause.evaluation --domain freddie_mac --replicates 10 --out docs/evaluation/freddie_mac
 ```
 
-The `freddie_mac` domain uses Freddie Mac's Single-Family Loan-Level Dataset, in its published 50,000-loan random samples of fixed-rate loans, for four origination years: 2007, 2008, 2010 and 2011. The data are a registered download, so **nothing from them is committed** (`data/freddie_mac/*` is gitignored; see `data/freddie_mac/README.md` for how to get and prepare them, and for where the files differ from the user guide). The outcome is serious delinquency within 36 months: ever 90+ days late, REO, short sale or charge-off. The three levers are the interest rate, the loan-to-value ratio and the debt-to-income ratio, each adjusted for the other 24 encoded loan columns (credit score, loan size and term, mortgage insurance, purpose, occupancy, channel, property type, origination quarter and so on).
+The `freddie_mac` domain uses Freddie Mac's Single-Family Loan-Level Dataset, in its published 50,000-loan random samples of fixed-rate loans, for seven origination years: 2007, 2008, 2010 and 2011 (the main table below) and 2016, 2019 and 2022 (recent vintages and a pandemic stress case, after the table). The data are a registered download, so **nothing from them is committed** (`data/freddie_mac/*` is gitignored; see `data/freddie_mac/README.md` for how to get and prepare them, and for where the files differ from the user guide). The outcome is serious delinquency within 36 months: ever 90+ days late, REO, short sale or charge-off. The three levers are the interest rate, the loan-to-value ratio and the debt-to-income ratio, each adjusted for the other 24 encoded loan columns (credit score, loan size and term, mortgage insurance, purpose, occupancy, channel, property type, origination quarter and so on).
 
 Choices that matter, all made in `scripts/prepare_freddie_mac.py`:
 
@@ -169,7 +169,51 @@ Effects are changes in the probability of serious delinquency. Full tables: `doc
 - **The fairness flag is not a fair-lending finding.** First-time-buyer status is not a protected class (this file has no race, sex or age), and in 2010 first-time buyers default *less* (1.5% against 2.3%), which is what the 0.68 ratio flags. Read it as "default rates differ between the two groups".
 - Each year is one 50,000-loan sample of loans Freddie Mac bought, not all US mortgages.
 
-**Semi-synthetic twin, scored against a known answer.** `rootcause/configs/freddie_mac.yaml` has a fourth dataset kind, `semi_synthetic`: the real 2007 loans' covariates with a *simulated* default, whose lever effects are planted (`rootcause/evaluation/scms.py::freddie_mac_semi_synthetic_scm`, built by `scripts/generate_semi_synthetic_freddie_mac_data.py`, same idea as the German Credit twin). It keeps the real correlation between the rate and the borrower's credit score, but unlike the real data, here every driver of default *is* a recorded column, so there is no unmeasured confounding — this validates the method, not what actually causes default.
+**Recent vintages and a pandemic stress case (2016, 2019, 2022).** Three more samples, each run under two outcomes (`real_2016`, `real_2016_relief_adjusted`, and the same for 2019 and 2022):
+
+```bash
+.venv/Scripts/python.exe scripts/prepare_freddie_mac.py 2016 2019 2022                    # 90+ day outcome
+.venv/Scripts/python.exe scripts/prepare_freddie_mac.py --relief-adjusted 2016 2019 2022  # relief-adjusted outcome
+.venv/Scripts/python.exe -m rootcause.evaluation --domain freddie_mac --dataset real_2019 --dataset real_2019_relief_adjusted --replicates 10 --out docs/evaluation/freddie_mac_recent   # about 80 minutes for all six
+```
+
+- **Why 2022 is the newest year.** The data end 2026-03-31 and the outcome needs 36 months of loan age, so only loans originated through about early 2023 can be labelled. 2023 is only partly observable and 2024-2026 not at all; a shorter horizon would be a different outcome. Loan age does not advance for every month a delinquent loan misses, so 24 non-defaulted 2022 loans were still active with age under 36 and are dropped and counted (a loan that had already defaulted keeps its known outcome).
+- **The 90+ day outcome stops meaning "default" in 2020-21.** In the 2019 sample 92% of the loans that went 90+ days late carried a relief flag (a disaster flag, a payment deferral or a forbearance-type assistance plan) at or before that month, 97% were later current again and 0.5% were ever liquidated or REO. In 2007 47% were liquidated. The **relief-adjusted** outcome removes from the defaults the loans that were relief-flagged at or before their first 90+ day month and never liquidated (they stay in the sample as non-defaults). It is a heuristic: relief was not randomly assigned, some relieved loans were genuinely troubled, and the flag is information from after origination.
+
+| Vintage | Loans | 90+ day rate | Relief-adjusted rate | Relief-flagged | Later current again | Ever liquidated or REO |
+|---|---|---|---|---|---|---|
+| 2007 | 31,780 | 15.5% | 15.1% | 2.7% | 53.7% | 47.2% |
+| 2008 | 25,531 | 11.8% | 11.5% | 2.4% | 54.0% | 39.9% |
+| 2010 | 30,466 | 2.2% | 2.1% | 5.4% | 48.0% | 38.0% |
+| 2011 | 33,210 | 1.6% | 1.5% | 8.2% | 53.5% | 34.0% |
+| 2016 | 40,139 | 1.4% | 0.7% | 50.2% | 82.0% | 5.3% |
+| **2019** | 19,654 | **12.6%** | **1.0%** | **92.4%** | **97.4%** | **0.5%** |
+| 2022 | 42,230 | 3.5% | 1.7% | 53.2% | 69.8% | 3.2% |
+
+(The last three columns are shares of each vintage's 90+ day delinquencies. 61% of the 2019 loans left before month 36, mostly in the 2020-21 refinance wave, so its survivors are the most selected sample here.)
+
+| Vintage, outcome | Interest rate, per +1 point (bootstrap sd) | LTV, per point (placebo passed) | DTI, per point (placebo passed) | Rank-1 intervention (of 10 resamples) | First-time-buyer ratio (flagged) |
+|---|---|---|---|---|---|
+| 2016, 90+ day | +0.0154 (0.0020) | +0.0001 (8/10) | +0.0001 (3/10) | lower rate, 10 | 0.71 (10/10) |
+| 2016, relief-adjusted | +0.0053 (0.0015) | +0.0000 (6/10) | +0.0001 (2/10) | lower rate 7, cap LTV 3 | 0.63 (10/10) |
+| 2019, 90+ day | +0.0623 (0.0063) | +0.0007 (10/10) | +0.0025 (10/10) | cap DTI, 10 | 0.84 (1/10) |
+| 2019, relief-adjusted | +0.0090 (0.0018) | -0.0000 (4/10) | -0.0000 (0/10) | lower rate, 10 | 0.70 (9/10) |
+| 2022, 90+ day | +0.0088 (0.0018) | +0.0002 (8/10) | +0.0003 (9/10) | cap DTI 8, cap LTV 2 | 0.83 (2/10) |
+| 2022, relief-adjusted | +0.0040 (0.0014) | +0.0000 (3/10) | +0.0001 (3/10) | cap DTI 5, lower rate 4, cap LTV 1 | 0.87 (0/10) |
+
+Effects are changes in the probability of the outcome. Full tables: `docs/evaluation/freddie_mac_recent/results.md`.
+
+**How to read it, honestly:**
+
+- **The conclusions depend on how the outcome is defined, and the pipeline cannot tell you that.** In 2019 the interest-rate estimate is 7 times smaller under the relief-adjusted outcome (+0.062 to +0.009), the LTV and DTI effects go from placebo-passing in 10 of 10 resamples to indistinguishable from zero, the top-ranked intervention flips from "cap DTI" (10 of 10) to "lower the interest rate" (10 of 10), and the first-time-buyer verdict flips from rarely flagged (1 of 10) to mostly flagged (9 of 10). A plausible reason (not tested here) is that under the 90+ day outcome the pipeline is partly measuring who took up forbearance, not who failed to pay. The fix is in data preparation, not in a pipeline stage: Stage 4 never sees the relief flags.
+- **This is a sensitivity result, not proof that the pipeline "handles" a pandemic.** The relief-adjusted 2019 outcome has only 194 events in 19,654 loans, so its LTV and DTI estimates are noisy (the sign matches the full sample in 8 of 10 resamples) and I would not read anything into their size. The adjusted outcome is better than the 90+ day one for 2019, not a verified loss definition.
+- **2016 and 2022 are affected less but not trivially.** About half of their 90+ day delinquencies are relief-flagged, the rate estimate shrinks 2-3 times under the adjusted outcome (+0.0154 to +0.0053, +0.0088 to +0.0040), and the 2022 ranking becomes unstable (5, 4 and 1 of 10 across three interventions). The four older vintages are barely affected (2-8% relief-flagged), so their results above stand.
+- **The discovered graphs agree with that (descriptive only).** On the 2019 90+ day data the PC graph has six variables pointing at the outcome (credit score, loan size, LTV, DTI, mortgage insurance and the rate); on the relief-adjusted data it has two (credit score and the rate). Figures: `docs/figures/freddie_mac_real_2019_pc.png` and `docs/figures/freddie_mac_real_2019_relief_adjusted_pc.png` (and 2016, 2022). There is no true graph to compare them with, and in the figures a long edge can pass behind a node.
+- **All of these remain confounded associations.** There is no ground truth for the real vintages (see the twin below for the one place there is), lenders set the rate from risk, and the placebo test and the sensitivity analysis cannot see that. The vintages are never pooled and their effect sizes are not comparable.
+
+**Data source and terms.** Freddie Mac's Single-Family Loan-Level Dataset, used under its dataset and website terms: analysis for personal or internal purposes, and noncommercial research results that cannot be used to recreate the data or identify anyone. This repository publishes only aggregates (the tables above, figures, code), no loan-level rows and no real loan identifiers, and is not affiliated with or endorsed by Freddie Mac. Details in `data/freddie_mac/README.md`.
+
+**Semi-synthetic twin, scored against a known answer.** `rootcause/configs/freddie_mac.yaml` has a further dataset kind, `semi_synthetic`: the real 2007 loans' covariates with a *simulated* default, whose lever effects are planted (`rootcause/evaluation/scms.py::freddie_mac_semi_synthetic_scm`, built by `scripts/generate_semi_synthetic_freddie_mac_data.py`, same idea as the German Credit twin). It keeps the real correlation between the rate and the borrower's credit score, but unlike the real data, here every driver of default *is* a recorded column, so there is no unmeasured confounding — this validates the method, not what actually causes default.
 
 ```bash
 .venv/Scripts/python.exe scripts/generate_semi_synthetic_freddie_mac_data.py
@@ -360,6 +404,8 @@ That is 37/40 against 34/40, **not a difference 40 runs can resolve**, and each 
 
 **What the check does not catch**, seen in the live runs: a narrative can use only correct numbers and still mislead. One AutoGen attrition draft called the ROI "very low at $15,000" (that is the cost, not the ROI); the check passed it. Sign is not checked (prose says "cuts by 2.5 points", not "-2.5"), the number-to-lever attribution is not checked, and an effect is stated without units. It is a guard against invented figures and dropped caveats, not proof that the text is right. The live tiers are not in the test suite (the suite never calls OpenAI: the chain is tested against AutoGen's replay client and the tiers against stubs).
 
+**Observational domains (`explanation.observational: true`).** The first live Freddie Mac narratives passed every check yet called the interest rate "a key factor driving" delinquency, which is causal language on a confounded association. For the three real observational domains (`freddie_mac`, `german_credit`, `carclaims`) the check now also requires the text to say the findings are associations (or observational, correlational, unmeasured, "not proven causes") and rejects causal wording ("drives", "causes", "leads to", "key factor", "main driver", "contributing to"; a negated mention such as "not proven causes" is allowed). The instruction is also given to the writers and the template header changes from "Top-line drivers ... causal effect size" to "Associations with ... (not proven causes)". Re-run live on Freddie Mac 2007 (3 runs, `gpt-4o-mini`): all three used "associated with" and added an observational caveat. The check is keyword-based, so it can be fooled by a rephrasing, and it still does not catch a wrong meaning built from correct numbers in general. One such case is now covered: two of those three runs called the ROI of 0.0000391 "favorable" when it is tiny, so for every domain, when the recommended action's ROI (benefit / cost) is below 1 the check rejects favorable wording ("favorable", "worthwhile", "good investment", "pays off", "cost-effective", ...; negations such as "not worthwhile" are allowed) and the writers are told to say the benefit is smaller than the cost. This is a keyword rule for that one known failure, not a general meaning check; it was not re-run live.
+
 AutoGen is optional (`autogen-agentchat`, `autogen-ext[openai]`); without it, tier 1 is skipped. Its `autogen-core` pins `protobuf~=5.29`, but CrewAI and Feast need `protobuf>=6.33.5` (a 5.x runtime fails on their generated code), so it lives in `requirements-autogen.txt`, not `requirements.txt` (listed together, pip's resolver falls back to a placeholder `autogen-agentchat 0.0.2`). Install it after the main requirements: `pip install -r requirements-autogen.txt` and then `pip install --no-deps "protobuf>=6.33.5,<7"`. `pip check` will report autogen-core's pin; it is harmless for local chats, which do not use its gRPC runtime.
 
 ### Multimodal ingestion (PDF and images)
@@ -441,7 +487,7 @@ curl localhost:8000/jobs/ed1c…
 .venv/Scripts/python.exe -m pytest
 ```
 
-451 tests, about 3-5 minutes (on a clean checkout, as in CI and the Docker image, 434 run and 17 skip: the 3 CNN tests skip themselves without torch or the pretrained weights, and 14 Freddie Mac tests (9 on the real files, 5 on the semi-synthetic twin) skip when that registered download is absent; the outcome/censoring rules and the twin's planted-effect constants are still tested on a small fake file in the real layout). They run real code on the real dataset (Feast round-trip, DoWhy, causal-learn) with no mocks, and assert the pipeline still recovers the ground-truth graph and effect signs. They never call OpenAI. The crew is only checked for wiring; a full crew run is deliberately not in the suite because of its cost.
+487 tests, about 4-5 minutes (on a clean checkout, as in CI and the Docker image, 466 run and 21 skip: the 3 CNN tests skip themselves without torch or the pretrained weights, and 18 Freddie Mac tests (13 on the real files, 5 on the semi-synthetic twin) skip when that registered download is absent; the outcome/censoring rules and the twin's planted-effect constants are still tested on a small fake file in the real layout). They run real code on the real dataset (Feast round-trip, DoWhy, causal-learn) with no mocks, and assert the pipeline still recovers the ground-truth graph and effect signs. They never call OpenAI. The crew is only checked for wiring; a full crew run is deliberately not in the suite because of its cost.
 
 ## Docker and CI
 

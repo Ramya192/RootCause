@@ -29,6 +29,9 @@ YEARS = ("2007", "2008", "2010", "2011")
 # (loans, defaults, loans with DTI not available) in the prepared files, from the sample vintages
 REAL_COUNTS = {"2007": (31780, 4936, 678), "2008": (25531, 3013, 542),
                "2010": (30466, 671, 10335), "2011": (33210, 538, 12174)}
+NEW_YEARS = ("2016", "2019", "2022")
+# (loans, 90+ day defaults, relief-adjusted defaults, DTI not available) in the prepared files
+NEW_COUNTS = {"2016": (40139, 550, 276, 2124), "2019": (19654, 2473, 194, 24), "2022": (42230, 1485, 707, 3)}
 
 
 # --- a fake raw pair in the real layout ---------------------------------------------------
@@ -112,6 +115,14 @@ def real_path(year: str) -> Path:
     return REPO_ROOT / "data" / "freddie_mac" / f"loans_{year}.csv"
 
 
+def new_path(year: str, adjusted: bool = False) -> Path:
+    suffix = "_relief_adjusted" if adjusted else ""
+    return REPO_ROOT / "data" / "freddie_mac" / f"loans_{year}{suffix}.csv"
+
+
+needs_new = pytest.mark.skipif(
+    not all(new_path(y, a).exists() for y in NEW_YEARS for a in (False, True)),
+    reason="Freddie Mac 2016/2019/2022 loans files not prepared (registered download)")
 needs_real = pytest.mark.skipif(not all(real_path(y).exists() for y in YEARS),
                                 reason="Freddie Mac loans_<year>.csv not prepared (registered download)")
 
@@ -229,7 +240,10 @@ def test_a_defect_row_after_the_termination_does_not_move_the_termination_age():
 
 def test_config_has_one_real_dataset_per_vintage_and_a_semi_synthetic_twin(config_loader, fm_config):
     assert config_loader.get_domain(DOMAIN).is_runnable
-    assert runner.available_datasets(fm_config) == [*(f"real_{y}" for y in YEARS), "semi_synthetic"]
+    assert runner.available_datasets(fm_config) == [
+        *(f"real_{y}" for y in YEARS),
+        *(f"real_{y}{suffix}" for y in NEW_YEARS for suffix in ("", "_relief_adjusted")),
+        "semi_synthetic"]
     assert runner.resolve_dataset(fm_config) == "real_2007"  # the twin never becomes the default
     # the real vintages have no ground truth; only the semi-synthetic twin does
     assert [key for key in SCM_REGISTRY if key[0] == DOMAIN] == [(DOMAIN, "semi_synthetic")]
@@ -356,3 +370,115 @@ def test_2010_11_relief_refinances_have_no_dti_and_2007_08_mostly_do():
     share = {y: pd.read_csv(real_path(y))["dti_missing"].mean() for y in YEARS}
     assert share["2010"] > 0.25 and share["2011"] > 0.25
     assert share["2007"] < 0.05 and share["2008"] < 0.05
+
+
+# --- the relief-adjusted outcome and the recent vintages ----------------------------------
+
+RELIEF_COLUMNS = {"deferral": 24, "disaster": 28, "assistance_plan": 29}
+
+
+def relief_perf(seq, ages, status_at=None, zero_balance="", flags=None):
+    """perf_rows plus the three optional relief columns; `flags` maps age -> {column name: value}."""
+    rows = perf_rows(seq, ages, status_at=status_at, zero_balance=zero_balance)
+    for row in rows:
+        for position in RELIEF_COLUMNS.values():
+            row[position] = ""
+        for column, value in (flags or {}).get(int(row[4]), {}).items():
+            row[RELIEF_COLUMNS[column]] = value
+    return rows
+
+
+def relief_case():
+    """Seven loans that each hit 90+ days at age 12 (G never does), differing in relief and what followed."""
+    plan = {a: {"assistance_plan": "F"} for a in range(10, 15)}
+    seqs = {n: f"F19Q10000{i:03d}" for i, n in enumerate("ABCDEFG", start=1)}
+    perf = (
+        relief_perf(seqs["A"], range(1, 41), status_at={12: "03"}, flags=plan)  # forbearance, cured
+        + relief_perf(seqs["B"], range(1, 31), status_at={a: "03" for a in range(12, 31)}, zero_balance="03", flags=plan)  # ...then liquidated
+        + relief_perf(seqs["C"], range(1, 41), status_at={12: "03"})  # no relief
+        + relief_perf(seqs["D"], range(1, 41), status_at={12: "03"}, flags={20: {"assistance_plan": "F"}})  # flag AFTER
+        + relief_perf(seqs["E"], range(1, 41), status_at={12: "03"}, flags={12: {"disaster": "Y"}})
+        + relief_perf(seqs["F"], range(1, 41), status_at={12: "03"}, flags={11: {"deferral": "C"}})
+        + relief_perf(seqs["G"], range(1, 41), flags=plan)  # relief but never delinquent
+    )
+    return seqs, [orig_row(s) for s in seqs.values()], perf
+
+
+def test_relief_adjusted_outcome_drops_only_relief_flagged_delinquencies_that_never_liquidated():
+    seqs, orig, perf = relief_case()
+    serious, rep_s = prepare.prepare(*frames(orig, perf))
+    adjusted, rep_a = prepare.prepare(*frames(orig, perf), outcome="relief_adjusted")
+    by_loan = lambda df: dict(zip(df["loan_sequence"], df["default"]))  # noqa: E731
+    assert by_loan(serious) == {seqs["A"]: 1, seqs["B"]: 1, seqs["C"]: 1, seqs["D"]: 1, seqs["E"]: 1, seqs["F"]: 1,
+                                seqs["G"]: 0}
+    # A (forbearance, cured), E (disaster) and F (COVID deferral) are not defaults any more; B was liquidated,
+    # C had no relief and D's relief came after the delinquency began
+    assert by_loan(adjusted) == {seqs["A"]: 0, seqs["B"]: 1, seqs["C"]: 1, seqs["D"]: 1, seqs["E"]: 0, seqs["F"]: 0,
+                                 seqs["G"]: 0}
+    assert list(serious["loan_sequence"]) == list(adjusted["loan_sequence"])  # same loans, only the label differs
+    for report in (rep_s, rep_a):
+        assert report["n_default_serious_delinquency"] == 6 and report["n_default_relief_adjusted"] == 3
+        assert report["serious_share_relief_flagged"] == pytest.approx(4 / 6)  # A, B, E, F
+        assert report["serious_share_liquidated"] == pytest.approx(1 / 6)
+        assert report["serious_share_cured"] == pytest.approx(5 / 6)  # everyone but B went back to current
+    assert (rep_s["outcome"], rep_a["outcome"]) == ("serious_delinquency", "relief_adjusted")
+    assert rep_s["n_default"] == 6 and rep_a["n_default"] == 3
+
+
+def test_without_the_relief_columns_both_outcomes_agree_and_nothing_is_flagged():
+    orig = [orig_row("F07Q10000001"), orig_row("F07Q10000002")]
+    perf = perf_rows("F07Q10000001", range(1, 41), status_at={12: "03"}) + perf_rows("F07Q10000002", range(1, 41))
+    a, ra = prepared(orig, perf)
+    b, rb = prepare.prepare(*frames(orig, perf), outcome="relief_adjusted")
+    assert a["default"].tolist() == b["default"].tolist() == [1, 0]
+    assert ra["serious_share_relief_flagged"] == 0.0
+
+
+def test_a_flag_on_an_unknown_deferral_or_plan_code_is_not_relief():
+    seq = "F19Q10000001"
+    perf = relief_perf(seq, range(1, 41), status_at={12: "03"},
+                       flags={12: {"deferral": "X", "assistance_plan": "N"}})
+    loans, _ = prepare.prepare(*frames([orig_row(seq)], perf), outcome="relief_adjusted")
+    assert loans["default"].tolist() == [1]
+
+
+def test_unobserved_loans_can_be_dropped_and_counted_instead_of_raising():
+    young, defaulted = "F22Q10000001", "F22Q10000002"
+    orig = [orig_row(young), orig_row(defaulted), orig_row("F22Q10000003")]
+    perf = (perf_rows(young, range(1, 20)) + perf_rows(defaulted, range(1, 20), status_at={15: "03"})
+            + perf_rows("F22Q10000003", range(1, 41)))
+    with pytest.raises(ValueError, match="still active"):
+        prepare.prepare(*frames(orig, perf))
+    loans, report = prepare.prepare(*frames(orig, perf), unobserved="drop")
+    # the already-defaulted loan has a known outcome and stays; the young non-defaulter is unknown
+    assert sorted(loans["loan_sequence"]) == [defaulted, "F22Q10000003"]
+    assert report["excluded_still_unobserved"] == 1 and report["excluded_left_before_horizon"] == 0
+
+
+def test_prepare_rejects_an_unknown_outcome_or_unobserved_mode():
+    o, p = [orig_row("F07Q10000001")], perf_rows("F07Q10000001", range(1, 41))
+    with pytest.raises(ValueError, match="outcome must be one of"):
+        prepare.prepare(*frames(o, p), outcome="loss")
+    with pytest.raises(ValueError, match="unobserved must be"):
+        prepare.prepare(*frames(o, p), unobserved="guess")
+
+
+@needs_new
+@pytest.mark.parametrize("year", NEW_YEARS)
+def test_recent_vintages_have_the_documented_counts_under_both_outcomes(year):
+    n, serious, adjusted, dti_missing = NEW_COUNTS[year]
+    a, b = pd.read_csv(new_path(year)), pd.read_csv(new_path(year, adjusted=True))
+    assert list(a.columns) == list(b.columns) == prepare.COLUMNS
+    assert (len(a), int(a["default"].sum()), int(a["dti_missing"].sum())) == (n, serious, dti_missing)
+    assert int(b["default"].sum()) == adjusted and len(b) == n
+    assert a["loan_sequence"].tolist() == b["loan_sequence"].tolist()
+    assert (b["default"] <= a["default"]).all()  # the adjusted outcome only removes defaults
+    assert not a.isna().any().any() and not b.isna().any().any()
+
+
+@needs_new
+def test_2019_is_a_pandemic_stress_case_the_90_day_outcome_is_not_credit_default():
+    serious, adjusted = (pd.read_csv(new_path("2019", a))["default"].mean() for a in (False, True))
+    assert serious > 0.10 and adjusted < 0.02  # ~12.6% vs ~1.0%: the gap is the forbearance
+    # the other recent vintages sit on the ordinary side of the same rates
+    assert pd.read_csv(new_path("2016"))["default"].mean() < 0.03

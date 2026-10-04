@@ -9,6 +9,7 @@ data/freddie_mac/raw/sample_YYYY/ and run
 
     python scripts/prepare_freddie_mac.py            # every vintage found under raw/
     python scripts/prepare_freddie_mac.py 2007 2010  # just these
+    python scripts/prepare_freddie_mac.py --relief-adjusted 2019   # the relief-adjusted outcome (below)
 
 Both raw files are pipe-delimited with NO header. The files this script was written against have 31
 origination and 35 performance columns (the January 2026 user guide lists 32 origination columns;
@@ -26,6 +27,19 @@ Choices, all visible in the output and in the returned report:
     counting it as good would understate risk. This conditions the sample on surviving to month 36,
     so default rates are "among loans that stayed", not lifetime default probabilities. The report
     gives the number excluded per zero-balance code.
+  * TWO OUTCOMES. `serious_delinquency` (the default above) counts every 90+ day delinquency. In
+    2020-21 most of those were pandemic forbearance, not credit failures: in the 2019 sample 92% of
+    the loans that went 90+ days past due carried a relief flag at or before that month, 97% later
+    returned to current and 0.5% were ever liquidated (2007: 47% liquidated). `relief_adjusted`
+    drops from the defaults every loan that (a) had a relief flag at or before its first 90+ day
+    month (disaster flag Y, payment deferral P/C, or a borrower assistance plan F/R/T) AND (b) was
+    never liquidated (zero balance 03/09 or REO) at any later age. Those loans stay in the sample
+    as non-defaults. It is a heuristic, not a verified loss definition: relief was not randomly
+    assigned and some relieved loans were genuinely troubled. The report gives both counts.
+  * HORIZON is loan AGE, which Freddie Mac does not advance for every calendar month a delinquent
+    loan misses: a few recent-vintage loans are still active at the data cutoff with age < 36.
+    Those that have not yet defaulted have an unknown outcome and are dropped and counted
+    (`excluded_still_unobserved`); a loan that already defaulted keeps its known outcome.
   * dti_missing: original DTI is "not available" for every relief-refinance (HARP) loan, about 29% of
     the 2010 and 31% of the 2011 samples (and about 2% of 2007-08). DTI is filled with the
     vintage median of the observed values and `dti_missing` = 1 marks those loans. In 2010-11 the
@@ -62,6 +76,11 @@ ORIG = {"credit_score": 0, "first_payment": 1, "first_time": 2, "mi_pct": 5, "un
         "occupancy": 7, "dti": 9, "upb": 10, "ltv": 11, "rate": 12, "channel": 13,
         "property_type": 17, "loan_seq": 19, "purpose": 20, "term_months": 21, "borrowers": 22}
 PERF = {"loan_seq": 0, "status": 3, "age": 4, "zero_balance": 8}
+# optional columns: only the relief_adjusted outcome and the report read them; absent = no relief
+RELIEF = {"deferral": 24, "disaster": 28, "assistance_plan": 29}
+RELIEF_DEFERRAL = {"P", "C"}  # payment deferral, COVID-19 payment deferral
+RELIEF_ASSISTANCE_PLAN = {"F", "R", "T"}  # forbearance, repayment plan, trial period plan
+OUTCOMES = ("serious_delinquency", "relief_adjusted")
 
 OCCUPANCY = {"P": "primary", "I": "investment", "S": "second_home"}
 CHANNEL = {"R": "retail", "B": "broker", "C": "correspondent", "T": "tpo_unspecified"}
@@ -83,18 +102,31 @@ def read_orig(path: Path) -> pd.DataFrame:
 
 
 def read_perf(path: Path) -> pd.DataFrame:
-    """Only the four performance columns the outcome needs (the file is ~3.5M rows)."""
+    """Only the performance columns the outcome needs (the file is ~3.5M rows)."""
     return pd.read_csv(path, sep="|", header=None, dtype=str, keep_default_na=False,
-                       usecols=sorted(PERF.values()), names=None)
+                       usecols=sorted({*PERF.values(), *RELIEF.values()}), names=None)
 
 
-def _default_by_loan(perf: pd.DataFrame, horizon: int) -> pd.DataFrame:
-    """Per loan: defaulted within `horizon` months, and whether its outcome is observable."""
+def _relief(perf: pd.DataFrame) -> np.ndarray:
+    """Row-level: a disaster flag, a payment deferral or a forbearance-type assistance plan."""
+    def column(key: str) -> np.ndarray:
+        position = RELIEF[key]
+        return perf[position].to_numpy() if position in perf.columns else np.full(len(perf), "", dtype=object)
+
+    return ((column("disaster") == "Y") | np.isin(column("deferral"), list(RELIEF_DEFERRAL))
+            | np.isin(column("assistance_plan"), list(RELIEF_ASSISTANCE_PLAN)))
+
+
+def _default_by_loan(perf: pd.DataFrame, horizon: int, unobserved: str = "error") -> pd.DataFrame:
+    """Per loan: defaulted within `horizon` months (and the relief-adjusted variant), and whether its
+    outcome is observable. `unobserved`: a loan still active with < `horizon` months of age and no
+    default has an unknown outcome -> "error" raises, "drop" marks it not observable."""
     p = pd.DataFrame({
         "loan_sequence": perf[PERF["loan_seq"]].to_numpy(),
         "status": perf[PERF["status"]].to_numpy(),
         "age": pd.to_numeric(perf[PERF["age"]], errors="raise").to_numpy(),
         "zero_balance": perf[PERF["zero_balance"]].to_numpy(),
+        "relief": _relief(perf),
     })
     numeric = pd.to_numeric(p["status"], errors="coerce")
     unknown = sorted(set(p.loc[numeric.isna() & (p["status"] != "RA"), "status"]))
@@ -108,13 +140,28 @@ def _default_by_loan(perf: pd.DataFrame, horizon: int) -> pd.DataFrame:
     out["first_bad_age"] = first_bad
     out = out.join(ended)
     out["default"] = (out["first_bad_age"] <= horizon).astype(int)
+
+    # what happened around and after the first 90+ day month (only meaningful for loans that have one)
+    p = p.join(out["first_bad_age"], on="loan_sequence")
+    def loans_where(mask: pd.Series) -> set:
+        return set(p.loc[mask, "loan_sequence"])
+
+    relief_at_or_before = loans_where(p["relief"] & (p["age"] <= p["first_bad_age"]))
+    cured_later = loans_where((p["age"] > p["first_bad_age"]) & (p["status"] == "00"))
+    liquidated = loans_where((p["status"] == "RA") | p["zero_balance"].isin(DEFAULT_ZERO_BALANCE))
+    out["relief_before"] = out.index.isin(relief_at_or_before)
+    out["cured"] = out.index.isin(cured_later)
+    out["liquidated"] = out.index.isin(liquidated)
+    out["default_relief_adjusted"] = (out["default"].astype(bool) & ~(out["relief_before"] & ~out["liquidated"])).astype(int)
+
     left_early = out["end_age"] < horizon  # terminated before month `horizon`
-    # data cutoff hit before month `horizon` with no default yet: the outcome is unknown, and the
-    # sample vintages should never contain such a loan (a defaulted loan's outcome is known)
+    # data cutoff hit before month `horizon` with no default yet: the outcome is unknown (a
+    # defaulted loan's outcome is known)
     still_unseen = out["end_age"].isna() & (out["last_age"] < horizon) & (out["default"] == 0)
-    if still_unseen.any():
+    if still_unseen.any() and unobserved == "error":
         raise ValueError(f"{int(still_unseen.sum())} loans are still active but observed for < {horizon} months")
-    out["observable"] = (out["default"] == 1) | ~left_early
+    out["unobserved"] = still_unseen
+    out["observable"] = ((out["default"] == 1) | ~left_early) & ~still_unseen
     return out
 
 
@@ -125,8 +172,14 @@ def _decode(series: pd.Series, mapping: dict, name: str, missing: tuple = ()) ->
     return series.map(mapping)
 
 
-def prepare(orig: pd.DataFrame, perf: pd.DataFrame, horizon: int = HORIZON) -> tuple[pd.DataFrame, dict]:
-    """(loans, report): one row per observable loan, and the counts behind every drop."""
+def prepare(orig: pd.DataFrame, perf: pd.DataFrame, horizon: int = HORIZON, outcome: str = "serious_delinquency",
+            unobserved: str = "error") -> tuple[pd.DataFrame, dict]:
+    """(loans, report): one row per observable loan, and the counts behind every drop. `outcome` is
+    one of OUTCOMES (see the module docstring); `unobserved` is passed to `_default_by_loan`."""
+    if outcome not in OUTCOMES:
+        raise ValueError(f"outcome must be one of {OUTCOMES}, got {outcome!r}")
+    if unobserved not in ("error", "drop"):
+        raise ValueError(f"unobserved must be 'error' or 'drop', got {unobserved!r}")
     if orig.shape[1] != ORIG_COLUMNS:
         raise ValueError(f"expected {ORIG_COLUMNS} origination columns, got {orig.shape[1]}")
     if not set(PERF.values()) <= set(perf.columns):
@@ -165,16 +218,19 @@ def prepare(orig: pd.DataFrame, perf: pd.DataFrame, horizon: int = HORIZON) -> t
     df["dti_missing"] = (df["dti"] == 999).astype(int)
     df.loc[df["dti"] == 999, "dti"] = np.nan
 
-    outcome = _default_by_loan(perf, horizon)
-    df = df.join(outcome[["default", "observable", "zero_balance"]], on="loan_sequence")
+    per_loan = _default_by_loan(perf, horizon, unobserved)
+    df = df.join(per_loan[["default", "default_relief_adjusted", "observable", "unobserved", "relief_before", "cured",
+                           "liquidated", "zero_balance"]], on="loan_sequence")
     if df["default"].isna().any():
         raise ValueError("some origination loans have no performance rows")
 
-    report: dict = {"horizon_months": horizon, "n_raw": len(df)}
-    left = df[~df["observable"].astype(bool)]
+    report: dict = {"horizon_months": horizon, "outcome": outcome, "n_raw": len(df)}
+    unseen = df["unobserved"].astype(bool)
+    left = df[~df["observable"].astype(bool) & ~unseen]
+    report["excluded_still_unobserved"] = int(unseen.sum())
     report["excluded_left_before_horizon"] = len(left)
     report["excluded_by_zero_balance"] = {str(k): int(v) for k, v in left["zero_balance"].value_counts().items()}
-    df = df[df["observable"].astype(bool)].drop(columns=["observable", "zero_balance"])
+    df = df[df["observable"].astype(bool)].drop(columns=["observable", "unobserved", "zero_balance"])
 
     required = ["credit_score", "ltv", "mi_pct", "n_units", "two_plus_borrowers", "first_time_buyer"]
     report["dropped_unusable_value"] = {c: int(df[c].isna().sum()) for c in required if df[c].isna().any()}
@@ -182,7 +238,16 @@ def prepare(orig: pd.DataFrame, perf: pd.DataFrame, horizon: int = HORIZON) -> t
     report["n_dti_missing"] = int(df["dti_missing"].sum())
     df["dti"] = df["dti"].fillna(df["dti"].median())
 
-    df["default"] = df["default"].astype(int)
+    serious = df["default"].astype(int)
+    adjusted = df["default_relief_adjusted"].astype(int)
+    flagged, cured, liquidated = (df[c].astype(bool) & (serious == 1) for c in ("relief_before", "cured", "liquidated"))
+    n_serious = int(serious.sum())
+    share = lambda mask: float(mask.sum() / n_serious) if n_serious else 0.0  # noqa: E731
+    report.update(n_default_serious_delinquency=n_serious, n_default_relief_adjusted=int(adjusted.sum()),
+                  serious_share_relief_flagged=share(flagged), serious_share_cured=share(cured),
+                  serious_share_liquidated=share(liquidated))
+    df["default"] = serious if outcome == "serious_delinquency" else adjusted
+    df = df.drop(columns=["default_relief_adjusted", "relief_before", "cured", "liquidated"])
     df["first_time_buyer"] = df["first_time_buyer"].astype(int)
     df["two_plus_borrowers"] = df["two_plus_borrowers"].astype(int)
     for column in ("credit_score", "ltv", "n_units", "mi_pct"):
@@ -199,28 +264,38 @@ def vintages() -> list[str]:
     return sorted(p.name.removeprefix("sample_") for p in RAW_DIR.glob("sample_*") if p.is_dir())
 
 
-def build(year: str) -> dict:
+def build(year: str, outcome: str = "serious_delinquency") -> dict:
     folder = RAW_DIR / f"sample_{year}"
     orig_path, perf_path = folder / f"sample_orig_{year}.txt", folder / f"sample_perf_{year}.txt"
     for path in (orig_path, perf_path):
         if not path.exists():
             sys.exit(f"{path} not found. See the module docstring for where to get and put the raw files.")
-    loans, report = prepare(read_orig(orig_path), read_perf(perf_path))
-    loans.to_csv(DATA_DIR / f"loans_{year}.csv", index=False)
+    loans, report = prepare(read_orig(orig_path), read_perf(perf_path), outcome=outcome, unobserved="drop")
+    suffix = "" if outcome == "serious_delinquency" else f"_{outcome}"
+    loans.to_csv(DATA_DIR / f"loans_{year}{suffix}.csv", index=False)
     return report
 
 
 def main(argv: list[str]) -> None:
+    outcome = "serious_delinquency"
+    if "--relief-adjusted" in argv:
+        outcome = "relief_adjusted"
+        argv = [a for a in argv if a != "--relief-adjusted"]
     years = argv or vintages()
     if not years:
         sys.exit(f"no vintages under {RAW_DIR}")
     for year in years:
-        r = build(year)
-        print(f"{year}: {r['n_raw']} sampled -> {r['excluded_left_before_horizon']} left before month "
+        r = build(year, outcome)
+        print(f"{year} [{outcome}]: {r['n_raw']} sampled -> {r['excluded_left_before_horizon']} left before month "
               f"{r['horizon_months']} without defaulting {r['excluded_by_zero_balance']}, "
+              f"{r['excluded_still_unobserved']} still active with an unknown outcome, "
               f"{sum(r['dropped_unusable_value'].values())} dropped for an unusable value "
               f"{r['dropped_unusable_value']} -> {r['n_loans']} loans, {r['n_default']} defaults "
               f"({r['default_rate']:.2%}), {r['n_dti_missing']} with DTI not available")
+        print(f"    of the {r['n_default_serious_delinquency']} serious delinquencies: "
+              f"{r['serious_share_relief_flagged']:.1%} relief-flagged at or before the first 90+ day month, "
+              f"{r['serious_share_cured']:.1%} later current again, {r['serious_share_liquidated']:.1%} ever "
+              f"liquidated/REO; relief-adjusted defaults = {r['n_default_relief_adjusted']}")
 
 
 if __name__ == "__main__":

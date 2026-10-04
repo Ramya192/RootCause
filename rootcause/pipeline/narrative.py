@@ -17,10 +17,15 @@ Choosing between them is deliberately NOT done by asking an LLM which text is be
     "placebo", or "statistically significant", which the facts use but the audience should
     not have to decode), and
   * the required caveats must be present: a failed placebo check must be described as
-    "no evidence of an effect beyond noise", and a fairness flag must be mentioned.
+    "no evidence of an effect beyond noise", and a fairness flag must be mentioned, and
+  * for a domain flagged `explanation.observational` (real data with no randomization or
+    ground truth), the text must say the findings are associations and must not use
+    causal wording ("drives", "causes", "leads to", "key factor", "contributing to"), and
+  * when the recommended action's ROI is below 1 (benefit smaller than cost), the text must not
+    call it favorable ("favorable", "worthwhile", "good investment", "pays off", ...).
 
 What the check does NOT catch: a wrong claim that uses only correct numbers (for example
-attributing an effect to the wrong lever), or an overclaim phrased without numbers or a
+attributing an effect to the wrong lever; the ROI-below-1 rule above covers one known case), or an overclaim phrased without numbers or a
 hedge word. It is a guard against invented figures and dropped caveats, not a proof that
 the narrative is right.
 
@@ -67,6 +72,38 @@ _JARGON = re.compile(
     re.IGNORECASE,
 )
 
+# Observational domains: the text must say "association" (or equivalent) and must not credit a lever
+# with causing the outcome. A negated mention ("not proven causes") is the caveat, not the overclaim.
+_OBSERVATIONAL_MARKER = re.compile(
+    r"associat|observational|correlat|confound|unmeasured|not proven|no proof|cannot prove|does not prove"
+    r"|not necessarily caus|not (?:a )?(?:proven )?cause",
+    re.IGNORECASE,
+)
+_CAUSAL_NEGATION = re.compile(
+    r"\b(?:not|never|nor|isn't|aren't|doesn't|does not|do not|don't|cannot|can't)\b[^.]{0,40}?\bcaus\w+",
+    re.IGNORECASE,
+)
+_CAUSAL_WORDING = re.compile(
+    r"\bkey (?:factors?|drivers?)\b|\b(?:main|primary|major|biggest|top) (?:factors?|drivers?|causes?)\b"
+    r"|\bdriv(?:e|es|ing|en)\b|\bcaus(?:e|es|ed|ing)\b|\bleads? to\b|\bcontribut\w+ to\b|\bresults? in\b",
+    re.IGNORECASE,
+)
+
+# ROI = benefit / cost (interventions.py), so ROI < 1 means the action costs more than it returns. Live runs
+# called an ROI of 0.0000391 "favorable": correct number, wrong meaning. Negated or comparative uses
+# ("not worthwhile", "less favorable") are the honest reading, so they are removed before matching.
+_POSITIVE_ROI = re.compile(
+    r"\bfavou?rabl[ey]\b|\bworth(?:while| it| the (?:cost|investment|money))\b|\bgood (?:investment|return|value)\b"
+    r"|\b(?:strong|solid|healthy|attractive|positive|high|great|excellent) (?:return|roi)\b|\bpays? (?:off|for itself)\b"
+    r"|\bcost-effective\b|\bprofitabl[ey]\b|\bbeneficial\b|\bpromising\b|\bsensible\b",
+    re.IGNORECASE,
+)
+_NEGATED_POSITIVE_ROI = re.compile(
+    r"\b(?:not|never|no|isn't|aren't|doesn't|does not|hardly|barely|less)\s+(?:\w+\s+){0,2}?"
+    r"(?:favou?rabl|worth|good|strong|solid|healthy|attractive|positive|high|great|excellent|pays?|cost-effective|profitabl|beneficial|promising|sensible)\w*",
+    re.IGNORECASE,
+)
+
 NARRATIVE_TIERS = ("autogen", "llm", "template")
 
 
@@ -76,6 +113,8 @@ class GroundingReport:
     ungrounded_numbers: list[str] = field(default_factory=list)
     missing_caveats: list[str] = field(default_factory=list)
     jargon: list[str] = field(default_factory=list)
+    causal_wording: list[str] = field(default_factory=list)
+    roi_wording: list[str] = field(default_factory=list)
 
     def detail(self) -> str:
         parts = []
@@ -85,6 +124,10 @@ class GroundingReport:
             parts.append("missing caveats: " + ", ".join(self.missing_caveats))
         if self.jargon:
             parts.append("jargon: " + ", ".join(self.jargon))
+        if self.causal_wording:
+            parts.append("causal wording on observational data: " + ", ".join(self.causal_wording))
+        if self.roi_wording:
+            parts.append("favorable wording although ROI is below 1 (benefit under cost): " + ", ".join(self.roi_wording))
         return "; ".join(parts) or "ok"
 
 
@@ -124,6 +167,8 @@ def check_grounding(
     failed_refutation: bool = False,
     fairness_flagged: bool = False,
     plain_language: bool = False,
+    observational: bool = False,
+    roi_below_cost: bool = False,
 ) -> GroundingReport:
     """Does `text` stay inside `facts_text`? See the module docstring for what it covers."""
     fact_values = [v for _, v, _ in extract_numbers(facts_text)]
@@ -140,16 +185,26 @@ def check_grounding(
         missing.append("fairness flag")
     if not text.strip():
         missing.append("non-empty narrative")
+    causal = []
+    if observational:
+        if text.strip() and not _OBSERVATIONAL_MARKER.search(text):
+            missing.append("association-not-causation (observational data)")
+        causal = sorted({m.group(0).lower() for m in _CAUSAL_WORDING.finditer(_CAUSAL_NEGATION.sub("", text))})
+    roi = []
+    if roi_below_cost:
+        roi = sorted({m.group(0).lower() for m in _POSITIVE_ROI.finditer(_NEGATED_POSITIVE_ROI.sub("", text))})
     jargon = (
         sorted({m.group(0) for m in _JARGON.finditer(_NEGATED_SIGNIFICANCE.sub('', text))})
         if plain_language
         else []
     )
     return GroundingReport(
-        passed=not ungrounded and not missing and not jargon,
+        passed=not ungrounded and not missing and not jargon and not causal and not roi,
         ungrounded_numbers=ungrounded,
         missing_caveats=missing,
         jargon=jargon,
+        causal_wording=causal,
+        roi_wording=roi,
     )
 
 
@@ -235,7 +290,12 @@ def _run_sync(coro):
         return pool.submit(asyncio.run, coro).result()
 
 
-def required_points(failed_treatments: list[str], fairness_flagged: bool) -> str:
+def required_points(
+    failed_treatments: list[str],
+    fairness_flagged: bool,
+    observational: bool = False,
+    roi_below_cost: bool = False,
+) -> str:
     """The caveats `check_grounding` will demand, phrased as an instruction, so a writer is
     told what it will be checked on instead of finding out by being rejected."""
     points = []
@@ -247,6 +307,17 @@ def required_points(failed_treatments: list[str], fairness_flagged: bool) -> str
         )
     if fairness_flagged:
         points.append("Mention the fairness / disparity concern for the top recommendation.")
+    if observational:
+        points.append(
+            "Say these are associations in observational data, not proven causes: write 'associated with', never "
+            "say a lever 'drives', 'causes', 'leads to' or is a 'key factor' in the outcome, and say the true "
+            "effect could differ because other factors were not measured."
+        )
+    if roi_below_cost:
+        points.append(
+            "The recommended action's ROI is below 1, meaning its estimated benefit is smaller than its cost: say so "
+            "plainly and do not call it favorable, worthwhile, attractive or a good return."
+        )
     return "\n".join(f"- {p}" for p in points)
 
 

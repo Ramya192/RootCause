@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RootCause</title>
+<style>
+  :root { --bg:#fafafa; --fg:#1a1a1a; --muted:#666; --card:#fff; --line:#ddd; --accent:#2457d6; --bad:#b3261e; --ok:#1b7f3b; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#141414; --fg:#eee; --muted:#9a9a9a; --card:#1e1e1e; --line:#333; --accent:#7aa2ff; --bad:#ff8a80; --ok:#6fd48c; }
+  }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.5 system-ui,sans-serif; }
+  main { max-width:960px; margin:0 auto; padding:24px 16px 64px; }
+  h1 { margin:0 0 4px; } h2 { margin:28px 0 8px; font-size:18px; }
+  .sub { color:var(--muted); margin-bottom:20px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:16px; }
+  .row { display:flex; flex-wrap:wrap; gap:12px; align-items:end; }
+  label { display:flex; flex-direction:column; font-size:13px; color:var(--muted); gap:4px; }
+  select, button { font:inherit; padding:8px 10px; border-radius:6px; border:1px solid var(--line); background:var(--card); color:var(--fg); }
+  button { background:var(--accent); color:#fff; border-color:var(--accent); cursor:pointer; }
+  button:disabled { opacity:.5; cursor:wait; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); }
+  .pass { color:var(--ok); } .fail { color:var(--bad); }
+  img { max-width:100%; border:1px solid var(--line); border-radius:8px; background:#fff; }
+  #status { margin-top:12px; color:var(--muted); } #status.err { color:var(--bad); }
+  #domdesc { color:var(--muted); font-size:13px; margin-top:8px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>RootCause</h1>
+  <div class="sub">Causal decision intelligence &mdash; pick a domain and run the pipeline.</div>
+
+  <div class="card">
+    <div class="row">
+      <label>Domain <select id="domain"></select></label>
+      <label>Dataset <select id="dataset"></select></label>
+      <label>Orchestration
+        <select id="orch"><option value="direct">direct (fast)</option><option value="crew">crew (needs OPENAI_API_KEY)</option></select>
+      </label>
+      <button id="run">Run analysis</button>
+    </div>
+    <div id="domdesc"></div>
+    <div id="status"></div>
+  </div>
+
+  <div id="out" hidden>
+    <h2>Narrative</h2><div class="card" id="narrative"></div>
+    <h2>Causal graph</h2><div id="graph"></div>
+    <h2>Effect estimates</h2><div class="card" id="effects"></div>
+    <h2>Recommendations</h2><div class="card" id="recs"></div>
+    <h2>Counterfactuals</h2><div class="card" id="cfs"></div>
+  </div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const num = (x, d=4) => typeof x === "number" ? x.toFixed(d) : "";
+let domains = [];
+
+function setStatus(msg, err=false) { $("status").textContent = msg; $("status").className = err ? "err" : ""; }
+
+function fillDatasets() {
+  const d = domains.find(x => x.id === $("domain").value);
+  $("dataset").innerHTML = d.datasets.map(x => `<option ${x===d.default_dataset?"selected":""}>${esc(x)}</option>`).join("");
+  $("domdesc").textContent = d.description || "";
+}
+
+async function init() {
+  try {
+    domains = await (await fetch("/domains")).json();
+    $("domain").innerHTML = domains.map(d => `<option value="${esc(d.id)}" ${d.runnable?"":"disabled"}>${esc(d.name || d.id)}</option>`).join("");
+    fillDatasets();
+  } catch (e) { setStatus("Could not load domains: " + e, true); }
+}
+$("domain").onchange = fillDatasets;
+
+async function run() {
+  $("run").disabled = true; $("out").hidden = true;
+  setStatus("Submitting...");
+  try {
+    const r = await fetch(`/domains/${$("domain").value}/analyze`, {
+      method: "POST", headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({orchestration: $("orch").value, dataset: $("dataset").value})
+    });
+    if (!r.ok) throw new Error((await r.json()).detail || r.statusText);
+    let job = await r.json();
+    const t0 = Date.now();
+    while (job.status === "queued" || job.status === "running") {
+      setStatus(`Job ${job.id.slice(0,8)} ${job.status}... ${Math.round((Date.now()-t0)/1000)}s`);
+      await new Promise(r => setTimeout(r, 2000));
+      job = await (await fetch(`/jobs/${job.id}`)).json();
+    }
+    if (job.status === "failed") throw new Error(job.error || "job failed");
+    setStatus(`Done in ${Math.round((Date.now()-t0)/1000)}s.`);
+    render(job);
+  } catch (e) { setStatus("Error: " + e.message, true); }
+  finally { $("run").disabled = false; }
+}
+$("run").onclick = run;
+
+function render(job) {
+  const res = job.result;
+  $("narrative").textContent = res.explanation?.narrative || "(none)";
+  $("graph").innerHTML = `<img alt="causal graph" src="/jobs/${job.id}/graph">`;
+  $("effects").innerHTML = table(["Treatment","Outcome","ATE","Estimator","Refutation"],
+    (res.effect_estimates||[]).map(e => [esc(e.treatment), esc(e.outcome), num(e.ate), esc(e.estimator),
+      `<span class="${e.refutation_passed?"pass":"fail"}">${e.refutation_passed?"passed":"failed"}</span> (p=${num(e.refutation_p_value,3)})`]));
+  $("recs").innerHTML = table(["#","Action","Target","Effect","Cost","ROI","Fairness"],
+    (res.recommendations||[]).map(r => [r.rank, esc(r.id), esc(r.target_variable), num(r.expected_effect), r.cost, num(r.roi,6),
+      `<span class="${r.fairness_pass?"pass":"fail"}">${r.fairness_pass?"pass":"fail"}</span> (${num(r.fairness_ratio,2)})`]));
+  $("cfs").innerHTML = (res.counterfactuals||[]).map(c => `<p>${esc(c.description)}</p>`).join("") || "(none)";
+  $("out").hidden = false;
+}
+function table(head, rows) {
+  return `<table><tr>${head.map(h=>`<th>${h}</th>`).join("")}</tr>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</table>`;
+}
+init();
+</script>
+</body>
+</html>

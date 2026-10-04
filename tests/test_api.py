@@ -59,6 +59,14 @@ def test_health(fake_client):
     assert fake_client.get("/health").json() == {"status": "ok"}
 
 
+def test_root_serves_the_browser_ui(fake_client):
+    response = fake_client.get("/")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/html")
+    assert "<title>RootCause</title>" in response.text
+    assert "/domains" in response.text and "/analyze" in response.text
+
+
 def test_list_domains(fake_client):
     domains = {d["id"]: d for d in fake_client.get("/domains").json()}
     assert domains["employee_attrition"]["runnable"] is True

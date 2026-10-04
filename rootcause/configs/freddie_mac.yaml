@@ -5,12 +5,15 @@ domain:
     Which loan terms are associated with a mortgage going seriously delinquent within three
     years, and does the population show a disparity for first-time homebuyers? Real data are
     50,000-loan random samples of fixed-rate loans that Freddie Mac bought, one sample per
-    origination year (2007, 2008, 2010, 2011; Freddie Mac Single-Family Loan-Level Dataset). The
+    origination year (2007, 2008, 2010, 2011, 2016, 2019, 2022; Freddie Mac Single-Family Loan-Level
+    Dataset). The
     data are OBSERVATIONAL with no ground truth: lenders set the rate and the terms from the
     borrower's risk, so the levers are confounded by things this file does not record, and the
     pipeline's numbers are plausibility and stability checks, not validated effects. The outcome
     is measured among loans that stayed on the books for 36 months (loans that were paid off
-    earlier are excluded), so it is not a lifetime default probability.
+    earlier are excluded), so it is not a lifetime default probability. In 2019 most 90+ day
+    delinquencies were pandemic forbearance, so 2016, 2019 and 2022 also have a relief-adjusted
+    outcome (relief-flagged delinquencies that never liquidated are not counted).
   status: working
   input_type: tabular
   entity_noun: loan
@@ -30,6 +33,15 @@ ingestion:
     real_2008: data/freddie_mac/loans_2008.csv
     real_2010: data/freddie_mac/loans_2010.csv
     real_2011: data/freddie_mac/loans_2011.csv
+    # Newer vintages, each with the 90+ day outcome and the relief-adjusted one (see
+    # scripts/prepare_freddie_mac.py --relief-adjusted). 2019's 90+ day outcome is ~92% pandemic
+    # forbearance (97% of those loans returned to current); read it as a stress case, not as defaults.
+    real_2016: data/freddie_mac/loans_2016.csv
+    real_2016_relief_adjusted: data/freddie_mac/loans_2016_relief_adjusted.csv
+    real_2019: data/freddie_mac/loans_2019.csv
+    real_2019_relief_adjusted: data/freddie_mac/loans_2019_relief_adjusted.csv
+    real_2022: data/freddie_mac/loans_2022.csv
+    real_2022_relief_adjusted: data/freddie_mac/loans_2022_relief_adjusted.csv
     # the 2007 loans' real covariates with a SIMULATED default (planted lever effects, known truth);
     # built by scripts/generate_semi_synthetic_freddie_mac_data.py, gitignored like the real files
     semi_synthetic: data/freddie_mac/loans_2007_semi_synthetic.csv
@@ -230,3 +242,6 @@ interventions:
 explanation:
   llm_model: gpt-4o-mini
   audience: mortgage credit risk manager
+  # real observational data (no randomization, no ground truth): Stage 7 must say "associated with",
+  # never that a lever drives or causes the outcome (checked in narrative.check_grounding)
+  observational: true

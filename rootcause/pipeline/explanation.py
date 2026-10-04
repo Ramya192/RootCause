@@ -68,7 +68,13 @@ def _template_narrative(
     outcome = domain_vocabulary(domain_config).outcome
     top_driver = max(shap_summary, key=shap_summary.get) if shap_summary else "n/a"
 
-    lines = [f"Top-line drivers of {outcome}, ranked by causal effect size:"]
+    if domain_config.get("explanation", {}).get("observational"):
+        lines = [
+            f"Associations with {outcome} in observational data (not proven causes), ranked by estimated "
+            f"effect size:"
+        ]
+    else:
+        lines = [f"Top-line drivers of {outcome}, ranked by causal effect size:"]
     for e in sorted(effect_estimates, key=lambda e: abs(e.ate), reverse=True):
         line = f"- {e.treatment}: ATE={e.ate:+.4f} ({e.estimator})"
         if e.refutation_passed is False:
@@ -137,13 +143,19 @@ def _tier_order(domain_config: dict) -> list[str]:
     return [t for t in tiers if t != "template"] + ["template"]
 
 
+def _roi_below_cost(recommendations: list[InterventionRecommendation]) -> bool:
+    return bool(recommendations) and recommendations[0].roi < 1.0
+
+
 def _grounding(
-    text, facts, effect_estimates, recommendations, plain_language=False
+    text, facts, effect_estimates, recommendations, plain_language=False, observational=False
 ) -> narrative.GroundingReport:
     return narrative.check_grounding(
         text,
         facts,
         plain_language=plain_language,
+        observational=observational,
+        roi_below_cost=_roi_below_cost(recommendations),
         failed_refutation=any(e.refutation_passed is False for e in effect_estimates),
         fairness_flagged=bool(recommendations) and not recommendations[0].fairness_pass,
     )
@@ -163,9 +175,12 @@ def generate_explanation(
     vocab = domain_vocabulary(domain_config)
     has_key = bool(os.environ.get("OPENAI_API_KEY"))
 
+    observational = bool(cfg.get("observational"))
     requirements = narrative.required_points(
         [e.treatment for e in effect_estimates if e.refutation_passed is False],
         bool(recommendations) and not recommendations[0].fairness_pass,
+        observational,
+        _roi_below_cost(recommendations),
     )
     writers = {
         "autogen": lambda: narrative.autogen_narrative(
@@ -202,7 +217,9 @@ def generate_explanation(
                 NarrativeAttempt(tier=tier, outcome="error", detail=f"{type(exc).__name__}: {exc}"[:300])
             )
             continue
-        report = _grounding(text, facts, effect_estimates, recommendations, plain_language=True)
+        report = _grounding(
+            text, facts, effect_estimates, recommendations, plain_language=True, observational=observational
+        )
         if report.passed:
             log.append(NarrativeAttempt(tier=tier, outcome="used"))
             return Explanation(

@@ -276,3 +276,6 @@ interventions:
 explanation:
   llm_model: gpt-4o-mini
   audience: claims fraud manager
+  # real observational data (no randomization, no ground truth): Stage 7 must say "associated with",
+  # never that a lever drives or causes the outcome (checked in narrative.check_grounding)
+  observational: true

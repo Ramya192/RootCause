@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Callable, Literal, Optional
 
 from fastapi import FastAPI, HTTPException, Response
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from rootcause.api.jobs import Job, JobStatus, JobStore
@@ -71,6 +72,10 @@ def create_app(
         jobs.shutdown()
 
     app = FastAPI(title="RootCause", description="Causal Decision Intelligence Agent", lifespan=lifespan)
+
+    @app.get("/", include_in_schema=False)
+    def index() -> FileResponse:
+        return FileResponse(Path(__file__).with_name("ui.html"))
 
     @app.get("/health")
     def health() -> dict[str, str]:

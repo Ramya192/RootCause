@@ -7,6 +7,7 @@ the single-call tier against a stub, so the suite stays free and hermetic.
 from __future__ import annotations
 
 import asyncio
+from types import SimpleNamespace
 
 import pytest
 
@@ -277,7 +278,7 @@ def test_required_points_mirror_the_checked_caveats():
 
 
 def test_required_points_reach_both_llm_tiers(stage7, monkeypatch):
-    monkeypatch.setattr(narrative, "required_points", lambda failed, fairness: "- CAVEAT-X")
+    monkeypatch.setattr(narrative, "required_points", lambda failed, fairness, observational=False, roi_below_cost=False: "- CAVEAT-X")
     seen = {}
 
     def fake_autogen(facts, **k):
@@ -290,3 +291,138 @@ def test_required_points_reach_both_llm_tiers(stage7, monkeypatch):
 
     stage7(autogen=fake_autogen, llm=fake_llm)
     assert "CAVEAT-X" in seen["autogen"] and "CAVEAT-X" in seen["llm"]
+
+
+# --- observational domains: association wording, no causal claims ---
+
+OBS_GOOD = (
+    "Pay is associated with lower attrition, by about 2.5 percentage points. Workload shows no "
+    "evidence of an effect beyond noise. The $40,000 pay plan has an ROI of 12.5 but raises a "
+    "fairness concern (ratio 0.69). These are associations in observational data, not proven causes."
+)
+
+
+def _obs(text):
+    return narrative.check_grounding(text, FACTS, observational=True, **CAVEATS)
+
+
+def test_observational_text_must_say_association():
+    report = _obs(GOOD)  # grounded and complete, but never says it is only an association
+    assert not report.passed and "association-not-causation" in report.detail()
+    assert narrative.check_grounding(GOOD, FACTS, **CAVEATS).passed  # an ordinary domain is unaffected
+    assert _obs(OBS_GOOD).passed, _obs(OBS_GOOD).detail()
+
+
+@pytest.mark.parametrize("phrase", [
+    "Pay is a key factor driving attrition down",
+    "Higher pay causes lower attrition",
+    "Pay is the main driver of attrition",
+    "Pay changes lead to lower attrition",
+    "Pay is contributing to lower attrition",
+])
+def test_observational_causal_wording_is_rejected_even_next_to_an_association_caveat(phrase):
+    report = _obs(f"{phrase}, about 2.5 percentage points, an association in observational data. "
+                  "Workload shows no evidence of an effect beyond noise. The fairness concern is ratio 0.69.")
+    assert not report.passed and report.causal_wording and "causal wording" in report.detail()
+    # the same sentence is fine for a domain with ground truth or randomization
+    plain = narrative.check_grounding(f"{phrase}, about 2.5 percentage points. Workload shows no evidence of an "
+                                      "effect beyond noise. The fairness concern is ratio 0.69.", FACTS, **CAVEATS)
+    assert plain.passed and not plain.causal_wording
+
+
+def test_a_negated_cause_is_the_caveat_not_the_overclaim():
+    assert _obs(OBS_GOOD).causal_wording == []
+    assert _obs("These do not prove that pay causes anything. " + OBS_GOOD).causal_wording == []
+    assert _obs("Pay causes lower attrition. " + OBS_GOOD).causal_wording == ["causes"]
+
+
+def test_required_points_ask_for_association_wording_only_when_observational():
+    text = narrative.required_points([], False, observational=True)
+    assert "associations in observational data" in text and "'drives'" in text
+    assert narrative.required_points([], False) == ""
+
+
+def test_template_for_an_observational_domain_says_association_and_passes_the_check():
+    estimates = [EffectEstimate(treatment="t", outcome="y", ate=0.1, estimator="e", refutation_passed=True)]
+    config = {"domain": {"id": "d"}, "ingestion": {"outcome_column": "y"}, "explanation": {"observational": True}}
+    text = explanation._template_narrative(config, estimates, [], [], {"a": 1.0})
+    assert text.startswith("Associations with") and "not proven causes" in text and "causal effect size" not in text
+    assert explanation._grounding(text, text, estimates, [], observational=True).passed
+    ordinary = explanation._template_narrative(
+        {"domain": {"id": "d"}, "ingestion": {"outcome_column": "y"}}, estimates, [], [], {"a": 1.0})
+    assert ordinary.startswith("Top-line drivers of")  # unchanged for domains without the flag
+
+
+def test_causal_narrative_is_rejected_for_an_observational_domain_and_the_next_tier_wins(stage7):
+    causal = "Attrition drivers were ranked by their causal effect."  # grounded, but no association caveat
+    result = stage7(
+        autogen=lambda *a, **k: causal,
+        llm=lambda *a, **k: "Attrition is associated with pay, though these are not proven causes.",
+        config_update={"observational": True},
+    )
+    assert _tiers(result) == [("autogen", "rejected"), ("llm", "used")]
+    assert "association-not-causation" in result.narrative_log[0].detail
+    # without the flag the same text is accepted by tier 1 (the existing behaviour)
+    assert stage7(autogen=lambda *a, **k: causal, llm=_boom).narrative_tier == "autogen"
+
+
+def test_observational_requirement_reaches_both_llm_tiers(stage7):
+    seen = {}
+
+    def fake_autogen(facts, **k):
+        seen["autogen"] = facts
+        return "Attrition falls by 88.8 points."  # ungrounded, so the chain moves on to tier 2
+
+    def fake_llm(*a, requirements="", **k):
+        seen["llm"] = requirements
+        return "Attrition is associated with pay, though these are not proven causes."
+
+    stage7(autogen=fake_autogen, llm=fake_llm, config_update={"observational": True})
+    assert "associations in observational data" in seen["autogen"] and "associations in observational data" in seen["llm"]
+
+
+def test_only_the_real_observational_domains_are_flagged(config_loader):
+    flagged = {d: bool(config_loader.get_domain(d).extra["explanation"].get("observational"))
+               for d in ("freddie_mac", "german_credit", "carclaims", "illinois_wellness", "employee_attrition")}
+    assert flagged == {"freddie_mac": True, "german_credit": True, "carclaims": True,
+                       "illinois_wellness": False, "employee_attrition": False}
+
+
+# --- ROI below 1: benefit under cost must not be called favorable ---
+
+LOW_ROI = "The $40,000 pay plan has an ROI of 0.8 and"
+
+
+@pytest.mark.parametrize("phrase", [
+    "is favorable", "is a worthwhile investment", "is a good investment", "pays off", "has a strong return",
+    "is cost-effective", "looks promising",
+])
+def test_favorable_wording_is_rejected_when_roi_is_below_one(phrase):
+    text = f"Raising pay lowers attrition by 2.5 percentage points. The plan {phrase} (ROI 0.8)."
+    facts = FACTS.replace("ROI=12.5", "ROI=0.8")
+    assert narrative.check_grounding(text, facts, roi_below_cost=True).roi_wording
+    assert not narrative.check_grounding(text, facts, roi_below_cost=True).passed
+    assert narrative.check_grounding(text, facts).passed  # same text is fine when ROI is not low
+
+
+@pytest.mark.parametrize("phrase", [
+    "is not favorable", "is not a worthwhile investment", "is unfavorable", "is less favorable than it looks",
+    "costs more than it returns",
+])
+def test_honest_low_roi_wording_is_allowed(phrase):
+    text = f"Raising pay lowers attrition by 2.5 percentage points. The plan {phrase} (ROI 0.8)."
+    facts = FACTS.replace("ROI=12.5", "ROI=0.8")
+    report = narrative.check_grounding(text, facts, roi_below_cost=True)
+    assert not report.roi_wording, report.detail()
+
+
+def test_required_points_mention_low_roi_only_when_it_applies():
+    assert "below 1" in narrative.required_points([], False, roi_below_cost=True)
+    assert narrative.required_points([], False) == ""
+
+
+def test_roi_below_cost_follows_the_top_recommendation():
+    rec = lambda roi: [SimpleNamespace(roi=roi)]
+    assert explanation._roi_below_cost(rec(0.0000391)) and not explanation._roi_below_cost(rec(12.5))
+    assert not explanation._roi_below_cost([])
+

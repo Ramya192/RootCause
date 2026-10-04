@@ -167,7 +167,22 @@ Effects are changes in the probability of serious delinquency. Full tables: `doc
 - **The intervention ranking follows from those numbers and from made-up costs.** "Lower the interest rate" comes first in three vintages because its estimate is the largest and the most confounded one. It is a check that the pipeline runs and ranks consistently, not lending advice.
 - **DTI in 2010-11 shows no effect beyond noise** (placebo passes in 3 and 0 of 10 resamples): the outcome is rare (about 2%) and a third of the loans have an imputed DTI.
 - **The fairness flag is not a fair-lending finding.** First-time-buyer status is not a protected class (this file has no race, sex or age), and in 2010 first-time buyers default *less* (1.5% against 2.3%), which is what the 0.68 ratio flags. Read it as "default rates differ between the two groups".
-- **Not done:** there is no semi-synthetic twin, so nothing here is scored against a known answer; each year is one 50,000-loan sample of loans Freddie Mac bought, not all US mortgages.
+- Each year is one 50,000-loan sample of loans Freddie Mac bought, not all US mortgages.
+
+**Semi-synthetic twin, scored against a known answer.** `rootcause/configs/freddie_mac.yaml` has a fourth dataset kind, `semi_synthetic`: the real 2007 loans' covariates with a *simulated* default, whose lever effects are planted (`rootcause/evaluation/scms.py::freddie_mac_semi_synthetic_scm`, built by `scripts/generate_semi_synthetic_freddie_mac_data.py`, same idea as the German Credit twin). It keeps the real correlation between the rate and the borrower's credit score, but unlike the real data, here every driver of default *is* a recorded column, so there is no unmeasured confounding — this validates the method, not what actually causes default.
+
+```bash
+.venv/Scripts/python.exe scripts/generate_semi_synthetic_freddie_mac_data.py
+.venv/Scripts/python.exe -m rootcause.evaluation --domain freddie_mac --dataset semi_synthetic --replicates 10 --out docs/evaluation/freddie_mac
+```
+
+| Treatment | True ATE (+1 shift) | Estimated ATE (10 replicates) | Bias |
+|---|---|---|---|
+| interest_rate | +0.1380 | +0.1201 ± 0.0063 | -0.0180 |
+| ltv | +0.0012 | +0.0007 ± 0.0001 | -0.0005 |
+| dti | +0.0019 | +0.0017 ± 0.0002 | -0.0002 |
+
+Placebo passes 10/10, the fairness verdict matches the true one 10/10 (ratio 0.880 estimated vs 0.876 true), and the pipeline's top-ranked intervention (lower the interest rate) matches the true ROI ranking in all 10 replicates. Full table: `docs/evaluation/freddie_mac/twin_results.md`. **Read this as: when the pipeline's assumptions hold (no unmeasured confounding), it recovers the planted effects to within about 13% for the rate and comes in low for LTV and DTI, whose true effects are tiny; it does not mean the real 2007-11 estimates above are unconfounded.**
 
 ### Stress tests
 
@@ -278,7 +293,7 @@ PC stays the default. GES matches it on the easy baseline but loses ground at sm
 
 ```bash
 .venv/Scripts/python.exe -m rootcause.evaluation --anomalies          # simulated data, known graph
-.venv/Scripts/python.exe -m rootcause.evaluation --anomalies-real     # real carclaims / German Credit covariates
+.venv/Scripts/python.exe -m rootcause.evaluation --anomalies-real     # real carclaims / German Credit / Freddie Mac 2007 covariates
 .venv/Scripts/python.exe scripts/flag_anomalies.py --domain carclaims # top records on real data
 ```
 
@@ -314,6 +329,8 @@ On simulated data with a known graph (attrition, continuous variable corrupted, 
 | marginal z-score | 0.52 | 0.94 | – |
 
 The honest reading: causal flagging now edges out Mahalanobis on swaps and on binary flips (attrition: 0.74 vs 0.68 and 0.65 vs 0.59), **but part of that edge is by construction**: faults are injected into non-root variables, which are exactly the ones now scored, so leaving the roots out removes noise from variables that were never corrupted. The cost shows in the `root` sections of `docs/evaluation/anomalies.md`: a corrupted root is visible only through its children, so a 3-sd shift in an attrition root scores AUC 0.96 and average precision 0.68 (0.99 and 0.87 with roots scored, matching Mahalanobis), and on the Illinois mirror a swapped root scores 0.52 against 0.56 with roots scored and 0.60 for Mahalanobis. On the Illinois mirror the causal detector is otherwise level with Mahalanobis (0.95 vs 0.93 on shifts). Its lasting contribution is **attribution** (which variable to look at); it clearly beats an isolation forest and single-variable checks. Flipping a **binary** variable to a value that was plausible anyway is nearly invisible to every method. A fault also makes its children look surprising, so the named variable is sometimes a child (the "or one of its children" column counts that). There are no labelled anomalies on any real dataset: nothing here is a claim about finding real fraud or credit anomalies, only about what the detector can see when a fault has a known form. Flagged means "not explained by this model" (a missing cause, a wrong functional form and a data-entry error look the same).
+
+**Freddie Mac 2007 (31,780 loans, 8 variables, 19 edges, faults injected as above, 5 draws).** Continuous variable pushed 3 sd: causal 0.93 AUC vs Mahalanobis 0.89, isolation forest 0.76, marginal z 0.86, and it names the corrupted variable 89% of the time (97% counting its children). Continuous value swapped: 0.58 vs 0.56 / 0.55 / 0.52, i.e. barely above chance for every detector. Binary flipped: causal 0.73, **below** Mahalanobis 0.74 and isolation forest 0.76. The real top-100 has no dominant (variable, value): the most common one is `ltv` = 13 at 4%, a value held by 0.1% of loans. So the attribution advantage holds here, the detection advantage only for large shifts.
 
 ### Stage 7 narrative tiers (AutoGen, single call, template)
 
@@ -424,7 +441,7 @@ curl localhost:8000/jobs/ed1c…
 .venv/Scripts/python.exe -m pytest
 ```
 
-443 tests, about 3-5 minutes (on a clean checkout, as in CI and the Docker image, 431 run and 12 skip: the 3 CNN tests skip themselves without torch or the pretrained weights, and the 9 Freddie Mac tests that read the real files skip when that registered download is absent; its outcome and censoring rules are tested on a small fake file in the real layout). They run real code on the real dataset (Feast round-trip, DoWhy, causal-learn) with no mocks, and assert the pipeline still recovers the ground-truth graph and effect signs. They never call OpenAI. The crew is only checked for wiring; a full crew run is deliberately not in the suite because of its cost.
+451 tests, about 3-5 minutes (on a clean checkout, as in CI and the Docker image, 434 run and 17 skip: the 3 CNN tests skip themselves without torch or the pretrained weights, and 14 Freddie Mac tests (9 on the real files, 5 on the semi-synthetic twin) skip when that registered download is absent; the outcome/censoring rules and the twin's planted-effect constants are still tested on a small fake file in the real layout). They run real code on the real dataset (Feast round-trip, DoWhy, causal-learn) with no mocks, and assert the pipeline still recovers the ground-truth graph and effect signs. They never call OpenAI. The crew is only checked for wiring; a full crew run is deliberately not in the suite because of its cost.
 
 ## Docker and CI
 

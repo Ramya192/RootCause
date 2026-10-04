@@ -389,6 +389,77 @@ def german_credit_semi_synthetic_scm() -> SCM:
     )
 
 
+# --- Freddie Mac 2007 semi-synthetic twin --------------------------------------------------
+#
+# The REAL 2007 covariates (31,780 loans) with a SIMULATED default whose lever effects are planted,
+# so the pipeline is scored where the answer is known. Same idea as the German Credit twin, and the
+# same limits: the effects are chosen (roughly the size of the real, confounded association), so this
+# validates the METHOD (does Stage 4 recover a known effect from realistic covariates whose
+# correlations, e.g. rate with credit score, are real?) and says nothing about what causes default.
+# One difference from the real data that flatters the method: here EVERY driver of default is a
+# recorded column, so there is no unobserved confounding (in the real file lenders price on risk that
+# the file does not hold). The graph among the covariates is unknown (SCM.graph_known is False).
+# The file has no loan_sequence: that is a real Freddie Mac identifier and is not reproduced.
+
+FREDDIE_SEED = 42
+FREDDIE_N_ROWS = 31_780  # the real 2007 file's size
+FREDDIE_INTERCEPT = -4.0164  # solved so the simulated default rate matches the real file's 15.53%
+FREDDIE_LEVER_LOGITS = {"interest_rate": 0.9, "ltv": 0.010, "dti": 0.015}  # per percentage point / point
+FREDDIE_SCORE_LOGIT = -0.007  # per credit-score point
+FREDDIE_FIRST_TIME_LOGIT = -0.15
+FREDDIE_INVESTMENT_LOGIT = 0.35  # occupancy == investment
+FREDDIE_CASH_OUT_LOGIT = 0.30  # purpose == refi_cash_out
+FREDDIE_DATA_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "freddie_mac" / "loans_2007.csv"
+FREDDIE_ID_COLUMN = "loan_id"
+FREDDIE_DROPPED_COLUMNS = (FREDDIE_ID_COLUMN, "loan_sequence", "default")
+FREDDIE_OUTCOME = "default"
+
+
+@lru_cache(maxsize=1)
+def _real_freddie_loans() -> pd.DataFrame:
+    """The real 2007 loans (prepared by scripts/prepare_freddie_mac.py), minus the ids and the real
+    outcome, which the SCM replaces."""
+    if not FREDDIE_DATA_PATH.exists():
+        raise FileNotFoundError(
+            f"{FREDDIE_DATA_PATH} not found; it is built from a registered Freddie Mac download by "
+            "scripts/prepare_freddie_mac.py (see data/freddie_mac/README.md)"
+        )
+    return pd.read_csv(FREDDIE_DATA_PATH).drop(columns=list(FREDDIE_DROPPED_COLUMNS))
+
+
+def _real_freddie_column(column: str) -> Node:
+    table = _real_freddie_loans()[column].to_numpy()
+    return Node(name=column, parents=("row",), mechanism=lambda values, rng, n: table[values["row"]])
+
+
+def _freddie_default(values, rng, n):
+    logit = FREDDIE_INTERCEPT + FREDDIE_SCORE_LOGIT * values["credit_score"] + FREDDIE_FIRST_TIME_LOGIT * values["first_time_buyer"]
+    logit = logit + FREDDIE_INVESTMENT_LOGIT * (values["occupancy"] == "investment")
+    logit = logit + FREDDIE_CASH_OUT_LOGIT * (values["purpose"] == "refi_cash_out")
+    for lever, coef in FREDDIE_LEVER_LOGITS.items():
+        logit = logit + coef * values[lever]
+    return (rng.uniform(0.0, 1.0, n) < sigmoid(logit)).astype(int)
+
+
+def freddie_mac_semi_synthetic_scm() -> SCM:
+    loans = _real_freddie_loans()
+    row = Node(
+        name="row",
+        parents=(),
+        mechanism=lambda values, rng, n: rng.integers(0, len(loans), n),
+        latent=True,
+    )
+    drivers = ("credit_score", "first_time_buyer", "occupancy", "purpose", *FREDDIE_LEVER_LOGITS)
+    return SCM(
+        nodes=(
+            row,
+            *(_real_freddie_column(column) for column in loans.columns),  # same column order as loans_2007.csv
+            Node(name=FREDDIE_OUTCOME, parents=drivers, mechanism=_freddie_default),
+        ),
+        graph_known=False,
+    )
+
+
 # (domain_id, dataset kind) -> factory for the SCM behind that dataset. A pair
 # absent from here has no known ground truth (e.g. real data), and the harness
 # reports only the metrics that don't need one.
@@ -396,4 +467,5 @@ SCM_REGISTRY: dict[tuple[str, str], Callable[[], SCM]] = {
     ("employee_attrition", "synthetic"): attrition_scm,
     ("illinois_wellness", "synthetic"): illinois_wellness_scm,
     ("german_credit", "semi_synthetic"): german_credit_semi_synthetic_scm,
+    ("freddie_mac", "semi_synthetic"): freddie_mac_semi_synthetic_scm,
 }

@@ -1,0 +1,32 @@
+digraph causal_graph {
+  rankdir=TB;
+  node [shape=box, style="rounded,filled", fontname="Helvetica"];
+  "credit_score" [fillcolor="#BAB0AC"];
+  "first_time_buyer" [fillcolor="#F58518"];
+  "orig_upb_100k" [fillcolor="#BAB0AC"];
+  "ltv" [fillcolor="#4C78A8"];
+  "dti" [fillcolor="#4C78A8"];
+  "mi_pct" [fillcolor="#BAB0AC"];
+  "interest_rate" [fillcolor="#4C78A8"];
+  "default" [fillcolor="#E45756"];
+  "credit_score" -> "default";
+  "credit_score" -> "dti";
+  "credit_score" -> "interest_rate";
+  "credit_score" -> "ltv";
+  "first_time_buyer" -> "dti";
+  "first_time_buyer" -> "interest_rate";
+  "first_time_buyer" -> "ltv";
+  "first_time_buyer" -> "mi_pct";
+  "first_time_buyer" -> "orig_upb_100k";
+  "orig_upb_100k" -> "default";
+  "orig_upb_100k" -> "interest_rate";
+  "orig_upb_100k" -> "ltv";
+  "ltv" -> "default";
+  "dti" -> "interest_rate";
+  "dti" -> "orig_upb_100k";
+  "mi_pct" -> "interest_rate";
+  "mi_pct" -> "ltv";
+  "mi_pct" -> "orig_upb_100k";
+  "interest_rate" -> "default";
+  "interest_rate" -> "ltv";
+}

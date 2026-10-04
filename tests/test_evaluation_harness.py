@@ -123,7 +123,9 @@ def test_filters_select_only_the_requested_domain_and_dataset(monkeypatch, tmp_p
 
     # with the data files hidden, each selected (domain, dataset) is a skipped scenario
     only = harness.run_evaluation(datasets=["semi_synthetic"], loader=config_loader)
-    assert {(s.domain_id, s.dataset) for s in only} == {("german_credit", "semi_synthetic")}
+    assert {(s.domain_id, s.dataset) for s in only} == {
+        ("german_credit", "semi_synthetic"), ("freddie_mac", "semi_synthetic"),
+    }
     assert all(s.skipped_reason for s in only)
 
 

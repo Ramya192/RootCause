@@ -259,7 +259,7 @@ def render_json(result: dict) -> str:
 # anomaly: only the injected faults are known. The graph is what Stage 3 finds on the real data
 # (there is no true graph), learned once on the uncorrupted data.
 
-REAL_SCENARIOS = (("carclaims", "real"), ("german_credit", "real"))
+REAL_SCENARIOS = (("carclaims", "real"), ("german_credit", "real"), ("freddie_mac", "real_2007"))
 # "type-aware" is the module default (categorical mechanisms, roots not scored); "earlier" is what it did
 # before: every non-binary column Gaussian, every variable scored.
 REAL_METHODS = ("causal (type-aware)", "causal (earlier)", "Mahalanobis", "isolation forest", "marginal z-score")

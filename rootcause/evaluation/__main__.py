@@ -48,7 +48,7 @@ def main(argv: list[str] | None = None) -> int:
                         help="check causal anomaly flagging against injected mechanism faults and standard outlier "
                         "detectors; writes anomalies.md and anomalies.json")
     parser.add_argument("--anomalies-real", action="store_true",
-                        help="check causal anomaly flagging on the real covariates of carclaims and German Credit "
+                        help="check causal anomaly flagging on the real covariates of carclaims, German Credit and Freddie Mac 2007 "
                         "(injected faults; type-aware vs Gaussian mechanisms; how concentrated the top of the "
                         "list is); writes anomalies_real.md and anomalies_real.json")
     parser.add_argument("--multimodal", action="store_true",

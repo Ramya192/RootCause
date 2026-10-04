@@ -30,6 +30,9 @@ ingestion:
     real_2008: data/freddie_mac/loans_2008.csv
     real_2010: data/freddie_mac/loans_2010.csv
     real_2011: data/freddie_mac/loans_2011.csv
+    # the 2007 loans' real covariates with a SIMULATED default (planted lever effects, known truth);
+    # built by scripts/generate_semi_synthetic_freddie_mac_data.py, gitignored like the real files
+    semi_synthetic: data/freddie_mac/loans_2007_semi_synthetic.csv
   default_dataset: real_2007  # the most defaults, so the most stable estimates
   id_column: loan_id
   outcome_column: default

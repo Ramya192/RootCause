@@ -227,11 +227,12 @@ def test_a_defect_row_after_the_termination_does_not_move_the_termination_age():
 # --- config -------------------------------------------------------------------------------
 
 
-def test_config_has_one_real_dataset_per_vintage_and_no_ground_truth(config_loader, fm_config):
+def test_config_has_one_real_dataset_per_vintage_and_a_semi_synthetic_twin(config_loader, fm_config):
     assert config_loader.get_domain(DOMAIN).is_runnable
-    assert runner.available_datasets(fm_config) == [f"real_{y}" for y in YEARS]
-    assert runner.resolve_dataset(fm_config) == "real_2007"
-    assert not [key for key in SCM_REGISTRY if key[0] == DOMAIN]  # nothing to score against
+    assert runner.available_datasets(fm_config) == [*(f"real_{y}" for y in YEARS), "semi_synthetic"]
+    assert runner.resolve_dataset(fm_config) == "real_2007"  # the twin never becomes the default
+    # the real vintages have no ground truth; only the semi-synthetic twin does
+    assert [key for key in SCM_REGISTRY if key[0] == DOMAIN] == [(DOMAIN, "semi_synthetic")]
 
 
 def test_config_adjusts_each_lever_for_every_other_encoded_column(fm_config, fake_loans):

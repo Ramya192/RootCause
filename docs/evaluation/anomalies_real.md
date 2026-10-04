@@ -12,6 +12,8 @@ The 100 records the model explains least. A list dominated by one (variable, val
 | carclaims (real covariates) | (earlier) | 100% | 100% | `deductible_100usd` = 7 | 2.0% |
 | german_credit (real covariates) | (type-aware) | 40% | 24% | `duration_months` = 48 | 4.8% |
 | german_credit (real covariates) | (earlier) | 31% | 1% | `credit_amount_kdm` = 14.896 | 0.1% |
+| freddie_mac (real covariates) | (type-aware) | 39% | 4% | `ltv` = 13 | 0.1% |
+| freddie_mac (real covariates) | (earlier) | 39% | 4% | `ltv` = 13 | 0.1% |
 
 ## carclaims (real covariates): swap in a binary variable (value taken from a record with the other value)
 
@@ -92,6 +94,46 @@ The 100 records the model explains least. A list dominated by one (variable, val
 | Mahalanobis | 0.62 ± 0.05 | 0.04 ± 0.01 | 0.04 ± 0.04 | – | – |
 | isolation forest | 0.64 ± 0.05 | 0.05 ± 0.02 | 0.04 ± 0.04 | – | – |
 | marginal z-score | 0.54 ± 0.04 | 0.04 ± 0.00 | 0.03 ± 0.03 | – | – |
+
+## freddie_mac (real covariates): swap in a continuous variable (value swapped with another record's)
+
+| Detector | ROC AUC | Avg precision | P@k | Top variable = the corrupted one | ... or one of its children |
+|---|---|---|---|---|---|
+| causal (type-aware) | 0.58 ± 0.02 | 0.05 ± 0.00 | 0.08 ± 0.00 | 0.26 ± 0.02 | 0.65 ± 0.01 |
+| causal (earlier) | 0.57 ± 0.02 | 0.05 ± 0.00 | 0.07 ± 0.00 | 0.22 ± 0.01 | 0.52 ± 0.01 |
+| Mahalanobis | 0.56 ± 0.02 | 0.04 ± 0.00 | 0.07 ± 0.00 | – | – |
+| isolation forest | 0.55 ± 0.01 | 0.04 ± 0.00 | 0.04 ± 0.01 | – | – |
+| marginal z-score | 0.52 ± 0.01 | 0.03 ± 0.00 | 0.03 ± 0.00 | – | – |
+
+## freddie_mac (real covariates): swap in a binary variable (value taken from a record with the other value)
+
+| Detector | ROC AUC | Avg precision | P@k | Top variable = the corrupted one | ... or one of its children |
+|---|---|---|---|---|---|
+| causal (type-aware) | 0.73 ± 0.01 | 0.07 ± 0.00 | 0.08 ± 0.01 | 0.63 ± 0.01 | 0.63 ± 0.01 |
+| causal (earlier) | 0.71 ± 0.01 | 0.06 ± 0.00 | 0.07 ± 0.01 | 0.58 ± 0.01 | 0.58 ± 0.01 |
+| Mahalanobis | 0.74 ± 0.01 | 0.07 ± 0.00 | 0.09 ± 0.01 | – | – |
+| isolation forest | 0.76 ± 0.01 | 0.07 ± 0.00 | 0.09 ± 0.01 | – | – |
+| marginal z-score | 0.68 ± 0.00 | 0.05 ± 0.00 | 0.03 ± 0.00 | – | – |
+
+## freddie_mac (real covariates): shift in a continuous variable (pushed 3 sd away)
+
+| Detector | ROC AUC | Avg precision | P@k | Top variable = the corrupted one | ... or one of its children |
+|---|---|---|---|---|---|
+| causal (type-aware) | 0.93 ± 0.00 | 0.47 ± 0.01 | 0.48 ± 0.01 | 0.89 ± 0.01 | 0.97 ± 0.00 |
+| causal (earlier) | 0.91 ± 0.00 | 0.42 ± 0.01 | 0.45 ± 0.01 | 0.87 ± 0.02 | 0.95 ± 0.00 |
+| Mahalanobis | 0.89 ± 0.00 | 0.37 ± 0.01 | 0.42 ± 0.01 | – | – |
+| isolation forest | 0.76 ± 0.00 | 0.07 ± 0.00 | 0.09 ± 0.01 | – | – |
+| marginal z-score | 0.86 ± 0.00 | 0.36 ± 0.01 | 0.41 ± 0.01 | – | – |
+
+## freddie_mac (real covariates): shift in a binary variable (value flipped)
+
+| Detector | ROC AUC | Avg precision | P@k | Top variable = the corrupted one | ... or one of its children |
+|---|---|---|---|---|---|
+| causal (type-aware) | 0.73 ± 0.01 | 0.07 ± 0.00 | 0.08 ± 0.01 | 0.63 ± 0.01 | 0.63 ± 0.01 |
+| causal (earlier) | 0.71 ± 0.01 | 0.06 ± 0.00 | 0.07 ± 0.01 | 0.58 ± 0.01 | 0.58 ± 0.01 |
+| Mahalanobis | 0.74 ± 0.01 | 0.07 ± 0.00 | 0.09 ± 0.01 | – | – |
+| isolation forest | 0.76 ± 0.01 | 0.07 ± 0.00 | 0.09 ± 0.01 | – | – |
+| marginal z-score | 0.68 ± 0.00 | 0.05 ± 0.00 | 0.03 ± 0.00 | – | – |
 
 ## How to read this
 

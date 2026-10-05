@@ -1,4 +1,4 @@
-"""Stage 7 narrative tiers (rootcause/pipeline/narrative.py + explanation.py).
+"""Stage 7 narrative tiers (causal_engine/pipeline/narrative.py + explanation.py).
 
 No test touches the network: the AutoGen chain runs against AutoGen's replay client and
 the single-call tier against a stub, so the suite stays free and hermetic.
@@ -11,8 +11,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from rootcause.models.schemas import EffectEstimate, InterventionRecommendation
-from rootcause.pipeline import counterfactuals, explanation, interventions, narrative
+from causal_engine.models.schemas import EffectEstimate, InterventionRecommendation
+from causal_engine.pipeline import counterfactuals, explanation, interventions, narrative
 
 FACTS = (
     "Top-line drivers of attrition, ranked by causal effect size:\n"

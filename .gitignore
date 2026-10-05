@@ -5,8 +5,8 @@ __pycache__/
 .env
 
 # Feast local artifacts
-rootcause/feature_repo/data/
-rootcause/feature_repo/.feast/
+causal_engine/feature_repo/data/
+causal_engine/feature_repo/.feast/
 
 # Synthetic PDF/image attachments: regenerated deterministically by scripts/generate_attachments.py
 data/*/attachments/

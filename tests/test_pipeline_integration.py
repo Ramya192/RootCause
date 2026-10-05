@@ -1,6 +1,6 @@
 """End-to-end stage-by-stage run (ingestion -> ... -> explanation), calling
-each rootcause/pipeline/*.py function directly rather than through the
-CrewAI/LLM orchestration in rootcause/agents/crew.py (that path costs real
+each causal_engine/pipeline/*.py function directly rather than through the
+CrewAI/LLM orchestration in causal_engine/agents/crew.py (that path costs real
 money/minutes per an LLM manager -- see tests/test_crew.py for a free
 wiring-only check of it). This mirrors the ad-hoc verification used during
 Phase 1 development and asserts the whole thing assembles into a valid
@@ -9,8 +9,8 @@ PipelineResult.
 
 from __future__ import annotations
 
-from rootcause.models.schemas import PipelineResult
-from rootcause.pipeline import counterfactuals, interventions
+from causal_engine.models.schemas import PipelineResult
+from causal_engine.pipeline import counterfactuals, interventions
 
 
 def test_full_pipeline_assembles_valid_result(
@@ -21,7 +21,7 @@ def test_full_pipeline_assembles_valid_result(
     cf_results = counterfactuals.estimate_counterfactuals(feature_df, domain_config)
     recs = interventions.rank_interventions(raw_df, effect_estimates, domain_config)
 
-    from rootcause.pipeline import explanation
+    from causal_engine.pipeline import explanation
 
     explanation_result = explanation.generate_explanation(
         feature_df, effect_estimates, cf_results, recs, domain_config

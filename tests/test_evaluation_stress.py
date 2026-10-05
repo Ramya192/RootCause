@@ -11,10 +11,10 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from rootcause.evaluation import __main__ as cli
-from rootcause.evaluation import harness, metrics, report, stress, stress_report
-from rootcause.evaluation.scm import additive_noise
-from rootcause.evaluation.scms import (
+from causal_engine.evaluation import __main__ as cli
+from causal_engine.evaluation import harness, metrics, report, stress, stress_report
+from causal_engine.evaluation.scm import additive_noise
+from causal_engine.evaluation.scms import (
     attrition_scm,
     confounded_attrition_scm,
     nonlinear_monotone_attrition_scm,

@@ -8,9 +8,9 @@ import json
 
 import pytest
 
-from rootcause.evaluation import harness, report
-from rootcause.evaluation.scms import attrition_scm
-from rootcause.pipeline import counterfactuals, interventions, runner
+from causal_engine.evaluation import harness, report
+from causal_engine.evaluation.scms import attrition_scm
+from causal_engine.pipeline import counterfactuals, interventions, runner
 
 
 @pytest.fixture(autouse=True)
@@ -130,7 +130,7 @@ def test_filters_select_only_the_requested_domain_and_dataset(monkeypatch, tmp_p
 
 
 def test_a_twin_whose_source_download_is_absent_is_skipped_not_a_crash(monkeypatch, tmp_path, config_loader):
-    from rootcause.evaluation import scms
+    from causal_engine.evaluation import scms
 
     monkeypatch.setattr(runner, "REPO_ROOT", tmp_path)
     monkeypatch.setattr(scms, "FREDDIE_DATA_PATH", tmp_path / "loans_2007.csv")

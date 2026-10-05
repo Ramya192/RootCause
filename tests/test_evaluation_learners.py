@@ -1,4 +1,4 @@
-"""The Stage 5 learner comparison on the Illinois trial (rootcause/evaluation/learners.py)."""
+"""The Stage 5 learner comparison on the Illinois trial (causal_engine/evaluation/learners.py)."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from rootcause.evaluation import benchmarks, harness, learners
+from causal_engine.evaluation import benchmarks, harness, learners
 
 
 def _run(learner="t_learner", base="linear", mean=0.0, women=-0.03, men=0.05, sd=0.04) -> learners.LearnerRun:

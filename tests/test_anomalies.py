@@ -1,4 +1,4 @@
-"""Causal anomaly flagging (rootcause/pipeline/anomalies.py) and its evaluation on injected faults."""
+"""Causal anomaly flagging (causal_engine/pipeline/anomalies.py) and its evaluation on injected faults."""
 
 from __future__ import annotations
 
@@ -9,9 +9,9 @@ import pandas as pd
 import pytest
 from sklearn.metrics import roc_auc_score
 
-from rootcause.evaluation import anomalies_eval
-from rootcause.models.schemas import CausalGraph
-from rootcause.pipeline import anomalies
+from causal_engine.evaluation import anomalies_eval
+from causal_engine.models.schemas import CausalGraph
+from causal_engine.pipeline import anomalies
 
 
 def _chain(n=4000, seed=0) -> tuple[pd.DataFrame, CausalGraph]:

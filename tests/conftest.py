@@ -17,13 +17,13 @@ from pathlib import Path
 
 import pytest
 
-from rootcause.pipeline import (
+from causal_engine.pipeline import (
     causal_discovery,
     effect_estimation,
     feature_store,
     ingestion,
 )
-from rootcause.utils.config_loader import ConfigLoader
+from causal_engine.utils.config_loader import ConfigLoader
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DATA_PATH = REPO_ROOT / "data" / "employee_attrition" / "attrition.csv"
@@ -35,7 +35,7 @@ def isolated_feast_root(tmp_path, monkeypatch) -> Path:
     """Point Feast's per-domain state at a temp dir. Tests that invent a
     throwaway domain use this instead of deleting files afterwards: Feast keeps
     its SQLite online store open until GC, so rmtree fails on Windows."""
-    from rootcause.feature_repo import definitions
+    from causal_engine.feature_repo import definitions
 
     monkeypatch.setattr(definitions, "DATA_ROOT", tmp_path)
     return tmp_path
@@ -54,7 +54,7 @@ def config_loader() -> ConfigLoader:
 @pytest.fixture(scope="session")
 def domain_config(config_loader: ConfigLoader) -> dict:
     """The employee_attrition domain's `extra` dict -- the same dict every
-    rootcause/pipeline/*.py stage function takes as `domain_config`."""
+    causal_engine/pipeline/*.py stage function takes as `domain_config`."""
     return config_loader.get_domain("employee_attrition").extra
 
 

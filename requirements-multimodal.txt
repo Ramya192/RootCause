@@ -1,4 +1,4 @@
-# Optional: PDF / image attachments (rootcause/pipeline/modalities.py). Install with
+# Optional: PDF / image attachments (causal_engine/pipeline/modalities.py). Install with
 #   pip install -r requirements-multimodal.txt
 # The core pipeline and its tests do not need any of this; the multimodal tests skip
 # themselves where torch or the pretrained weights are unavailable.

@@ -1,5 +1,5 @@
 # Optional: tier 1 of the Stage 7 narrative chain (an AutoGen analyst -> skeptic -> writer team,
-# rootcause/pipeline/narrative.py). Without it the chain skips that tier and falls back to a
+# causal_engine/pipeline/narrative.py). Without it the chain skips that tier and falls back to a
 # single LLM call, then the template. Install AFTER requirements.txt:
 #
 #   pip install -r requirements-autogen.txt

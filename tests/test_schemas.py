@@ -1,4 +1,4 @@
-"""Pydantic contracts threaded between stages (rootcause/models/schemas.py)."""
+"""Pydantic contracts threaded between stages (causal_engine/models/schemas.py)."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 from pydantic import ValidationError
 
-from rootcause.models.schemas import (
+from causal_engine.models.schemas import (
     CausalGraph,
     CounterfactualResult,
     EffectEstimate,

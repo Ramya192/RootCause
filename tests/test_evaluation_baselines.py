@@ -10,9 +10,9 @@ import json
 import pandas as pd
 import pytest
 
-from rootcause.evaluation import __main__ as cli
-from rootcause.evaluation import baselines, baselines_report, harness, metrics, report
-from rootcause.evaluation.scms import attrition_scm, confounded_attrition_scm
+from causal_engine.evaluation import __main__ as cli
+from causal_engine.evaluation import baselines, baselines_report, harness, metrics, report
+from causal_engine.evaluation.scms import attrition_scm, confounded_attrition_scm
 
 
 @pytest.fixture(autouse=True)

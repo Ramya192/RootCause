@@ -16,5 +16,5 @@ data/freddie_mac
 data/*/attachments
 
 # Feast local state is rebuilt at run time
-rootcause/feature_repo/data
-rootcause/feature_repo/.feast
+causal_engine/feature_repo/data
+causal_engine/feature_repo/.feast

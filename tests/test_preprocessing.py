@@ -1,4 +1,4 @@
-"""Stage 2 preprocessing (rootcause/pipeline/preprocessing.py): categorical
+"""Stage 2 preprocessing (causal_engine/pipeline/preprocessing.py): categorical
 encoding + missing-value handling, plus the missing-outcome rule in Stage 1
 and a real Feast round-trip on a messy frame."""
 
@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from rootcause.pipeline import feature_store, ingestion, preprocessing
+from causal_engine.pipeline import feature_store, ingestion, preprocessing
 
 
 def make_config(**fs_overrides) -> dict:

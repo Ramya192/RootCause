@@ -1,4 +1,4 @@
-"""Stage 3 with PC, GES and LiNGAM (rootcause/pipeline/causal_discovery.py).
+"""Stage 3 with PC, GES and LiNGAM (causal_engine/pipeline/causal_discovery.py).
 
 Real algorithms on simulated data with a known graph. The attrition SCM's graph is
 compensation -> satisfaction <- manager_quality -> burnout <- workload, both -> attrition.
@@ -12,8 +12,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from rootcause.evaluation import harness, scms, stress
-from rootcause.pipeline import causal_discovery
+from causal_engine.evaluation import harness, scms, stress
+from causal_engine.pipeline import causal_discovery
 
 CONTINUOUS = ["compensation", "manager_quality", "workload", "job_satisfaction", "burnout"]
 

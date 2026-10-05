@@ -1,7 +1,7 @@
 """Generate data/illinois_wellness/wellness_synthetic.csv: a fully synthetic mirror of the
 Illinois Workplace Wellness schema with a PLANTED treatment effect and a known graph.
 
-The data-generating process lives in rootcause/evaluation/scms.py (`illinois_wellness_scm`),
+The data-generating process lives in causal_engine/evaluation/scms.py (`illinois_wellness_scm`),
 which is also what the evaluation harness intervenes on to compute the true effect, so the
 CSV and its ground truth cannot drift apart (tests/test_evaluation_scm.py checks this).
 
@@ -16,9 +16,9 @@ from pathlib import Path
 import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT))  # so `python scripts/...` finds the rootcause package
+sys.path.insert(0, str(REPO_ROOT))  # so `python scripts/...` finds the causal_engine package
 
-from rootcause.evaluation.scms import (  # noqa: E402
+from causal_engine.evaluation.scms import (  # noqa: E402
     WELLNESS_N_ROWS,
     WELLNESS_SEED,
     illinois_wellness_scm,

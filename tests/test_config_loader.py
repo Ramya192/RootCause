@@ -1,10 +1,10 @@
-"""Stage-0 infra: rootcause/utils/config_loader.py (ported from Prism)."""
+"""Stage-0 infra: causal_engine/utils/config_loader.py (ported from Prism)."""
 
 from __future__ import annotations
 
 import pytest
 
-from rootcause.utils.config_loader import ConfigLoader, _resolve_env
+from causal_engine.utils.config_loader import ConfigLoader, _resolve_env
 
 
 def test_loads_employee_attrition_domain(config_loader: ConfigLoader):

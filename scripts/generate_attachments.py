@@ -6,7 +6,7 @@
 Writes under data/<domain>/attachments/ (git-ignored: it is regenerated deterministically from
 the tabular data) and, for carclaims, the 5,000-claim row sample data/carclaims/claims_multimodal.csv.
 The attachments are rendered from pre-outcome covariates only and are SYNTHETIC: see
-rootcause/evaluation/attachment_synth.py for what that does and does not show.
+causal_engine/evaluation/attachment_synth.py for what that does and does not show.
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from rootcause.evaluation import attachment_synth  # noqa: E402
+from causal_engine.evaluation import attachment_synth  # noqa: E402
 
 
 def main() -> int:

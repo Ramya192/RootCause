@@ -1,4 +1,4 @@
-"""Stage 7: Explanation (rootcause/pipeline/explanation.py).
+"""Stage 7: Explanation (causal_engine/pipeline/explanation.py).
 
 Both tests force the deterministic template path (no real OpenAI call) so
 the suite stays free, fast, and hermetic -- `test_llm_failure_falls_back_to_template`
@@ -11,7 +11,7 @@ from __future__ import annotations
 import openai
 import pytest
 
-from rootcause.pipeline import counterfactuals, explanation, interventions, narrative
+from causal_engine.pipeline import counterfactuals, explanation, interventions, narrative
 
 
 def _run_explanation(feature_df, effect_estimates, raw_df, domain_config):

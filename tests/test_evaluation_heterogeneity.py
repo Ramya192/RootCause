@@ -8,10 +8,10 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from rootcause.evaluation import benchmarks, harness, metrics, report
-from rootcause.evaluation.scm import SCM, Node, additive_noise, bernoulli_of
-from rootcause.models.schemas import CounterfactualResult, SubgroupEffect
-from rootcause.pipeline import counterfactuals, runner
+from causal_engine.evaluation import benchmarks, harness, metrics, report
+from causal_engine.evaluation.scm import SCM, Node, additive_noise, bernoulli_of
+from causal_engine.models.schemas import CounterfactualResult, SubgroupEffect
+from causal_engine.pipeline import counterfactuals, runner
 
 DOMAIN = "illinois_wellness"
 
@@ -117,7 +117,7 @@ def test_a_non_binary_subgroup_variable_is_rejected():
 
 
 def test_wellness_mirror_effect_varies_by_baseline_risk_even_though_the_logit_effect_is_constant():
-    from rootcause.evaluation.scms import illinois_wellness_scm
+    from causal_engine.evaluation.scms import illinois_wellness_scm
 
     effects = illinois_wellness_scm().true_subgroup_effects("treat", "terminated_0119", "age37_49", n=400_000)
     # the 37-49 band has the lowest baseline termination, so the same logit shift moves it least

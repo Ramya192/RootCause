@@ -13,9 +13,9 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from rootcause.evaluation import harness
-from rootcause.evaluation.scms import SCM_REGISTRY
-from rootcause.pipeline import preprocessing, runner
+from causal_engine.evaluation import harness
+from causal_engine.evaluation.scms import SCM_REGISTRY
+from causal_engine.pipeline import preprocessing, runner
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))

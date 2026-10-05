@@ -17,7 +17,7 @@ statsmodels
 
 # Stage 5: Counterfactuals
 # NOTE: causalml has Cython extensions and needs a C++ build toolchain on
-# Windows. If `pip install causalml` fails here, rootcause/pipeline/
+# Windows. If `pip install causalml` fails here, causal_engine/pipeline/
 # counterfactuals.py has a scikit-learn-only fallback path — comment this
 # line out and rely on scikit-learn (already a causalml/dowhy dependency).
 causalml

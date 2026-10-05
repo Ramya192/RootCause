@@ -20,8 +20,8 @@ from collections import Counter
 
 from dotenv import load_dotenv
 
-from rootcause.pipeline import explanation, runner
-from rootcause.utils.config_loader import ConfigLoader
+from causal_engine.pipeline import explanation, runner
+from causal_engine.utils.config_loader import ConfigLoader
 
 
 def main() -> None:

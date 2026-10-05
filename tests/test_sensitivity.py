@@ -1,4 +1,4 @@
-"""Stage 4 sensitivity analysis (rootcause/pipeline/sensitivity.py).
+"""Stage 4 sensitivity analysis (causal_engine/pipeline/sensitivity.py).
 
 The formulas are Cinelli & Hazlett (2020). Reference numbers below were produced by the
 authors' `sensemakr` Python port on the same simulated data (kept here as pins, not as a
@@ -15,7 +15,7 @@ import pandas as pd
 import pytest
 import statsmodels.api as sm
 
-from rootcause.pipeline import effect_estimation, sensitivity
+from causal_engine.pipeline import effect_estimation, sensitivity
 
 
 def _simulate(n: int = 3000, seed: int = 0) -> pd.DataFrame:
@@ -151,7 +151,7 @@ def test_adjusted_estimate_defaults_to_shrinking_and_takes_an_explicit_direction
 
 
 def test_hidden_confounder_check_identity_holds_and_robustness_moves_the_wrong_way(monkeypatch):
-    from rootcause.evaluation import sensitivity_eval
+    from causal_engine.evaluation import sensitivity_eval
 
     monkeypatch.setattr(sensitivity_eval, "TRUTH_DRAWS", 100_000)
     result = sensitivity_eval.run(replicates=3, n_rows=1500, strengths=(0.0, 0.85))

@@ -3,7 +3,7 @@
     python scripts/build_ui_samples.py
     python scripts/build_ui_samples.py --only german_credit/real
 
-The UI (rootcause/api/ui.html) loads these so it works instantly with no server round trip. Each
+The UI (causal_engine/api/ui.html) loads these so it works instantly with no server round trip. Each
 file holds the PipelineResult plus the domain facts the page needs to explain it (what the outcome
 and levers are, whether the data are observational) and, where a structural causal model of the
 domain exists, the TRUE graph and effects so the page can show recovery against the truth.
@@ -25,12 +25,12 @@ import pandas as pd
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from rootcause.evaluation import harness  # noqa: E402
-from rootcause.evaluation.scms import SCM_REGISTRY  # noqa: E402
-from rootcause.pipeline import runner  # noqa: E402
-from rootcause.utils.config_loader import ConfigLoader  # noqa: E402
+from causal_engine.evaluation import harness  # noqa: E402
+from causal_engine.evaluation.scms import SCM_REGISTRY  # noqa: E402
+from causal_engine.pipeline import runner  # noqa: E402
+from causal_engine.utils.config_loader import ConfigLoader  # noqa: E402
 
-OUT_DIR = REPO_ROOT / "rootcause" / "api" / "static" / "samples"
+OUT_DIR = REPO_ROOT / "causal_engine" / "api" / "static" / "samples"
 
 # (domain, dataset, label shown in the UI)
 SAMPLES = [

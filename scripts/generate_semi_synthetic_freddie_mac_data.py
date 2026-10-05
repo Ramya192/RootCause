@@ -2,7 +2,7 @@
 SIMULATED default outcome whose lever effects are planted.
 
 Same columns as data/freddie_mac/loans_2007.csv except `loan_sequence` (a real Freddie Mac
-identifier, not reproduced). The data-generating process lives in rootcause/evaluation/scms.py
+identifier, not reproduced). The data-generating process lives in causal_engine/evaluation/scms.py
 (`freddie_mac_semi_synthetic_scm`), which is also what the evaluation harness intervenes on to
 compute the true effects, so the CSV and its ground truth cannot drift apart. Needs
 loans_2007.csv, which scripts/prepare_freddie_mac.py builds from the registered Freddie Mac
@@ -19,9 +19,9 @@ from pathlib import Path
 import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT))  # so `python scripts/...` finds the rootcause package
+sys.path.insert(0, str(REPO_ROOT))  # so `python scripts/...` finds the causal_engine package
 
-from rootcause.evaluation.scms import (  # noqa: E402
+from causal_engine.evaluation.scms import (  # noqa: E402
     FREDDIE_ID_COLUMN,
     FREDDIE_N_ROWS,
     FREDDIE_SEED,

@@ -2,7 +2,7 @@
 so causal discovery (stage 3) and effect estimation (stage 4) have ground
 truth to be checked against instead of unverifiable real-world data.
 
-The data-generating process itself lives in rootcause/evaluation/scms.py
+The data-generating process itself lives in causal_engine/evaluation/scms.py
 (`attrition_scm`), which is also what the evaluation harness intervenes on to
 compute true effects -- one definition, so the CSV and the ground truth can't
 drift apart. See that module for the structural equations.
@@ -25,13 +25,13 @@ from pathlib import Path
 import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT))  # so `python scripts/...` finds the rootcause package
+sys.path.insert(0, str(REPO_ROOT))  # so `python scripts/...` finds the causal_engine package
 
-from rootcause.evaluation.scms import N_ROWS, SEED, attrition_scm  # noqa: E402
+from causal_engine.evaluation.scms import N_ROWS, SEED, attrition_scm  # noqa: E402
 
 GROUND_TRUTH_EFFECTS = {
     # direct structural coefficients (NOT total effects -- for those see
-    # `python -m rootcause.evaluation`, which simulates do() on the SCM)
+    # `python -m causal_engine.evaluation`, which simulates do() on the SCM)
     "job_satisfaction->attrition": -1.2,
     "burnout->attrition": 1.0,
 }

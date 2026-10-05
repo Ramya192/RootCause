@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from rootcause.evaluation import metrics
-from rootcause.models.schemas import EffectEstimate, InterventionRecommendation
+from causal_engine.evaluation import metrics
+from causal_engine.models.schemas import EffectEstimate, InterventionRecommendation
 
 
 def _est(treatment, ate, passed=None):

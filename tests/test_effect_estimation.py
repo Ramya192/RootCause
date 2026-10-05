@@ -1,4 +1,4 @@
-"""Stage 4: Effect Estimation (rootcause/pipeline/effect_estimation.py).
+"""Stage 4: Effect Estimation (causal_engine/pipeline/effect_estimation.py).
 
 Expected ATE signs are derived from the synthetic DAG's own structural
 equations (scripts/generate_synthetic_attrition_data.py), not guessed:
@@ -21,7 +21,7 @@ import numpy as np
 import pytest
 import statsmodels.tools.sm_exceptions as sm_exc
 
-from rootcause.pipeline import effect_estimation
+from causal_engine.pipeline import effect_estimation
 
 
 def test_one_estimate_per_configured_treatment(effect_estimates, domain_config):

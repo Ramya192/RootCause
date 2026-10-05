@@ -8,8 +8,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from rootcause.evaluation.scm import SCM, Node, linear_gaussian, logistic_binary
-from rootcause.evaluation.scms import N_ROWS, SEED, attrition_scm
+from causal_engine.evaluation.scm import SCM, Node, linear_gaussian, logistic_binary
+from causal_engine.evaluation.scms import N_ROWS, SEED, attrition_scm
 
 
 def _node(name, spec, latent=False):

@@ -36,5 +36,7 @@ COPY . .
 
 # OPENAI_API_KEY is read from the environment (docker run -e OPENAI_API_KEY=...); without it the
 # pipeline uses the template narrative. Never bake a key into the image.
+# Cloud Run injects PORT; locally it defaults to 8000. Shell form so ${PORT} expands; exec keeps
+# uvicorn as PID 1 so it receives SIGTERM.
 EXPOSE 8000
-CMD ["uvicorn", "rootcause.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD exec uvicorn causal_engine.api.main:app --host 0.0.0.0 --port ${PORT:-8000}

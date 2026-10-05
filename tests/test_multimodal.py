@@ -1,5 +1,5 @@
-"""PDF / image attachments (rootcause/pipeline/modalities.py) and the synthetic renderers behind them
-(rootcause/evaluation/attachment_synth.py).
+"""PDF / image attachments (causal_engine/pipeline/modalities.py) and the synthetic renderers behind them
+(causal_engine/evaluation/attachment_synth.py).
 
 Rendering and extraction run for real: fpdf2 writes PDFs that pypdf reads back, Pillow/OpenCV process
 real pixels. The CNN tests need torch/torchvision and the pretrained weights (downloaded once); they are
@@ -15,9 +15,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from rootcause.evaluation import attachment_synth, harness
-from rootcause.pipeline import effect_estimation, ingestion, modalities, preprocessing
-from rootcause.utils.config_loader import ConfigLoader
+from causal_engine.evaluation import attachment_synth, harness
+from causal_engine.pipeline import effect_estimation, ingestion, modalities, preprocessing
+from causal_engine.utils.config_loader import ConfigLoader
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DOMAINS = sorted(attachment_synth.DOMAINS)

@@ -18,9 +18,9 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from rootcause.pipeline import causal_discovery, ingestion, preprocessing, runner  # noqa: E402
-from rootcause.utils.config_loader import ConfigLoader  # noqa: E402
-from rootcause.utils.graph_plot import plot_causal_graph, to_dot  # noqa: E402
+from causal_engine.pipeline import causal_discovery, ingestion, preprocessing, runner  # noqa: E402
+from causal_engine.utils.config_loader import ConfigLoader  # noqa: E402
+from causal_engine.utils.graph_plot import plot_causal_graph, to_dot  # noqa: E402
 
 
 def main() -> int:

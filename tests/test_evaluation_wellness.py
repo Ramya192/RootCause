@@ -15,15 +15,15 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from rootcause.evaluation import benchmarks, harness, report
-from rootcause.evaluation.scms import (
+from causal_engine.evaluation import benchmarks, harness, report
+from causal_engine.evaluation.scms import (
     SCM_REGISTRY,
     WELLNESS_N_ROWS,
     WELLNESS_SEED,
     WELLNESS_TREAT_LOGIT,
     illinois_wellness_scm,
 )
-from rootcause.pipeline import runner
+from causal_engine.pipeline import runner
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))

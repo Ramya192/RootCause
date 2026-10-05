@@ -1,4 +1,4 @@
-"""Stage 6: Interventions (rootcause/pipeline/interventions.py).
+"""Stage 6: Interventions (causal_engine/pipeline/interventions.py).
 
 `test_recommendations_not_empty_regression` guards the exact silent-failure
 bug documented in memory: effect_estimation.treatments and
@@ -8,8 +8,8 @@ rank_interventions() silently returns an empty list instead of raising.
 
 from __future__ import annotations
 
-from rootcause.models.schemas import EffectEstimate
-from rootcause.pipeline import interventions
+from causal_engine.models.schemas import EffectEstimate
+from causal_engine.pipeline import interventions
 
 
 def test_recommendations_not_empty_regression(raw_df, effect_estimates, domain_config):

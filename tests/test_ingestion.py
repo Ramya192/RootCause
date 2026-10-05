@@ -1,4 +1,4 @@
-"""Stage 1: Ingestion (rootcause/pipeline/ingestion.py)."""
+"""Stage 1: Ingestion (causal_engine/pipeline/ingestion.py)."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import copy
 
 import pytest
 
-from rootcause.pipeline import ingestion
+from causal_engine.pipeline import ingestion
 
 
 def test_ingest_real_csv_shape_and_dtype(raw_df):

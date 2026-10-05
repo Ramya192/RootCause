@@ -10,7 +10,7 @@ a categorical one), with the probability its causes gave the observed value.
 
 On real data there are no labelled anomalies, so this is a list of leads, not findings: "flagged" means
 "not explained by this model" (a missing cause, a wrong functional form or a data-entry error look the
-same), never "fraudulent" or "wrong". See rootcause/pipeline/anomalies.py for the method and its limits.
+same), never "fraudulent" or "wrong". See causal_engine/pipeline/anomalies.py for the method and its limits.
 """
 
 from __future__ import annotations
@@ -22,8 +22,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from rootcause.pipeline import anomalies, causal_discovery, ingestion, preprocessing, runner  # noqa: E402
-from rootcause.utils.config_loader import ConfigLoader  # noqa: E402
+from causal_engine.pipeline import anomalies, causal_discovery, ingestion, preprocessing, runner  # noqa: E402
+from causal_engine.utils.config_loader import ConfigLoader  # noqa: E402
 
 
 def main() -> int:

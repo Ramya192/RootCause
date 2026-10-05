@@ -17,9 +17,9 @@ import pandas as pd
 import pytest
 import statsmodels.api as sm
 
-from rootcause.evaluation import harness, report
-from rootcause.evaluation.scm import SCM, Node, bernoulli_of
-from rootcause.evaluation.scms import (
+from causal_engine.evaluation import harness, report
+from causal_engine.evaluation.scm import SCM, Node, bernoulli_of
+from causal_engine.evaluation.scms import (
     CREDIT_LEVER_LOGITS,
     CREDIT_N_ROWS,
     CREDIT_SEED,
@@ -27,8 +27,8 @@ from rootcause.evaluation.scms import (
     SCM_REGISTRY,
     german_credit_semi_synthetic_scm,
 )
-from rootcause.models.schemas import CausalGraph, EffectEstimate, InterventionRecommendation
-from rootcause.pipeline import preprocessing, runner
+from causal_engine.models.schemas import CausalGraph, EffectEstimate, InterventionRecommendation
+from causal_engine.pipeline import preprocessing, runner
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))

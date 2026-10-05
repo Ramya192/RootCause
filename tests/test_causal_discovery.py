@@ -1,4 +1,4 @@
-"""Stage 3: Causal Discovery (rootcause/pipeline/causal_discovery.py).
+"""Stage 3: Causal Discovery (causal_engine/pipeline/causal_discovery.py).
 
 Regression test for the result documented in memory: PC + domain priors
 recovers all 6 ground-truth edges exactly, with zero spurious edges, on the

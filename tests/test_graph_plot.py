@@ -1,4 +1,4 @@
-"""Causal graph drawing and DOT export (rootcause/utils/graph_plot.py) and the API route that serves it."""
+"""Causal graph drawing and DOT export (causal_engine/utils/graph_plot.py) and the API route that serves it."""
 
 from __future__ import annotations
 
@@ -6,9 +6,9 @@ import networkx as nx
 import pytest
 from fastapi.testclient import TestClient
 
-from rootcause.api.app import create_app
-from rootcause.models.schemas import CausalGraph, Explanation, PipelineResult
-from rootcause.utils import graph_plot
+from causal_engine.api.app import create_app
+from causal_engine.models.schemas import CausalGraph, Explanation, PipelineResult
+from causal_engine.utils import graph_plot
 
 CONFIG = {
     "effect_estimation": {"outcome": "y", "treatments": [{"name": "t"}]},
@@ -123,7 +123,7 @@ def test_graph_route_404_for_unknown_job_and_409_before_the_job_finishes(client)
         release.wait(5)
         raise RuntimeError("never mind")
 
-    from rootcause.utils.config_loader import ConfigLoader
+    from causal_engine.utils.config_loader import ConfigLoader
 
     slow_client = TestClient(create_app(config_loader=ConfigLoader(), runners={"direct": slow, "crew": slow}))
     job_id = slow_client.post("/domains/employee_attrition/analyze").json()["id"]

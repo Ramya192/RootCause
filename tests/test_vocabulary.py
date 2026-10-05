@@ -1,4 +1,4 @@
-"""Domain wording (rootcause/utils/vocabulary.py) and its use in Stage 7."""
+"""Domain wording (causal_engine/utils/vocabulary.py) and its use in Stage 7."""
 
 from __future__ import annotations
 
@@ -8,9 +8,9 @@ import numpy as np
 import openai
 import pandas as pd
 
-from rootcause.pipeline import explanation
-from rootcause.pipeline.preprocessing import feature_columns_of
-from rootcause.utils.vocabulary import domain_vocabulary
+from causal_engine.pipeline import explanation
+from causal_engine.pipeline.preprocessing import feature_columns_of
+from causal_engine.utils.vocabulary import domain_vocabulary
 
 
 def test_employee_config_wording(domain_config):

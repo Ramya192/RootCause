@@ -13,9 +13,9 @@ import pandas as pd
 import pytest
 import statsmodels.api as sm
 
-from rootcause.evaluation import scms
-from rootcause.evaluation.scm import SCM
-from rootcause.evaluation.scms import (
+from causal_engine.evaluation import scms
+from causal_engine.evaluation.scm import SCM
+from causal_engine.evaluation.scms import (
     FREDDIE_FIRST_TIME_LOGIT,
     FREDDIE_LEVER_LOGITS,
     FREDDIE_N_ROWS,
@@ -24,7 +24,7 @@ from rootcause.evaluation.scms import (
     SCM_REGISTRY,
     freddie_mac_semi_synthetic_scm,
 )
-from rootcause.pipeline import runner
+from causal_engine.pipeline import runner
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))

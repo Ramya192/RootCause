@@ -1,4 +1,4 @@
-"""FastAPI service (rootcause/api/).
+"""FastAPI service (causal_engine/api/).
 
 Most tests inject a fake runner so they exercise only the HTTP/job contract
 and stay instant. `test_real_direct_run_through_api` is the exception: it
@@ -16,8 +16,8 @@ import time
 import pytest
 from fastapi.testclient import TestClient
 
-from rootcause.api.app import create_app
-from rootcause.models.schemas import (
+from causal_engine.api.app import create_app
+from causal_engine.models.schemas import (
     CausalGraph,
     EffectEstimate,
     Explanation,
@@ -67,8 +67,21 @@ def test_domains_carry_the_facts_the_ui_needs(fake_client):
     assert domain["observational"] is False
 
 
+def test_domains_hide_datasets_whose_file_is_absent_on_this_host(fake_client, monkeypatch, tmp_path):
+    from causal_engine.pipeline import runner
+
+    real = runner.resolve_data_path
+    monkeypatch.setattr(
+        runner, "resolve_data_path",
+        lambda cfg, name=None: tmp_path / "missing.csv" if cfg["domain"]["id"] == "freddie_mac" else real(cfg, name),
+    )
+    domains = {d["id"]: d for d in fake_client.get("/domains").json()}
+    assert domains["freddie_mac"]["datasets"] == [] and domains["freddie_mac"]["runnable"] is False
+    assert domains["employee_attrition"]["runnable"] is True
+
+
 def test_bundled_ui_samples_are_valid_results(fake_client):
-    from rootcause.models.schemas import PipelineResult
+    from causal_engine.models.schemas import PipelineResult
 
     index = fake_client.get("/static/samples/index.json").json()
     assert index, "run scripts/build_ui_samples.py"
@@ -235,7 +248,7 @@ def test_dataset_not_configured_for_domain_is_400(fake_client):
 
 
 def test_configured_dataset_with_missing_file_is_409():
-    from rootcause.utils.config_loader import ConfigLoader
+    from causal_engine.utils.config_loader import ConfigLoader
 
     loader = ConfigLoader()  # fresh: don't mutate the session-scoped loader
     ingestion = loader.get_domain("employee_attrition").extra["ingestion"]
@@ -248,7 +261,7 @@ def test_configured_dataset_with_missing_file_is_409():
 
 
 def test_selected_dataset_path_is_the_one_run():
-    from rootcause.utils.config_loader import ConfigLoader
+    from causal_engine.utils.config_loader import ConfigLoader
 
     loader = ConfigLoader()
     ingestion = loader.get_domain("employee_attrition").extra["ingestion"]

@@ -1,4 +1,4 @@
-"""Stage 5: Counterfactuals (rootcause/pipeline/counterfactuals.py)."""
+"""Stage 5: Counterfactuals (causal_engine/pipeline/counterfactuals.py)."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from rootcause.pipeline import counterfactuals
+from causal_engine.pipeline import counterfactuals
 
 
 def test_mean_cate_sign_matches_job_satisfaction_reducing_attrition(feature_df, domain_config):

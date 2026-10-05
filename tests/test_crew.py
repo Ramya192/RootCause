@@ -1,4 +1,4 @@
-"""CrewAI wiring (rootcause/agents/crew.py) -- structure only, no kickoff().
+"""CrewAI wiring (causal_engine/agents/crew.py) -- structure only, no kickoff().
 
 build_crew() just constructs Agent/Task/Crew objects and makes no network
 call; crew.kickoff() is what runs the real (paid, multi-minute) manager-LLM
@@ -14,7 +14,7 @@ from __future__ import annotations
 import pytest
 from crewai import Process
 
-from rootcause.agents.crew import _AGENT_SPECS, _STAGE_ORDER, _STAGE_TOOL_NAMES, build_crew
+from causal_engine.agents.crew import _AGENT_SPECS, _STAGE_ORDER, _STAGE_TOOL_NAMES, build_crew
 
 
 @pytest.fixture(scope="module")

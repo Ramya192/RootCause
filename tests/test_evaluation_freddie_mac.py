@@ -15,9 +15,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from rootcause.evaluation import harness
-from rootcause.evaluation.scms import SCM_REGISTRY
-from rootcause.pipeline import preprocessing, runner
+from causal_engine.evaluation import harness
+from causal_engine.evaluation.scms import SCM_REGISTRY
+from causal_engine.pipeline import preprocessing, runner
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
@@ -300,13 +300,13 @@ def test_declared_levels_match_the_levels_prepare_can_produce(fm_config):
 def test_loader_accepts_real_slices_and_rejects_other_names(tmp_path):
     import yaml
 
-    from rootcause.utils.config_loader import ConfigLoader, REAL_SLICE
+    from causal_engine.utils.config_loader import ConfigLoader, REAL_SLICE
 
     assert REAL_SLICE.fullmatch("real_2007") and REAL_SLICE.fullmatch("real_ex_relief_2010")
     assert not any(REAL_SLICE.fullmatch(k) for k in ("real_", "real", "Real_2007", "real-2007", "fake_2007", "real_2007 "))
 
     def load(kinds):
-        raw = yaml.safe_load((REPO_ROOT / "rootcause" / "configs" / "freddie_mac.yaml").read_text(encoding="utf-8"))
+        raw = yaml.safe_load((REPO_ROOT / "causal_engine" / "configs" / "freddie_mac.yaml").read_text(encoding="utf-8"))
         raw["ingestion"]["datasets"] = {k: "x.csv" for k in kinds}
         raw["ingestion"]["default_dataset"] = kinds[0]
         (tmp_path / "d.yaml").write_text(yaml.safe_dump(raw), encoding="utf-8")

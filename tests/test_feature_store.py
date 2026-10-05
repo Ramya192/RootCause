@@ -1,4 +1,4 @@
-"""Stage 2: Feature Store (rootcause/pipeline/feature_store.py).
+"""Stage 2: Feature Store (causal_engine/pipeline/feature_store.py).
 
 Exercises the real Feast round-trip (parquet offline source -> materialize
 -> online read) via the session-scoped `feature_df` fixture -- slower than a
@@ -42,8 +42,8 @@ def test_second_domain_gets_isolated_feast_state(
 
     import pandas as pd
 
-    from rootcause.feature_repo import definitions
-    from rootcause.pipeline import feature_store
+    from causal_engine.feature_repo import definitions
+    from causal_engine.pipeline import feature_store
 
     other = copy.deepcopy(domain_config)
     other["domain"]["id"] = "test_second_domain"
@@ -77,8 +77,8 @@ def test_same_domain_different_datasets_do_not_share_feast_state(
 
     import pandas as pd
 
-    from rootcause.feature_repo import definitions
-    from rootcause.pipeline import feature_store
+    from causal_engine.feature_repo import definitions
+    from causal_engine.pipeline import feature_store
 
     cfg = copy.deepcopy(domain_config)
     cfg["feature_store"].update(feature_columns=["a"])
@@ -111,7 +111,7 @@ def test_online_read_is_chunked_and_keeps_row_order(domain_config, isolated_feas
 
     import pandas as pd
 
-    from rootcause.pipeline import feature_store
+    from causal_engine.pipeline import feature_store
 
     monkeypatch.setattr(feature_store, "ONLINE_READ_CHUNK", 3)
     cfg = copy.deepcopy(domain_config)

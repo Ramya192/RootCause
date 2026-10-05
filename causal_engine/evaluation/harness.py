@@ -52,7 +52,6 @@ DEFAULT_N_ROWS = 2000
 REPLICATE_SEED_BASE = 1000  # replicate i uses seed 1000 + i; the committed data used 42
 EVAL_DATASET_PREFIX = "eval_"  # keeps harness Feast state apart from the API's
 BOOTSTRAP_SOURCE = "bootstrap of committed file"  # ScenarioResult.source of the bootstrap runs
-MULTIMODAL = "multimodal"  # attachments are keyed by record id: not part of the default sweep, never bootstrapped
 TRUTH_DRAWS = 1_000_000  # Monte Carlo draws behind each true effect
 
 Edge = tuple[str, str]
@@ -313,7 +312,7 @@ def evaluate_dataset(
         reps = ScenarioResult(domain_id, dataset, "SCM replicates", True, truth=truth)
         reps.runs = _run_replicates(scm, cfg, domain_config, n_rows, replicates, truth)
         scenarios.append(reps)
-    elif scm is None and replicates > 0 and path.exists() and dataset != MULTIMODAL:
+    elif scm is None and replicates > 0 and path.exists():
         # No SCM to redraw from, so the only replicates available are bootstrap resamples of the
         # file itself. They measure STABILITY (do the estimates and the fairness verdict survive
         # resampling the applicants?), not accuracy: there is no truth to be accurate against.
@@ -466,8 +465,6 @@ def run_evaluation(
         for dataset in runner.available_datasets(domain.extra):
             if wanted_datasets and dataset not in wanted_datasets:
                 continue
-            if dataset == MULTIMODAL and not (wanted_datasets and MULTIMODAL in wanted_datasets):
-                continue  # slow (CNN embeddings) and needs generated attachments: ask for it by name
             results.extend(
                 evaluate_dataset(domain.id, with_algorithm(domain.extra, algorithm), dataset, replicates, n_rows)
             )

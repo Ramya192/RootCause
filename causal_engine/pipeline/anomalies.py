@@ -130,7 +130,7 @@ class Mechanism:
 
 
 def _is_binary(series: pd.Series) -> bool:
-    return set(pd.unique(series.dropna())) <= {0, 1, 0.0, 1.0}
+    return set(pd.unique(series.dropna())) <= {0, 1}
 
 
 def variable_kind(series: pd.Series, max_levels: Optional[int] = MAX_LEVELS) -> str:

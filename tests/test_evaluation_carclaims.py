@@ -108,7 +108,7 @@ def test_documented_disparity_and_fault_signal_are_in_the_data(claims_df):
 
 def test_config_has_a_real_dataset_only_and_no_ground_truth(config_loader, claims_config):
     assert config_loader.get_domain(DOMAIN).is_runnable
-    assert runner.available_datasets(claims_config) == ["multimodal", "real"]
+    assert runner.available_datasets(claims_config) == ["real"]
     assert runner.resolve_dataset(claims_config) == "real"
     assert runner.resolve_data_path(claims_config, "real").exists()
     assert not [key for key in SCM_REGISTRY if key[0] == DOMAIN]  # nothing to score against

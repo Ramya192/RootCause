@@ -93,7 +93,7 @@ def _summary_table(results: list[ScenarioResult]) -> str:
 
         regret = _regret_percent(sc)
 
-        def fmt_bias(t: str) -> str:
+        def fmt_bias(t: str, bias=bias) -> str:
             if t not in bias:
                 return MISSING
             mean, sd, n = bias[t]

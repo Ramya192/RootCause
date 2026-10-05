@@ -429,7 +429,7 @@ def test_without_the_relief_columns_both_outcomes_agree_and_nothing_is_flagged()
     orig = [orig_row("F07Q10000001"), orig_row("F07Q10000002")]
     perf = perf_rows("F07Q10000001", range(1, 41), status_at={12: "03"}) + perf_rows("F07Q10000002", range(1, 41))
     a, ra = prepared(orig, perf)
-    b, rb = prepare.prepare(*frames(orig, perf), outcome="relief_adjusted")
+    b, _ = prepare.prepare(*frames(orig, perf), outcome="relief_adjusted")
     assert a["default"].tolist() == b["default"].tolist() == [1, 0]
     assert ra["serious_share_relief_flagged"] == 0.0
 

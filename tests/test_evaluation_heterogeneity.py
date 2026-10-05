@@ -11,7 +11,7 @@ import pytest
 from causal_engine.evaluation import benchmarks, harness, metrics, report
 from causal_engine.evaluation.scm import SCM, Node, additive_noise, bernoulli_of
 from causal_engine.models.schemas import CounterfactualResult, SubgroupEffect
-from causal_engine.pipeline import counterfactuals, runner
+from causal_engine.pipeline import counterfactuals
 
 DOMAIN = "illinois_wellness"
 

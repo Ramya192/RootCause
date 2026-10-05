@@ -38,7 +38,7 @@ jobs:
           pip install --no-deps "protobuf>=6.33.5,<7"
 
       # No secrets: the suite never calls OpenAI (LLM tiers run against replay clients and stubs).
-      # Tests that need optional pieces skip themselves: the CNN tests without torch/weights, and the
+      # Tests that need optional pieces skip themselves: the
       # Freddie Mac real-file tests without the registered download (data/freddie_mac is gitignored;
       # its rule tests run on a small fake file).
       - name: Run tests

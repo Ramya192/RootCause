@@ -2,10 +2,3 @@
 pytest
 pytest-cov
 httpx
-
-# Light multimodal packages, so the PDF/image tests run in CI and in the Docker image instead of skipping.
-# torch/torchvision (the CNN tests) stay optional: see requirements-multimodal.txt.
-pypdf
-Pillow
-opencv-python-headless
-fpdf2

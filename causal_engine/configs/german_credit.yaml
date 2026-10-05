@@ -21,32 +21,10 @@ ingestion:
   #                  file by scripts/prepare_german_credit.py)
   # semi_synthetic = the same applicants, default re-simulated with planted lever effects
   #                  (scripts/generate_semi_synthetic_credit_data.py)
-  # multimodal = the real applicants plus a SYNTHETIC loan-summary PDF and profile-chart image per
-  #              applicant, rendered from application covariates only (never `default`, and never a
-  #              lever: term, amount, installment rate) by scripts/generate_attachments.py. Shows the
-  #              ingestion path works.
   datasets:
     real: data/german_credit/credit.csv
     semi_synthetic: data/german_credit/credit_semi_synthetic.csv
-    multimodal: data/german_credit/credit.csv
   default_dataset: real
-  attachments:
-    multimodal:
-      - name: loan_summary
-        kind: pdf
-        directory: data/german_credit/attachments/summaries
-        pattern: "{id}.pdf"
-        keywords:
-          business: ["purpose: business"]
-          education: ["purpose: education"]
-          car: ["purpose: car"]
-          own_home: ["housing: own"]
-      - name: profile_chart
-        kind: image
-        directory: data/german_credit/attachments/charts
-        pattern: "{id}.jpg"
-        model: resnet18
-        embedding_dims: 8
   id_column: applicant_id
   outcome_column: default
 
@@ -270,7 +248,6 @@ effect_estimation:
         - job__unskilled_nonresident
         - job__unskilled_resident
         - job__management
-  adjust_for_attachments: true  # PDF/image feature columns (multimodal dataset only) join the adjustment set
   estimator: backdoor.linear_regression
   refutation: permutation_placebo
   refutation_simulations: 100

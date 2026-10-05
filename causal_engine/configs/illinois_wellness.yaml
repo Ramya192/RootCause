@@ -19,30 +19,10 @@ ingestion:
   # real      = the RCT (data/illinois_wellness/wellness.csv, built from the public file by
   #             scripts/prepare_illinois_wellness.py)
   # synthetic = same schema, effect planted (scripts/generate_synthetic_wellness_data.py)
-  # multimodal = the real rows plus a SYNTHETIC screening-summary PDF and activity-chart image per
-  #             participant, rendered from pre-assignment covariates only (never `treat` or the
-  #             outcome) by scripts/generate_attachments.py. Shows the ingestion path works.
   datasets:
     real: data/illinois_wellness/wellness.csv
     synthetic: data/illinois_wellness/wellness_synthetic.csv
-    multimodal: data/illinois_wellness/wellness.csv
   default_dataset: real
-  attachments:
-    multimodal:
-      - name: screening_summary
-        kind: pdf
-        directory: data/illinois_wellness/attachments/reports
-        pattern: "{id}.pdf"
-        keywords:
-          male: ["sex: male"]
-          age50: ["age band: 50 plus"]
-          age37_49: ["age band: 37 to 49"]
-      - name: activity_chart
-        kind: image
-        directory: data/illinois_wellness/attachments/charts
-        pattern: "{id}.jpg"
-        model: resnet18
-        embedding_dims: 8
   id_column: employee_id
   outcome_column: terminated_0119
 
@@ -142,7 +122,6 @@ effect_estimation:
         - sickleave_0815_0716
         - gym_0815_0716
         - prod_index_yr0
-  adjust_for_attachments: true  # PDF/image feature columns (multimodal dataset only) join the adjustment set
   estimator: backdoor.linear_regression
   refutation: permutation_placebo
   refutation_simulations: 100

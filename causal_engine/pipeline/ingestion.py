@@ -1,10 +1,7 @@
 """Stage 1: Data Ingestion.
 
 Reads the domain's CSV, checks the id/outcome columns the domain config
-declares actually exist, and coerces the outcome to numeric 0/1. If the run's
-dataset kind lists `ingestion.attachments` (PDFs, images), their features are
-extracted per record and appended as columns (see modalities.py). Audio is not
-supported.
+declares actually exist, and coerces the outcome to numeric 0/1.
 """
 
 from __future__ import annotations
@@ -14,8 +11,6 @@ from pathlib import Path
 import logging
 
 import pandas as pd
-
-from causal_engine.pipeline import modalities
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +44,5 @@ def ingest(data_path: str | Path, domain_config: dict) -> pd.DataFrame:
         df, outcome = df[outcome.notna()].reset_index(drop=True), outcome.dropna().reset_index(drop=True)
     df[outcome_col] = outcome.astype(int)
     dropped = n_missing
-    df = modalities.attach_features(df, domain_config)
     df.attrs["rows_dropped_missing_outcome"] = dropped
     return df

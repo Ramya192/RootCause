@@ -1,9 +1,8 @@
 """Shared fixtures for the RootCause test suite.
 
 Everything here runs against real code and real data (the committed
-employee_attrition synthetic dataset), not mocks -- matching how this
-pipeline was verified during Phase 1 development (see memory: ad-hoc
-per-stage checks against data/employee_attrition/ground_truth.json).
+employee_attrition synthetic dataset), not mocks -- checked
+against data/employee_attrition/ground_truth.json.
 
 Expensive fixtures (Feast materialization, DoWhy estimation) are
 session-scoped so each stage's real work happens once per test run and

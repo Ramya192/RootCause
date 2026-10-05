@@ -11,9 +11,8 @@ __pycache__
 notebooks
 docs
 
-# Freddie Mac loan files (1+ GB, registered download) and the regenerable synthetic attachments
+# Freddie Mac loan files (1+ GB, registered download)
 data/freddie_mac
-data/*/attachments
 
 # Feast local state is rebuilt at run time
 causal_engine/feature_repo/data

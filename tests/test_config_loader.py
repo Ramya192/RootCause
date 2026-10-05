@@ -1,4 +1,4 @@
-"""Stage-0 infra: causal_engine/utils/config_loader.py (ported from Prism)."""
+"""Stage-0 infra: causal_engine/utils/config_loader.py."""
 
 from __future__ import annotations
 

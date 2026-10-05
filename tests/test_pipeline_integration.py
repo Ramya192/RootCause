@@ -2,8 +2,7 @@
 each causal_engine/pipeline/*.py function directly rather than through the
 CrewAI/LLM orchestration in causal_engine/agents/crew.py (that path costs real
 money/minutes per an LLM manager -- see tests/test_crew.py for a free
-wiring-only check of it). This mirrors the ad-hoc verification used during
-Phase 1 development and asserts the whole thing assembles into a valid
+wiring-only check of it) and asserts the whole thing assembles into a valid
 PipelineResult.
 """
 

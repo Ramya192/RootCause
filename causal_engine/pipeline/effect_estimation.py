@@ -30,7 +30,7 @@ import pandas as pd
 from dowhy import CausalModel
 
 from causal_engine.models.schemas import EffectEstimate
-from causal_engine.pipeline import modalities, sensitivity
+from causal_engine.pipeline import sensitivity
 
 PERMUTATION_PLACEBO = "permutation_placebo"
 DEFAULT_SIMULATIONS = 100
@@ -92,30 +92,16 @@ def estimate_effects(feature_df: pd.DataFrame, domain_config: dict) -> list[Effe
     simulations = cfg.get("refutation_simulations", DEFAULT_SIMULATIONS)
     alpha = cfg.get("refutation_alpha", DEFAULT_ALPHA)
     seed = cfg.get("refutation_seed", DEFAULT_SEED)
-    # With `adjust_for_attachments`, PDF/image feature columns (Stage 1 attachments) join every
-    # treatment's adjustment set; they are absent from real-only runs, where this adds nothing.
-    extra_adjustment = (
-        [c for c in modalities.attachment_columns(domain_config) if c in feature_df.columns]
-        if cfg.get("adjust_for_attachments", False)
-        else []
-    )
     run_sensitivity = cfg.get("sensitivity", True)  # cheap (two OLS fits per treatment)
     sens_alpha = cfg.get("sensitivity_alpha", DEFAULT_ALPHA)
 
     results: list[EffectEstimate] = []
     for treatment_cfg in cfg["treatments"]:
         treatment = treatment_cfg["name"]
-        confounders = [*treatment_cfg.get("confounders", []), *extra_adjustment]
+        confounders = [*treatment_cfg.get("confounders", [])]
         # A declared level that no row has (Freddie Mac 2010-11 have no `tpo_unspecified` loans) is
         # all zeros: it adjusts for nothing and makes the design matrix rank-deficient.
         confounders = [c for c in confounders if feature_df[c].nunique(dropna=False) > 1]
-        for column in extra_adjustment:
-            if column != treatment and abs(feature_df[treatment].corr(feature_df[column])) > COPY_CORRELATION:
-                raise ValueError(
-                    f"attachment feature {column!r} is almost a copy of treatment {treatment!r} "
-                    f"(|correlation| > {COPY_CORRELATION}); adjusting for it would remove the effect being estimated. "
-                    "Do not render or extract the treatment into attachments."
-                )
 
         model = CausalModel(
             data=feature_df,

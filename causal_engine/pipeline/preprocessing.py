@@ -37,7 +37,6 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from causal_engine.pipeline import modalities
 
 logger = logging.getLogger(__name__)
 
@@ -113,8 +112,7 @@ def preprocess(df: pd.DataFrame, domain_config: dict) -> PreprocessResult:
     fs_cfg = domain_config["feature_store"]
     id_col = fs_cfg["entity_id_column"]
     outcome_col = domain_config["ingestion"]["outcome_column"]
-    # attachment features (PDF / image columns from Stage 1) are numeric features like any other
-    numeric_cols = list(fs_cfg["feature_columns"]) + modalities.attachment_columns(domain_config)
+    numeric_cols = list(fs_cfg["feature_columns"])
     cat_cfgs = fs_cfg.get("categorical_columns", [])
     missing_cfg = fs_cfg.get("missing", {})
     strategy = missing_cfg.get("numeric", "error")

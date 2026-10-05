@@ -19,30 +19,9 @@ ingestion:
   file_type: csv
   # real       = the 15,420 claims (data/carclaims/claims.csv, built from the raw carclaims.csv by
   #              scripts/prepare_carclaims.py). No synthetic twin: see data/carclaims/README.md.
-  # multimodal = a fixed 5,000-claim sample of the real claims, each with a SYNTHETIC claim-report
-  #              PDF and damage photo rendered from its own covariates (never the outcome or a lever) by
-  #              scripts/generate_attachments.py. Shows the PDF/image ingestion path works; says
-  #              nothing about real claim documents.
   datasets:
     real: data/carclaims/claims.csv
-    multimodal: data/carclaims/claims_multimodal.csv
   default_dataset: real
-  attachments:
-    multimodal:
-      - name: claim_report
-        kind: pdf
-        directory: data/carclaims/attachments/reports
-        pattern: "{id}.pdf"
-        keywords:
-          fault: ["fault: policy holder"]
-          rural: ["accident area: rural"]
-          witness: ["a witness was present"]
-      - name: damage_photo
-        kind: image
-        directory: data/carclaims/attachments/photos
-        pattern: "{id}.jpg"
-        model: resnet18
-        embedding_dims: 8
   id_column: claim_id
   outcome_column: fraud_found
 
@@ -235,7 +214,6 @@ effect_estimation:
         - vehicle_category__utility
         - base_policy__all_perils
         - base_policy__liability
-  adjust_for_attachments: true  # PDF/image feature columns (multimodal dataset only) join the adjustment set
   estimator: backdoor.linear_regression
   refutation: permutation_placebo
   refutation_simulations: 100

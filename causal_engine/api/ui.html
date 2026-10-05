@@ -189,7 +189,7 @@
     <div class="card"><div class="stat">0.97 / 0.93</div><div class="cap">Edge precision / recall of the discovered causal graph, on 10 simulated datasets where the true graph is known.</div></div>
     <div class="card"><div class="stat">0.007</div><div class="cap">Mean absolute error of the estimated effects, where the true effects are about &plusmn;0.12&ndash;0.14. The top-ranked intervention was the true best 10 of 10 times.</div></div>
     <div class="card"><div class="stat">+0.0020</div><div class="cap">Estimate on a real randomized trial (a workplace wellness programme) versus the trial's own +0.0022 [&minus;0.022, +0.027]. Both say: no effect.</div></div>
-    <div class="card"><div class="stat">490</div><div class="cap">Automated tests, run on every push in CI and in a clean Linux container. No test calls a paid API.</div></div>
+    <div class="card"><div class="stat">453</div><div class="cap">Automated tests, run on every push in CI and in a clean Linux container. No test calls a paid API.</div></div>
   </div>
   <div class="tags">
     <span class="pill acc">Causal discovery (PC, GES, LiNGAM)</span><span class="pill acc">DoWhy &middot; CausalML</span><span class="pill acc">Sensitivity analysis</span>
@@ -250,7 +250,7 @@
   <h2>Seven stages, each a testable function</h2>
   <p class="sub">The same pipeline runs on any domain from a config file: HR attrition, credit, insurance claims, mortgages, a randomized trial.</p>
   <div class="stages">
-    <div class="stage"><h3>Ingestion</h3><p>Validate the data; optionally read PDFs and images.</p><div class="tech">pandas &middot; pypdf &middot; OpenCV</div></div>
+    <div class="stage"><h3>Ingestion</h3><p>Validate the data and coerce the outcome.</p><div class="tech">pandas</div></div>
     <div class="stage"><h3>Feature store</h3><p>Write and serve causal features the way production does.</p><div class="tech">Feast</div></div>
     <div class="stage"><h3>Causal discovery</h3><p>Learn the graph, seeded with domain rules.</p><div class="tech">causal-learn &middot; LiNGAM</div></div>
     <div class="stage"><h3>Effect estimation</h3><p>Effect of each lever, with noise and confounder checks.</p><div class="tech">DoWhy &middot; statsmodels</div></div>
@@ -313,8 +313,8 @@
     <div class="card"><h3>Causal discovery</h3><ul><li>PC, GES and DirectLiNGAM, benchmarked</li><li>Domain priors as required / forbidden edges</li><li>Stress tests: small n, non-Gaussian, nonlinear</li></ul></div>
     <div class="card"><h3>Evaluation rigour</h3><ul><li>Truth-scored simulations, true ATE by simulating <code>do()</code></li><li>Real-trial benchmark; bootstrap stability</li><li>Negative results written up, not hidden</li></ul></div>
     <div class="card"><h3>LLM and agents</h3><ul><li>CrewAI hierarchical crew (7 agents + manager)</li><li>AutoGen analyst &rarr; skeptic &rarr; writer</li><li>Programmatic grounding check on every number</li></ul></div>
-    <div class="card"><h3>Data and ML engineering</h3><ul><li>Feast offline/online feature store</li><li>Multimodal ingestion (PDF, image, CNN/ViT)</li><li>Five real and simulated domains from one config format</li></ul></div>
-    <div class="card"><h3>Software engineering</h3><ul><li>FastAPI service with async job queue</li><li>Docker image and GitHub Actions CI</li><li>490 tests; bugs found by CI fixed with regression tests</li></ul></div>
+    <div class="card"><h3>Data and ML engineering</h3><ul><li>Feast offline/online feature store</li><li>Five real and simulated domains from one config format</li></ul></div>
+    <div class="card"><h3>Software engineering</h3><ul><li>FastAPI service with async job queue</li><li>Docker image and GitHub Actions CI</li><li>453 tests; bugs found by CI fixed with regression tests</li></ul></div>
   </div>
 </section>
 

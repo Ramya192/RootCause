@@ -179,7 +179,7 @@ def test_graph_is_declared_unknown_and_registered(credit_config):
 
 def test_config_registers_both_datasets_and_defaults_to_the_real_file(config_loader, credit_config):
     assert config_loader.get_domain(DOMAIN).is_runnable
-    assert runner.available_datasets(credit_config) == ["multimodal", "real", "semi_synthetic"]
+    assert runner.available_datasets(credit_config) == ["real", "semi_synthetic"]
     assert runner.resolve_dataset(credit_config) == "real"
     for kind in ("real", "semi_synthetic"):
         assert runner.resolve_data_path(credit_config, kind).exists()

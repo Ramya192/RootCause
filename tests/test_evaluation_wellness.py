@@ -207,7 +207,7 @@ def test_reference_skips_a_treatment_that_is_not_binary(tmp_path):
 
 def test_config_registers_both_datasets_and_defaults_to_the_real_trial(config_loader, wellness_config):
     assert config_loader.get_domain(DOMAIN).is_runnable
-    assert runner.available_datasets(wellness_config) == ["multimodal", "real", "synthetic"]
+    assert runner.available_datasets(wellness_config) == ["real", "synthetic"]
     assert runner.resolve_dataset(wellness_config) == "real"
     for kind in ("real", "synthetic"):
         assert runner.resolve_data_path(wellness_config, kind).exists()

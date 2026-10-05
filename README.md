@@ -2,13 +2,13 @@
 
 A domain-agnostic **causal decision intelligence** pipeline (the CDIA architecture). Instead of predicting *who* will churn, it asks *why* — learns the causal structure of a domain, estimates how much each lever actually moves the outcome, and ranks interventions by ROI with a fairness check.
 
-Phase 1 is a full 7-stage vertical slice on one domain, **employee attrition**, run against a semi-synthetic dataset with a known ground-truth causal graph so every stage can be checked against the truth. Phase 2 adds validation and a second domain, **workplace wellness**, which pairs a real randomized trial with a synthetic mirror of it (see Evaluation).
+The pipeline runs end to end on five domains: a semi-synthetic employee-attrition dataset with a known ground-truth causal graph (so every stage can be checked against the truth), a real randomized workplace-wellness trial paired with a synthetic mirror of it, real German Credit and carclaims data, and Freddie Mac mortgage loans across seven origination years (see Evaluation).
 
 ## Pipeline
 
 | # | Stage | What it does | Built with |
 |---|-------|--------------|------------|
-| 1 | Ingestion | Loads and validates the domain CSV; optionally extracts numeric features from per-record PDFs and images (synthetic attachments only, see below) | pandas, pypdf, Pillow, OpenCV, torchvision |
+| 1 | Ingestion | Loads and validates the domain CSV | pandas |
 | 2 | Feature store | Writes/materializes causal feature vectors and reads them back through the online-serving path | Feast (parquet offline, SQLite online) |
 | 3 | Causal discovery | Learns the DAG with PC, GES or LiNGAM, seeded with required/forbidden domain-prior edges; NetworkX plot | causal-learn, lingam, NetworkX |
 | 4 | Effect estimation | ATE per treatment with a permutation-placebo check and an unmeasured-confounder sensitivity analysis | DoWhy, statsmodels |
@@ -408,30 +408,6 @@ That is 37/40 against 34/40, **not a difference 40 runs can resolve**, and each 
 
 AutoGen is optional (`autogen-agentchat`, `autogen-ext[openai]`); without it, tier 1 is skipped. Its `autogen-core` pins `protobuf~=5.29`, but CrewAI and Feast need `protobuf>=6.33.5` (a 5.x runtime fails on their generated code), so it lives in `requirements-autogen.txt`, not `requirements.txt` (listed together, pip's resolver falls back to a placeholder `autogen-agentchat 0.0.2`). Install it after the main requirements: `pip install -r requirements-autogen.txt` and then `pip install --no-deps "protobuf>=6.33.5,<7"`. `pip check` will report autogen-core's pin; it is harmless for local chats, which do not use its gRPC runtime.
 
-### Multimodal ingestion (PDF and images)
-
-```bash
-pip install -r requirements-multimodal.txt
-.venv/Scripts/python.exe scripts/generate_attachments.py        # render the synthetic attachments (about 1.5 min)
-.venv/Scripts/python.exe -m causal_engine.evaluation --multimodal   # about 30 minutes on CPU
-```
-
-Stage 1 can read per-record **PDFs** (text via pypdf, summarised as word and character counts, digit share and configurable keyword-group counts) and **images** (Pillow and OpenCV for brightness, contrast, edge density and sharpness, plus a pretrained torchvision **ResNet18 or ViT-B/16** embedding reduced by PCA). They are configured under `ingestion.attachments`, keyed by dataset kind, and appear as numeric feature columns that flow through Stages 2-6. A record with no file gets NaN, and Stage 2's `feature_store.missing` policy decides what happens next. Audio is not supported.
-
-**None of the three real datasets contains a document or a photo, so the attachments are synthetic.** `scripts/generate_attachments.py` renders each record's PDF and image from its own tabular covariates (carclaims: a claim report and a damage photo; Illinois: a screening summary and an activity chart; German Credit: a loan summary and a profile chart), and the dataset kind `multimodal` is the real rows plus those files (for carclaims, a fixed 5,000-claim sample). Two rules, enforced by tests: the attachments never depend on the **outcome**, and never on a **treatment or lever** (a rendered lever would put a copy of the treatment among the features, and adjusting for it removes the effect; Stage 4 now refuses to, and an earlier draft of the carclaims report that mentioned the police report caused exactly that failure). So they hold no information the table does not, and this shows that the *path works*, not that documents or photos help a causal question, and it says nothing about real claim photos.
-
-What the check shows (`docs/evaluation/multimodal.md`):
-
-| | Carclaims | Illinois | German Credit |
-|---|---|---|---|
-| PDF keyword flags agree with the source field | 100% (3 fields) | 100% (3) | 100% (4) |
-| Image features predict the rendered quantity, cross-validated R² (stats only / CNN only / both) | damage level 0.94 / 0.93 / 0.95 | gym visits 0.73 / 0.89 / 0.93; sick leave 0.55 / 0.88 / 0.90 | age 0.38 / 0.94 / 0.96; years employed 0.84 / 0.98 / 0.99 |
-| Same target, shuffled (should be about 0) | −0.00 | −0.00 | 0.00 |
-| Largest change in a Stage 4 estimate from adding the features | 0.0015 | 0.0007 | 0.0062 |
-| Fairness ratio and top-ranked intervention | unchanged | unchanged | unchanged |
-
-The generic ImageNet embedding beats the hand-built OpenCV statistics on most targets, but not on carclaims damage, where a simple edge count does as well; both are reported so neither is assumed. Agreement is 100% by construction (regular templates), and real documents are messier. The embeddings are generic, not trained on the domain, and PCA is fitted on the rows ingested, so the columns of one run are not comparable with another's. A full multimodal evaluation is slow because every image passes through the network twice per pipeline run.
-
 ## Setup
 
 Requires **Python 3.11** (causal-learn / DoWhy / CausalML wheel support lags on newer versions).
@@ -455,7 +431,8 @@ Copy `.env.example` to `.env` and set `OPENAI_API_KEY` if you want an LLM-writte
 
 Interactive docs at <http://localhost:8000/docs>. A browser UI is served at <http://localhost:8000/> (see below).
 
-**Web UI.** The root page explains the idea, the seven stages and how each result is validated, and lets you open a saved example instantly or run the pipeline live on any bundled dataset. A result is shown as a plain-language answer, a clickable causal graph (optionally overlaid with the true graph where one is known), the interventions compared with their fairness flags, and an evidence panel per lever (effect, noise check, how strong a hidden confounder would have to be). The saved examples are real pipeline outputs in ootcause/api/static/samples/ (aggregates only, no row-level data); rebuild them with `python scripts/build_ui_samples.py`. A link like `/#example=german_credit__real&node=duration_months` opens one directly. The UI only runs the datasets named in the domain configs; it does not accept uploads.
+**Web UI.** The root page explains the idea, the seven stages and how each result is validated, and lets you open a saved example instantly or run the pipeline live on any bundled dataset. A result is shown as a plain-language answer, a clickable causal graph (optionally overlaid with the true graph where one is known), the interventions compared with their fairness flags, and an evidence panel per lever (effect, noise check, how strong a hidden confounder would have to be). The saved examples are real pipeline outputs in 
+ootcause/api/static/samples/ (aggregates only, no row-level data); rebuild them with `python scripts/build_ui_samples.py`. A link like `/#example=german_credit__real&node=duration_months` opens one directly. The UI only runs the datasets named in the domain configs; it does not accept uploads.
 
 | Method | Path | |
 |--------|------|-|
@@ -489,7 +466,7 @@ curl localhost:8000/jobs/ed1c…
 .venv/Scripts/python.exe -m pytest
 ```
 
-490 tests, about 4-5 minutes (on a clean checkout, as in CI and the Docker image, 469 run and 21 skip: the 3 CNN tests skip themselves without torch or the pretrained weights, and 18 Freddie Mac tests (13 on the real files, 5 on the semi-synthetic twin) skip when that registered download is absent; the outcome/censoring rules and the twin's planted-effect constants are still tested on a small fake file in the real layout). They run real code on the real dataset (Feast round-trip, DoWhy, causal-learn) with no mocks, and assert the pipeline still recovers the ground-truth graph and effect signs. They never call OpenAI. The crew is only checked for wiring; a full crew run is deliberately not in the suite because of its cost.
+453 tests, about 6 minutes (on a clean checkout, as in CI and the Docker image, 435 run and 18 skip: the 18 Freddie Mac tests (13 on the real files, 5 on the semi-synthetic twin) skip when that registered download is absent; the outcome/censoring rules and the twin's planted-effect constants are still tested on a small fake file in the real layout). They run real code on the real dataset (Feast round-trip, DoWhy, causal-learn) with no mocks, and assert the pipeline still recovers the ground-truth graph and effect signs. They never call OpenAI. The crew is only checked for wiring; a full crew run is deliberately not in the suite because of its cost.
 
 ## Docker and CI
 
@@ -499,19 +476,19 @@ docker run --rm -p 8000:8000 -e OPENAI_API_KEY=... rootcause          # the API,
 docker run --rm rootcause python -m pytest -q                          # the test suite inside the image
 ```
 
-The image is `python:3.11-slim` plus `requirements-dev.txt` (which includes the four light PDF/image packages) and AutoGen, installed last with protobuf put back to 6.x (see `requirements-autogen.txt`). It has no torch, so the CNN tests skip themselves. `.dockerignore` keeps the build context small: `data/freddie_mac` (over 1 GB, gitignored), the regenerable attachments, `docs`, `.env` and the virtualenv. The key is read from the environment and never baked in.
+The image is `python:3.11-slim` plus `requirements-dev.txt` and AutoGen, installed last with protobuf put back to 6.x (see `requirements-autogen.txt`). `.dockerignore` keeps the build context small: `data/freddie_mac` (over 1 GB, gitignored), `docs`, `.env` and the virtualenv. The key is read from the environment and never baked in.
 
-`.github/workflows/ci.yml` runs on every push to `main` and every pull request: a `test` job (Python 3.11 on Ubuntu, `pip install -r requirements-dev.txt`, `pytest`) and a `docker` job that builds the image without pushing it. It needs no secrets, because the suite never calls OpenAI. It runs on a clean checkout, so the tests that need files that are not in git skip themselves: the Freddie Mac real-file tests (the download is gitignored; its rule tests run on a small fake file) and the CNN tests (no torch). Everything else, including the PDF/image and AutoGen-narrative tests, runs.
+`.github/workflows/ci.yml` runs on every push to `main` and every pull request: a `test` job (Python 3.11 on Ubuntu, `pip install -r requirements-dev.txt`, `pytest`) and a `docker` job that builds the image without pushing it. It needs no secrets, because the suite never calls OpenAI. It runs on a clean checkout, so the tests that need files that are not in git skip themselves: the Freddie Mac real-file tests (the download is gitignored; its rule tests run on a small fake file). Everything else, including the AutoGen-narrative tests, runs.
 
 ## Adding a domain
 
-A domain is one YAML file in `causal_engine/configs/`. The `domain` section is validated; every stage reads its own section (`ingestion`, `feature_store`, `causal_discovery`, `effect_estimation`, `counterfactuals`, `interventions`, `explanation`). See `employee_attrition.yaml` for a complete example. `ingestion.datasets` maps `real` / `synthetic` / `semi_synthetic` / `multimodal` to files that share the domain's one schema and config. A domain with several real slices of the same schema (Freddie Mac's origination years) can name them `real_<slug>` (`real_2007`, `real_2010`, ...); each is bootstrapped on its own and never pooled. The `domain` section can also set `entity_noun`, `entity_noun_plural` and `outcome_label`, which Stages 5 and 7 use in their generated text (defaults are neutral: "record" and the outcome column name). The `feature_store` section can declare `categorical_columns` (ordinal / binary / onehot) and a `missing` policy (median / mean / drop; the default is to fail loudly); see `causal_engine/pipeline/preprocessing.py`.
+A domain is one YAML file in `causal_engine/configs/`. The `domain` section is validated; every stage reads its own section (`ingestion`, `feature_store`, `causal_discovery`, `effect_estimation`, `counterfactuals`, `interventions`, `explanation`). See `employee_attrition.yaml` for a complete example. `ingestion.datasets` maps `real` / `synthetic` / `semi_synthetic` to files that share the domain's one schema and config. A domain with several real slices of the same schema (Freddie Mac's origination years) can name them `real_<slug>` (`real_2007`, `real_2010`, ...); each is bootstrapped on its own and never pooled. The `domain` section can also set `entity_noun`, `entity_noun_plural` and `outcome_label`, which Stages 5 and 7 use in their generated text (defaults are neutral: "record" and the outcome column name). The `feature_store` section can declare `categorical_columns` (ordinal / binary / onehot) and a `missing` policy (median / mean / drop; the default is to fail loudly); see `causal_engine/pipeline/preprocessing.py`.
 
 `effect_estimation.refutation` accepts only `permutation_placebo` (optional `refutation_simulations`, default 100, and `refutation_alpha`, default 0.05); any other value is rejected. It shuffles the treatment and checks the real estimate stands out from noise. It cannot detect unmeasured confounding.
 
 A domain whose real data is a randomized trial can be listed in `causal_engine/evaluation/benchmarks.py` (`RCT_DATASETS`); the harness then compares Stage 4 with the trial's own difference in means. A binary treatment's true ATE in a simulation is the effect of switching it from 0 to 1. A semi-synthetic dataset (real covariates, simulated outcome; see `german_credit_semi_synthetic_scm`) sets `graph_known=False` on its SCM, so Stage 3 is not scored against it.
 
-Optional Phase 3 keys: `causal_discovery.algorithm` (`pc`, `ges`, `lingam`; anything else raises) and `lingam_threshold`; `effect_estimation.sensitivity` (on) and `adjust_for_attachments`; `counterfactuals.meta_learner` (`t_learner`, `s_learner`, `x_learner`, `r_learner`, `dr_learner`), `base_learner` (`linear`, `gbm`), `propensity` (`estimated`, `constant`) and `propensity_clip`; and `ingestion.attachments`, a map from dataset kind to PDF/image specs (`name`, `kind`, `directory`, `pattern`, and `keywords` or `model` and `embedding_dims`). Attachments must never be rendered from or extracted to a treatment or the outcome.
+Optional keys: `causal_discovery.algorithm` (`pc`, `ges`, `lingam`; anything else raises) and `lingam_threshold`; `effect_estimation.sensitivity` (on); `counterfactuals.meta_learner` (`t_learner`, `s_learner`, `x_learner`, `r_learner`, `dr_learner`), `base_learner` (`linear`, `gbm`), `propensity` (`estimated`, `constant`) and `propensity_clip`.
 
 One thing isn't validated and fails silently: each name in `effect_estimation.treatments` must match an `interventions.candidates[].target_variable`. If they don't line up, Stage 6 returns an empty recommendation list rather than an error.
 
@@ -521,13 +498,13 @@ One thing isn't validated and fails silently: each name in `effect_estimation.tr
 causal_engine/
   api/          FastAPI app + in-memory job store
   agents/       CrewAI hierarchical orchestration
-  pipeline/     the 7 stage functions + runner (direct / crew); sensitivity, anomalies, modalities (PDF/image) and narrative (Stage 7 tiers and grounding check) helpers
-  evaluation/   SCMs with true-effect simulation, metrics, harness, stress scenarios, naive baselines, and the Phase 3 checks (sensitivity, learners, anomalies, multimodal, synthetic attachments)
+  pipeline/     the 7 stage functions + runner (direct / crew); sensitivity, anomalies and narrative (Stage 7 tiers and grounding check) helpers
+  evaluation/   SCMs with true-effect simulation, metrics, harness, stress scenarios, naive baselines, and the extra checks (sensitivity, learners, anomalies)
   feature_repo/ Feast definitions and local stores
   models/       Pydantic contracts passed between stages
   configs/      one YAML per domain
   utils/        config loader, causal graph plotting
-scripts/        data preparation (incl. prepare_freddie_mac.py), synthetic data and attachment generators, graph plots, anomaly listing, Stage 7 tier comparison (explain_tiers.py)
+scripts/        data preparation (incl. prepare_freddie_mac.py), synthetic data generators, graph plots, anomaly listing, Stage 7 tier comparison (explain_tiers.py)
 docs/           evaluation reports (docs/evaluation) and causal graph figures (docs/figures)
 data/           datasets + ground truth (data/freddie_mac holds only a README in git: the raw and prepared loan files are gitignored)
 tests/
@@ -535,4 +512,4 @@ tests/
 
 ## Scope
 
-Deliberately not built: GAN-based counterfactuals (V2), audio ingestion, a semi-synthetic insurance or mortgage dataset (carclaims and Freddie Mac are real and observational only), ChromaDB agent memory, and human-in-the-loop review. Time-series forecasting (RNN/LSTM) and drift detection are out of scope: none of the datasets here is a time series or a stream. The PDF/image attachments are synthetic (see above); no real documents or photos were used.
+Deliberately not built: GAN-based counterfactuals (V2), audio ingestion, a semi-synthetic insurance or mortgage dataset (carclaims and Freddie Mac are real and observational only), ChromaDB agent memory, and human-in-the-loop review. Time-series forecasting (RNN/LSTM) and drift detection are out of scope: none of the datasets here is a time series or a stream.

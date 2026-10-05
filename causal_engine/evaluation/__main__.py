@@ -11,7 +11,6 @@ from causal_engine.evaluation import (
     baselines_report,
     harness,
     learners,
-    multimodal_eval,
     report,
     sensitivity_eval,
     stress_report,
@@ -51,10 +50,6 @@ def main(argv: list[str] | None = None) -> int:
                         help="check causal anomaly flagging on the real covariates of carclaims, German Credit and Freddie Mac 2007 "
                         "(injected faults; type-aware vs Gaussian mechanisms; how concentrated the top of the "
                         "list is); writes anomalies_real.md and anomalies_real.json")
-    parser.add_argument("--multimodal", action="store_true",
-                        help="check the PDF/image ingestion path on the three domains' synthetic attachments "
-                        "(extraction validity, and Stages 1-6 with vs without the features); needs "
-                        "scripts/generate_attachments.py to have run; writes multimodal.md and multimodal.json")
     parser.add_argument("--workers", type=int, default=1,
                         help="with --stress or --baselines, run this many scenarios in parallel processes "
                         "(default 1; results are identical to a serial run)")
@@ -75,20 +70,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.workers < 1:
         parser.error("--workers must be >= 1")
-    if args.multimodal:
-        if args.stress or args.baselines or args.sensitivity or args.learners or args.anomalies:
-            parser.error("--multimodal is a separate run; do not combine it with other modes")
-        results = multimodal_eval.run(domains=args.domain or multimodal_eval.DOMAINS)
-        markdown = multimodal_eval.render_markdown(results)
-        print(markdown)
-        if not args.no_write:
-            args.out.mkdir(parents=True, exist_ok=True)
-            (args.out / "multimodal.md").write_text(markdown, encoding="utf-8")
-            (args.out / "multimodal.json").write_text(multimodal_eval.render_json(results), encoding="utf-8")
-            print(f"\nWrote {args.out / 'multimodal.md'} and multimodal.json", file=sys.stderr)
-        return 0
     if args.anomalies_real:
-        if args.stress or args.baselines or args.sensitivity or args.learners or args.anomalies or args.multimodal:
+        if args.stress or args.baselines or args.sensitivity or args.learners or args.anomalies:
             parser.error("--anomalies-real is a separate run; do not combine it with other modes")
         result = anomalies_eval.run_real(replicates=5 if args.replicates is None else args.replicates)
         markdown = anomalies_eval.render_real_markdown(result)

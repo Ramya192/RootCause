@@ -14,7 +14,6 @@ import pytest
 import statsmodels.api as sm
 
 from causal_engine.evaluation import scms
-from causal_engine.evaluation.scm import SCM
 from causal_engine.evaluation.scms import (
     FREDDIE_FIRST_TIME_LOGIT,
     FREDDIE_LEVER_LOGITS,

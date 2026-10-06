@@ -27,6 +27,10 @@ from causal_engine.models.schemas import PipelineResult
 logger = logging.getLogger(__name__)
 
 
+class QueueFull(Exception):
+    """Raised by `JobStore.submit` when too many runs are already waiting or running."""
+
+
 class JobStatus(str, Enum):
     queued = "queued"
     running = "running"
@@ -52,11 +56,12 @@ def _now() -> datetime:
 
 
 class JobStore:
-    def __init__(self, max_jobs: int = 100):
+    def __init__(self, max_jobs: int = 100, max_pending: Optional[int] = None):
         self._jobs: OrderedDict[str, Job] = OrderedDict()
         self._lock = threading.Lock()
         self._executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="rootcause-job")
         self._max_jobs = max_jobs
+        self._max_pending = max_pending  # queued + running runs allowed at once; None = unlimited
 
     def submit(
         self,
@@ -73,6 +78,10 @@ class JobStore:
             created_at=_now(),
         )
         with self._lock:
+            if self._max_pending is not None:
+                pending = sum(j.status in (JobStatus.queued, JobStatus.running) for j in self._jobs.values())
+                if pending >= self._max_pending:
+                    raise QueueFull(f"{pending} runs are already queued or running")
             self._jobs[job.id] = job
             self._evict_locked()
             snapshot = job.model_copy()  # taken before the worker can touch the job

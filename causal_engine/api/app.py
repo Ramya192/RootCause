@@ -29,7 +29,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from causal_engine.api.jobs import Job, JobStatus, JobStore
+from causal_engine.api.jobs import Job, JobStatus, JobStore, QueueFull
 from causal_engine.models.schemas import PipelineResult
 from causal_engine.pipeline import runner
 from causal_engine.utils.config_loader import ConfigLoader
@@ -71,7 +71,9 @@ def create_app(
 ) -> FastAPI:
     loader = config_loader or ConfigLoader()
     run_fns = runners or DEFAULT_RUNNERS
-    jobs = JobStore()
+    # Runs are serialized on one worker, so a public deployment caps how many may wait; without a cap a
+    # handful of clicks (or a bot) leaves every other visitor queued behind them.
+    jobs = JobStore(max_pending=int(os.environ.get("ROOTCAUSE_MAX_PENDING", "3")))
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
@@ -150,12 +152,19 @@ def create_app(
 
         run_fn = run_fns[body.orchestration]
         run_config = runner.with_dataset(domain.extra, dataset)
-        job = jobs.submit(
-            domain_id,
-            body.orchestration,
-            lambda: run_fn(domain_id, run_config, str(data_path)),
-            dataset=dataset,
-        )
+        try:
+            job = jobs.submit(
+                domain_id,
+                body.orchestration,
+                lambda: run_fn(domain_id, run_config, str(data_path)),
+                dataset=dataset,
+            )
+        except QueueFull:
+            raise HTTPException(
+                status_code=429,
+                detail="The server is busy with other runs. Try again in a minute, or open a saved example, which loads instantly.",
+                headers={"Retry-After": "60"},
+            ) from None
         response.headers["Location"] = f"/jobs/{job.id}"
         return job
 

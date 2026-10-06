@@ -193,6 +193,25 @@ def test_runs_are_serialized(config_loader):
     assert max_active == 1
 
 
+def test_a_full_queue_answers_429_with_a_readable_message(config_loader, monkeypatch):
+    monkeypatch.setenv("ROOTCAUSE_MAX_PENDING", "1")
+    release = threading.Event()
+
+    def blocked(*_):
+        release.wait(timeout=10)
+        return _fake_result()
+
+    client = TestClient(create_app(config_loader=config_loader, runners={"direct": blocked}))
+    first = client.post("/domains/employee_attrition/analyze")
+    assert first.status_code == 202
+    second = client.post("/domains/employee_attrition/analyze")
+    assert second.status_code == 429
+    assert "busy" in second.json()["detail"] and second.headers["Retry-After"] == "60"
+    release.set()
+    assert _wait_for(client, first.json()["id"])["status"] == "succeeded"
+    assert client.post("/domains/employee_attrition/analyze").status_code == 202  # room again once it finished
+
+
 def test_list_jobs_omits_results(fake_client):
     job_id = fake_client.post("/domains/employee_attrition/analyze").json()["id"]
     _wait_for(fake_client, job_id)

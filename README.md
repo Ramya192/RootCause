@@ -431,6 +431,8 @@ Copy `.env.example` to `.env` and set `OPENAI_API_KEY` if you want an LLM-writte
 
 Interactive docs at <http://localhost:8000/docs>. A browser UI is served at <http://localhost:8000/> (see below).
 
+**Live demo:** https://rootcause-142084972380.us-central1.run.app (Google Cloud Run; the first visit after idle takes a few seconds to wake, and a live run takes about a minute. Freddie Mac runs are not offered there because that data is not redistributable, but its saved examples are.)
+
 **Web UI.** The root page explains the idea, the seven stages and how each result is validated, and lets you open a saved example instantly or run the pipeline live on any bundled dataset. A result is shown as a plain-language answer, a clickable causal graph (optionally overlaid with the true graph where one is known), the interventions compared with their fairness flags, and an evidence panel per lever (effect, noise check, how strong a hidden confounder would have to be). The saved examples are real pipeline outputs in 
 ootcause/api/static/samples/ (aggregates only, no row-level data); rebuild them with `python scripts/build_ui_samples.py`. A link like `/#example=german_credit__real&node=duration_months` opens one directly. The UI only runs the datasets named in the domain configs; it does not accept uploads.
 
@@ -466,7 +468,7 @@ curl localhost:8000/jobs/ed1c…
 .venv/Scripts/python.exe -m pytest
 ```
 
-453 tests, about 6 minutes (on a clean checkout, as in CI and the Docker image, 435 run and 18 skip: the 18 Freddie Mac tests (13 on the real files, 5 on the semi-synthetic twin) skip when that registered download is absent; the outcome/censoring rules and the twin's planted-effect constants are still tested on a small fake file in the real layout). They run real code on the real dataset (Feast round-trip, DoWhy, causal-learn) with no mocks, and assert the pipeline still recovers the ground-truth graph and effect signs. They never call OpenAI. The crew is only checked for wiring; a full crew run is deliberately not in the suite because of its cost.
+454 tests, about 6 minutes (on a clean checkout, as in CI and the Docker image, 436 run and 18 skip: the 18 Freddie Mac tests (13 on the real files, 5 on the semi-synthetic twin) skip when that registered download is absent; the outcome/censoring rules and the twin's planted-effect constants are still tested on a small fake file in the real layout). They run real code on the real dataset (Feast round-trip, DoWhy, causal-learn) with no mocks, and assert the pipeline still recovers the ground-truth graph and effect signs. They never call OpenAI. The crew is only checked for wiring; a full crew run is deliberately not in the suite because of its cost.
 
 ## Docker and CI
 

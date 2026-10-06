@@ -3,12 +3,12 @@
 # single LLM call, then the template. Install AFTER requirements.txt:
 #
 #   pip install -r requirements-autogen.txt
-#   pip install --no-deps "protobuf>=6.33.5,<7"
+#   pip install --no-deps "protobuf==6.33.6"
 #
 # autogen-core pins protobuf~=5.29, but crewai and feast need protobuf>=6.33.5 (a 5.x runtime
 # breaks their generated code), so the second command puts protobuf 6.x back. `pip check` then
 # reports autogen-core's pin; that is harmless here. (Listing both in one file makes pip's
 # resolver fail over to the placeholder autogen-agentchat 0.0.2, which is why they are split.)
 
-autogen-agentchat
-autogen-ext[openai]
+autogen-agentchat==0.7.5
+autogen-ext[openai]==0.7.5

@@ -30,13 +30,24 @@ RUN pip install --retries 5 -r requirements-dev.txt
 # grounding check) is skipped whole. `pip check` reports autogen-core's pin afterwards; harmless.
 COPY requirements-autogen.txt ./
 RUN pip install --retries 5 -r requirements-autogen.txt \
-    && pip install --no-deps "protobuf>=6.33.5,<7"
+    && pip install --no-deps "protobuf==6.33.6"
 
-COPY . .
+# Run as an unprivileged user (a bug or a hostile request then cannot touch the system). The app writes Feast
+# state under causal_engine/feature_repo/data and library caches under $HOME, so it owns /app and has a home.
+RUN useradd --create-home --uid 10001 app \
+    && mkdir -p /app && chown app:app /app
+COPY --chown=app:app . .
 
 # OPENAI_API_KEY is read from the environment (docker run -e OPENAI_API_KEY=...); without it the
 # pipeline uses the template narrative. Never bake a key into the image.
 # Cloud Run injects PORT; locally it defaults to 8000. Shell form so ${PORT} expands; exec keeps
 # uvicorn as PID 1 so it receives SIGTERM.
+USER app
+ENV HOME=/home/app
+
+# Local `docker run` only: Cloud Run ignores HEALTHCHECK and probes the port itself.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
+  CMD python -c "import os, urllib.request; urllib.request.urlopen('http://127.0.0.1:%s/health' % os.environ.get('PORT', '8000'), timeout=3)"
+
 EXPOSE 8000
 CMD exec uvicorn causal_engine.api.main:app --host 0.0.0.0 --port ${PORT:-8000}

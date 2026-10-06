@@ -1,47 +1,48 @@
-# Python 3.11
+# Python 3.11. Direct dependencies are pinned to the versions this project was tested with
+# (the Windows virtualenv the 455-test suite passes on); bump them deliberately, one at a time.
 # Data processing
-pandas
-numpy
-pyyaml
-pydantic>=2
+pandas==2.3.3
+numpy==2.2.6
+pyyaml==6.0.3
+pydantic==2.12.5
 
 # Stage 3: Causal Discovery (pc and ges from causal-learn, lingam from lingam)
-causal-learn
-lingam
-networkx
-matplotlib
+causal-learn==0.1.4.8
+lingam==1.13.0
+networkx==3.6.1
+matplotlib==3.11.2
 
 # Stage 4: Effect Estimation
-dowhy
-statsmodels
+dowhy==0.14
+statsmodels==0.15.0
 
 # Stage 5: Counterfactuals
 # NOTE: causalml has Cython extensions and needs a C++ build toolchain on
 # Windows. If `pip install causalml` fails here, causal_engine/pipeline/
 # counterfactuals.py has a scikit-learn-only fallback path — comment this
 # line out and rely on scikit-learn (already a causalml/dowhy dependency).
-causalml
-scipy
-scikit-learn
+causalml==0.15.5
+scipy==1.13.1
+scikit-learn==1.9.1
 
 # Stage 6: Interventions
-fairlearn
+fairlearn==0.14.0
 
 # Stage 7: Explanation
-shap
-openai
+shap==0.51.0
+openai==2.54.0
 # Optional: tier 1 of the narrative chain (AutoGen) is in requirements-autogen.txt, NOT here: its
 # protobuf pin conflicts with feast/crewai, and pip resolved this file to the placeholder
 # autogen-agentchat 0.0.2 when it was listed.
 
 # Stage 2: Feature Store
-feast
+feast==0.66.0
 
 # Orchestration
-crewai
+crewai==1.15.22
 
 # API
-fastapi
-uvicorn[standard]
+fastapi==0.141.1
+uvicorn[standard]==0.53.0
 
-python-dotenv
+python-dotenv==1.2.3

@@ -35,7 +35,7 @@ jobs:
           # AutoGen last, then protobuf back to 6.x (see requirements-autogen.txt); otherwise
           # tests/test_narrative.py is skipped whole
           pip install -r requirements-autogen.txt
-          pip install --no-deps "protobuf>=6.33.5,<7"
+          pip install --no-deps "protobuf==6.33.6"
 
       # No secrets: the suite never calls OpenAI (LLM tiers run against replay clients and stubs).
       # Tests that need optional pieces skip themselves: the

@@ -60,7 +60,7 @@ causal_discovery:
 # graph, not the job_satisfaction/burnout mediators) -- these are what
 # Stage 6's candidate interventions actually move, so this is the total
 # effect (through both mediators) Stage 6 needs to rank ROI against. No
-# confounders: by construction (see scripts/generate_synthetic_attrition_data.py)
+# confounders: by construction (see scripts/data/generate_synthetic_attrition_data.py)
 # compensation/manager_quality/workload are mutually independent roots.
 effect_estimation:
   outcome: attrition

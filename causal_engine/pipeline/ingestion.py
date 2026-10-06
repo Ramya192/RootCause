@@ -1,14 +1,13 @@
 """Stage 1: Data Ingestion.
 
 Reads the domain's CSV, checks the id/outcome columns the domain config
-declares actually exist, and coerces the outcome to numeric 0/1.
+declares actually exist, and coerces the outcome to numeric 0/1 (anything else is an error).
 """
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import logging
+from pathlib import Path
 
 import pandas as pd
 
@@ -19,8 +18,7 @@ def ingest(data_path: str | Path, domain_config: dict) -> pd.DataFrame:
     ingestion_cfg = domain_config["ingestion"]
     if ingestion_cfg["file_type"] != "csv":
         raise NotImplementedError(
-            f"file_type={ingestion_cfg['file_type']!r} not supported in this "
-            "vertical slice; only 'csv' is implemented"
+            f"file_type={ingestion_cfg['file_type']!r} is not supported; only 'csv' is implemented"
         )
 
     df = pd.read_csv(data_path)
@@ -42,7 +40,10 @@ def ingest(data_path: str | Path, domain_config: dict) -> pd.DataFrame:
     if n_missing:
         logger.warning("dropping %d/%d rows with missing outcome %r", n_missing, len(df), outcome_col)
         df, outcome = df[outcome.notna()].reset_index(drop=True), outcome.dropna().reset_index(drop=True)
+    not_binary = sorted(float(v) for v in set(outcome.unique()) - {0, 1})
+    if not_binary:
+        # Casting 0.5 or 2 to int would silently turn them into 0 or 2; every stage assumes a 0/1 outcome.
+        raise ValueError(f"{data_path}: outcome column {outcome_col!r} must be 0/1, found {not_binary[:5]}")
     df[outcome_col] = outcome.astype(int)
-    dropped = n_missing
-    df.attrs["rows_dropped_missing_outcome"] = dropped
+    df.attrs["rows_dropped_missing_outcome"] = n_missing
     return df

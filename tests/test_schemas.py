@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import pandas as pd
 import pytest
 from pydantic import ValidationError
 
@@ -12,19 +11,8 @@ from causal_engine.models.schemas import (
     EffectEstimate,
     Explanation,
     InterventionRecommendation,
-    PipelineContext,
     PipelineResult,
 )
-
-
-def test_pipeline_context_allows_dataframe():
-    ctx = PipelineContext(
-        domain_id="employee_attrition",
-        config={"a": 1},
-        raw_data=pd.DataFrame({"x": [1, 2]}),
-    )
-    assert isinstance(ctx.raw_data, pd.DataFrame)
-    assert ctx.feature_vectors is None
 
 
 def test_causal_graph_requires_edge_tuples():

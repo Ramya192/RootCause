@@ -1,7 +1,7 @@
 """Stage 4: Effect Estimation (causal_engine/pipeline/effect_estimation.py).
 
 Expected ATE signs are derived from the synthetic DAG's own structural
-equations (scripts/generate_synthetic_attrition_data.py), not guessed:
+equations (scripts/data/generate_synthetic_attrition_data.py), not guessed:
 
     attrition_logit = -1.2*job_satisfaction + 1.0*burnout
     job_satisfaction = 0.6*compensation + 0.5*manager_quality + noise
@@ -107,3 +107,10 @@ def test_an_all_zero_adjustment_column_is_dropped_not_fed_to_a_rank_deficient_fi
         warnings.simplefilter("error", sm_exc.SingularMatrixWarning)
         (got,) = effect_estimation.estimate_effects(data, with_empty)
     assert got.ate == pytest.approx(expected.ate)
+
+
+def test_linear_estimates_carry_a_95_percent_interval_around_the_ate(effect_estimates):
+    for e in effect_estimates:
+        assert e.std_error is not None and e.std_error > 0
+        assert e.ci_low < e.ate < e.ci_high
+        assert e.ci_high - e.ci_low == pytest.approx(2 * 1.96 * e.std_error, rel=0.05)

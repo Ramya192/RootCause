@@ -76,10 +76,6 @@ class Mechanism:
     def binary(self) -> bool:
         return self.kind == "binary"
 
-    @property
-    def discrete(self) -> bool:
-        return self.kind != "continuous"
-
     def _class_probs(self, df: pd.DataFrame) -> np.ndarray:
         """(records x levels) probabilities of a categorical variable, columns in `classes` order."""
         if self.model is None:  # no parents, or a single level (nothing to regress on)

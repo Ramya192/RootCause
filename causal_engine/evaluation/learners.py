@@ -19,7 +19,6 @@ preprocessed frame), so this is fast.
 
 from __future__ import annotations
 
-import time
 from dataclasses import asdict, dataclass, field
 
 import numpy as np
@@ -44,7 +43,6 @@ class LearnerRun:
     cate_std: float
     subgroup_cates: dict[str, float]
     extreme_propensity_share: float | None
-    seconds: float
 
     @property
     def spec(self) -> str:
@@ -66,7 +64,6 @@ def _config(domain_config: dict, learner: str, base: str) -> dict:
 def fit_all(feature_df: pd.DataFrame, domain_config: dict) -> list[LearnerRun]:
     runs = []
     for learner, base in SPECS:
-        start = time.perf_counter()
         (result,) = counterfactuals.estimate_counterfactuals(feature_df, _config(domain_config, learner, base))
         runs.append(
             LearnerRun(
@@ -76,7 +73,6 @@ def fit_all(feature_df: pd.DataFrame, domain_config: dict) -> list[LearnerRun]:
                 cate_std=result.cate_std or 0.0,
                 subgroup_cates={s.key: s.mean_cate for s in result.subgroups},
                 extreme_propensity_share=result.extreme_propensity_share,
-                seconds=time.perf_counter() - start,
             )
         )
     return runs

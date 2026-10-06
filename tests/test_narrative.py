@@ -422,7 +422,7 @@ def test_required_points_mention_low_roi_only_when_it_applies():
 
 
 def test_roi_below_cost_follows_the_top_recommendation():
-    rec = lambda roi: [SimpleNamespace(roi=roi)]
+    rec = lambda roi: [SimpleNamespace(roi=roi, recommended=True)]
     assert explanation._roi_below_cost(rec(0.0000391)) and not explanation._roi_below_cost(rec(12.5))
     assert not explanation._roi_below_cost([])
 

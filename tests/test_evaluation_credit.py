@@ -31,7 +31,7 @@ from causal_engine.models.schemas import CausalGraph, EffectEstimate, Interventi
 from causal_engine.pipeline import preprocessing, runner
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
+sys.path.insert(0, str(REPO_ROOT / "scripts" / "data"))
 import generate_semi_synthetic_credit_data as generator  # noqa: E402
 import prepare_german_credit as prepare  # noqa: E402
 
@@ -77,7 +77,7 @@ def test_real_file_is_the_1000_statlog_applicants_with_the_published_class_split
 
 def test_committed_real_file_is_what_the_prepare_script_produces():
     data_dir = REPO_ROOT / "data" / "german_credit"
-    raw = pd.read_csv(data_dir / "german.data", sep=" ", header=None, names=prepare.RAW_COLUMNS)
+    raw = pd.read_csv(data_dir / "raw" / "german.data", sep=" ", header=None, names=prepare.RAW_COLUMNS)
     pd.testing.assert_frame_equal(prepare.prepare(raw), pd.read_csv(data_dir / "credit.csv"))
 
 
@@ -89,7 +89,7 @@ def test_prepare_derives_the_documented_columns(real_df):
 
 
 def test_prepare_rejects_a_code_the_codebook_does_not_define():
-    raw = pd.read_csv(REPO_ROOT / "data" / "german_credit" / "german.data", sep=" ", header=None, names=prepare.RAW_COLUMNS)
+    raw = pd.read_csv(REPO_ROOT / "data" / "german_credit" / "raw" / "german.data", sep=" ", header=None, names=prepare.RAW_COLUMNS)
     raw.loc[0, "housing"] = "A159"
     with pytest.raises(ValueError, match="housing.*A159"):
         prepare.prepare(raw)

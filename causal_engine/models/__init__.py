@@ -4,12 +4,10 @@ from causal_engine.models.schemas import (
     EffectEstimate,
     Explanation,
     InterventionRecommendation,
-    PipelineContext,
     PipelineResult,
 )
 
 __all__ = [
-    "PipelineContext",
     "CausalGraph",
     "EffectEstimate",
     "CounterfactualResult",

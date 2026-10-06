@@ -1,7 +1,7 @@
 """The known data-generating processes the evaluation harness scores against.
 
 `attrition_scm` is the single definition of the committed synthetic dataset
-(data/employee_attrition/attrition.csv): scripts/generate_synthetic_attrition_data.py
+(data/employee_attrition/attrition.csv): scripts/data/generate_synthetic_attrition_data.py
 samples it, and tests/test_evaluation_scm.py fails if the two ever drift apart.
 
     compensation        ~ N(0, 1)                                   (root)
@@ -341,11 +341,11 @@ CREDIT_OUTCOME = "default"
 
 @lru_cache(maxsize=1)
 def _real_credit_applicants() -> pd.DataFrame:
-    """The real applicants (prepared by scripts/prepare_german_credit.py), minus the id and
+    """The real applicants (prepared by scripts/data/prepare_german_credit.py), minus the id and
     the real outcome, which the SCM replaces."""
     if not CREDIT_DATA_PATH.exists():
         raise FileNotFoundError(
-            f"{CREDIT_DATA_PATH} not found; run scripts/prepare_german_credit.py first"
+            f"{CREDIT_DATA_PATH} not found; run scripts/data/prepare_german_credit.py first"
         )
     return pd.read_csv(CREDIT_DATA_PATH).drop(columns=[CREDIT_ID_COLUMN, CREDIT_OUTCOME])
 
@@ -417,12 +417,12 @@ FREDDIE_OUTCOME = "default"
 
 @lru_cache(maxsize=1)
 def _real_freddie_loans() -> pd.DataFrame:
-    """The real 2007 loans (prepared by scripts/prepare_freddie_mac.py), minus the ids and the real
+    """The real 2007 loans (prepared by scripts/data/prepare_freddie_mac.py), minus the ids and the real
     outcome, which the SCM replaces."""
     if not FREDDIE_DATA_PATH.exists():
         raise FileNotFoundError(
             f"{FREDDIE_DATA_PATH} not found; it is built from a registered Freddie Mac download by "
-            "scripts/prepare_freddie_mac.py (see data/freddie_mac/README.md)"
+            "scripts/data/prepare_freddie_mac.py (see data/freddie_mac/README.md)"
         )
     return pd.read_csv(FREDDIE_DATA_PATH).drop(columns=list(FREDDIE_DROPPED_COLUMNS))
 

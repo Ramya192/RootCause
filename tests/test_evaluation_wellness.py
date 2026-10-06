@@ -26,7 +26,7 @@ from causal_engine.evaluation.scms import (
 from causal_engine.pipeline import runner
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
+sys.path.insert(0, str(REPO_ROOT / "scripts" / "data"))
 import generate_synthetic_wellness_data as generator  # noqa: E402
 import prepare_illinois_wellness as prepare  # noqa: E402
 
@@ -73,7 +73,7 @@ def test_real_file_keeps_only_variables_measured_before_assignment(real_df):
 
 def test_committed_real_file_is_what_the_prepare_script_produces():
     data_dir = REPO_ROOT / "data" / "illinois_wellness"
-    raw = pd.read_csv(data_dir / "firm_admin.csv")
+    raw = pd.read_csv(data_dir / "raw" / "firm_admin.csv")
     pd.testing.assert_frame_equal(prepare.prepare(raw), pd.read_csv(data_dir / "wellness.csv"))
 
 

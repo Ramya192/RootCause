@@ -18,7 +18,7 @@ from causal_engine.evaluation.scms import SCM_REGISTRY
 from causal_engine.pipeline import preprocessing, runner
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
+sys.path.insert(0, str(REPO_ROOT / "scripts" / "data"))
 import prepare_carclaims as prepare  # noqa: E402
 
 DOMAIN = "carclaims"
@@ -32,7 +32,7 @@ def claims_config(config_loader):
 
 @pytest.fixture(scope="module")
 def raw_df() -> pd.DataFrame:
-    return pd.read_csv(REPO_ROOT / "data" / "carclaims" / "carclaims.csv")
+    return pd.read_csv(REPO_ROOT / "data" / "carclaims" / "raw" / "carclaims.csv")
 
 
 @pytest.fixture(scope="module")

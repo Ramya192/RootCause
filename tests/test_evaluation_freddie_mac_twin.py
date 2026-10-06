@@ -26,7 +26,7 @@ from causal_engine.evaluation.scms import (
 from causal_engine.pipeline import runner
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
+sys.path.insert(0, str(REPO_ROOT / "scripts" / "data"))
 import generate_semi_synthetic_freddie_mac_data as generator  # noqa: E402
 
 DOMAIN = "freddie_mac"

@@ -18,9 +18,9 @@ domain:
 ingestion:
   file_type: csv
   # real           = the 1,000 applicants (data/german_credit/credit.csv, built from the raw UCI
-  #                  file by scripts/prepare_german_credit.py)
+  #                  file by scripts/data/prepare_german_credit.py)
   # semi_synthetic = the same applicants, default re-simulated with planted lever effects
-  #                  (scripts/generate_semi_synthetic_credit_data.py)
+  #                  (scripts/data/generate_semi_synthetic_credit_data.py)
   datasets:
     real: data/german_credit/credit.csv
     semi_synthetic: data/german_credit/credit_semi_synthetic.csv

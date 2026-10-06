@@ -54,7 +54,7 @@ def test_description_uses_domain_wording(feature_df, domain_config):
     cfg = copy.deepcopy(domain_config)
     cfg["domain"].update(entity_noun="applicant", entity_noun_plural="applicants", outcome_label="loan default")
     [result] = counterfactuals.estimate_counterfactuals(feature_df, cfg)
-    assert "applicants below" in result.description
+    assert result.description.startswith("Across all applicants,")
     assert "loan default" in result.description
     assert "employee" not in result.description
 
@@ -65,7 +65,7 @@ def test_description_defaults_are_neutral_not_another_domains(feature_df, domain
     cfg = copy.deepcopy(domain_config)
     cfg["domain"] = {"id": "x"}  # no wording configured
     [result] = counterfactuals.estimate_counterfactuals(feature_df, cfg)
-    assert "records below" in result.description
+    assert result.description.startswith("Across all records,")
     assert "employee" not in result.description
 
 
@@ -176,3 +176,20 @@ def test_without_causalml_only_the_linear_t_learner_has_a_fallback(monkeypatch):
         counterfactuals.estimate_cate(X, w, y, "dr_learner")
     with pytest.raises(ImportError, match="only the linear T-learner"):
         counterfactuals.estimate_cate(X, w, y, "t_learner", base_learner="gbm")
+
+
+def test_description_says_the_effect_is_averaged_over_everyone(feature_df, domain_config):
+    [result] = counterfactuals.estimate_counterfactuals(feature_df, domain_config)
+    assert result.description.startswith("Across all employees,")
+    assert "rather than below it" in result.description and "is estimated to change" in result.description
+    assert "shifted" not in result.description  # it is not the effect on only those below the threshold
+
+
+def test_description_in_an_observational_domain_is_an_association(feature_df, domain_config):
+    import copy
+
+    observational = copy.deepcopy(domain_config)
+    observational.setdefault("explanation", {})["observational"] = True
+    [result] = counterfactuals.estimate_counterfactuals(feature_df, observational)
+    assert "goes with" in result.description and "association" in result.description
+    assert "is estimated to change" not in result.description

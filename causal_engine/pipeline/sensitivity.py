@@ -82,6 +82,29 @@ def benchmark_partial_r2(r2_dxj: float, r2_yxj: float, kd: float = 1.0, ky: floa
     return float(r2_dz), float(min(r2_yz, 1.0))
 
 
+def _varying(data: pd.DataFrame, confounders: list[str]) -> list[str]:
+    """Drop columns with no variation: they adjust for nothing and only make the design
+    rank-deficient (a declared one-hot level that a dataset never uses, e.g. Freddie Mac's
+    `tpo_unspecified` channel in 2010-11); every other coefficient is unchanged by leaving them out."""
+    return [c for c in confounders if data[c].nunique(dropna=False) > 1]
+
+
+def _fit_outcome(data: pd.DataFrame, treatment: str, outcome: str, confounders: list[str]):
+    design = data[[treatment, *confounders]].astype(float)
+    design.insert(0, INTERCEPT, 1.0)  # named here so a covariate called "const" cannot collide with it
+    return sm.OLS(data[outcome].to_numpy(dtype=float), design).fit()
+
+
+def linear_interval(
+    data: pd.DataFrame, treatment: str, outcome: str, confounders: list[str], alpha: float = 0.05
+) -> tuple[float, float, float]:
+    """(standard error, low, high) of the OLS estimate of `treatment` on `outcome`, with a
+    (1 - alpha) t-interval. It is the same regression as the linear-regression estimate, so it is centred on it."""
+    fit = _fit_outcome(data, treatment, outcome, _varying(data, confounders))
+    low, high = fit.conf_int(alpha=alpha).loc[treatment]
+    return float(fit.bse[treatment]), float(low), float(high)
+
+
 def linear_sensitivity(
     data: pd.DataFrame,
     treatment: str,
@@ -90,14 +113,8 @@ def linear_sensitivity(
     alpha: float = 0.05,
 ) -> SensitivityResult:
     """Sensitivity of the OLS estimate of `treatment` on `outcome`, adjusting for `confounders`."""
-    # A column with no variation adjusts for nothing and only makes the design rank-deficient (a
-    # declared one-hot level that a dataset never uses, e.g. Freddie Mac's `tpo_unspecified`
-    # channel in 2010-11); every other coefficient is unchanged by leaving it out.
-    confounders = [c for c in confounders if data[c].nunique(dropna=False) > 1]
-    y = data[outcome].to_numpy(dtype=float)
-    design = data[[treatment, *confounders]].astype(float)
-    design.insert(0, INTERCEPT, 1.0)  # named here so a covariate called "const" cannot collide with it
-    outcome_fit = sm.OLS(y, design).fit()
+    confounders = _varying(data, confounders)
+    outcome_fit = _fit_outcome(data, treatment, outcome, confounders)
     estimate = float(outcome_fit.params[treatment])
     se = float(outcome_fit.bse[treatment])
     t = float(outcome_fit.tvalues[treatment])

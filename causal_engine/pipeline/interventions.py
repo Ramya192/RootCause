@@ -13,10 +13,14 @@ population-level caution flag, not a per-recommendation guarantee.
 
 from __future__ import annotations
 
+import logging
+
 import pandas as pd
 from fairlearn.metrics import MetricFrame, selection_rate
 
 from causal_engine.models.schemas import EffectEstimate, InterventionRecommendation
+
+logger = logging.getLogger(__name__)
 
 
 def _fairness_ratio(raw_data: pd.DataFrame, outcome_col: str, sensitive_attr: str) -> float:
@@ -49,12 +53,16 @@ def rank_interventions(
         target = candidate["target_variable"]
         effect = effects_by_treatment.get(target)
         if effect is None:
-            continue  # no effect estimate for this target -- skip, don't guess
+            # skip rather than guess, but say so: a target_variable that matches no treatment is a config slip
+            logger.warning("intervention %r targets %r, which has no effect estimate; skipped", candidate["id"], target)
+            continue
 
         delta_outcome = effect.ate * candidate["expected_shift"]
         benefit = -delta_outcome  # positive = expected reduction in outcome
         cost = candidate["cost"]
-        roi = benefit / cost if cost else 0.0
+        if not cost > 0:
+            raise ValueError(f"intervention {candidate['id']!r}: cost must be positive to compute an ROI, got {cost!r}")
+        roi = benefit / cost
 
         scored.append(
             {
@@ -63,6 +71,7 @@ def rank_interventions(
                 "expected_effect": benefit,
                 "cost": cost,
                 "roi": roi,
+                "recommended": benefit > 0,
             }
         )
 

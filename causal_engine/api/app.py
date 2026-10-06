@@ -13,7 +13,8 @@ domain's default_dataset is used.
 
 `orchestration` picks how the 7 stages run: "direct" (default; the stage
 functions called in order -- fast) or "crew" (the CDIA spec's hierarchical
-CrewAI orchestration -- minutes of paid LLM calls, needs OPENAI_API_KEY).
+CrewAI orchestration -- minutes of paid LLM calls; needs OPENAI_API_KEY and is refused unless the
+server sets ROOTCAUSE_ALLOW_CREW=1).
 """
 
 from __future__ import annotations
@@ -82,7 +83,8 @@ def create_app(
 
     app = FastAPI(title="RootCause", description="Causal Decision Intelligence Agent", lifespan=lifespan)
 
-    app.mount("/static", StaticFiles(directory=Path(__file__).with_name("static")), name="static")
+    # Saved example results the browser page shows instantly (built by scripts/reports/build_ui_examples.py)
+    app.mount("/examples", StaticFiles(directory=runner.REPO_ROOT / "outputs" / "ui_examples"), name="examples")
 
     @app.get("/", include_in_schema=False)
     def index() -> FileResponse:
@@ -132,6 +134,12 @@ def create_app(
             raise HTTPException(
                 status_code=409,
                 detail=f"Domain '{domain_id}' has status '{domain.status}' and cannot be run yet",
+            )
+        if body.orchestration == "crew" and os.environ.get("ROOTCAUSE_ALLOW_CREW", "").lower() not in ("1", "true", "yes"):
+            raise HTTPException(
+                status_code=403,
+                detail="orchestration='crew' is disabled on this server (each run makes many paid LLM calls); "
+                "set ROOTCAUSE_ALLOW_CREW=1 to enable it",
             )
         if body.orchestration == "crew" and not os.environ.get("OPENAI_API_KEY"):
             raise HTTPException(

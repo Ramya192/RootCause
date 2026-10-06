@@ -1,24 +1,11 @@
-"""Shared Pydantic contracts passed between pipeline stages 1-7, so agents
-exchange typed objects instead of loose dicts."""
+"""Shared Pydantic contracts for the stage outputs and the final PipelineResult, so the stages,
+the crew and the API exchange typed objects instead of loose dicts."""
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Optional
 
-import pandas as pd
-from pydantic import BaseModel, ConfigDict, Field
-
-
-class PipelineContext(BaseModel):
-    """Threaded through all 7 stages: raw + feature data plus the resolved
-    domain config each stage reads its own section from."""
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    domain_id: str
-    config: dict[str, Any]
-    raw_data: pd.DataFrame
-    feature_vectors: Optional[pd.DataFrame] = None
+from pydantic import BaseModel, Field
 
 
 class CausalGraph(BaseModel):
@@ -27,6 +14,8 @@ class CausalGraph(BaseModel):
     nodes: list[str]
     edges: list[tuple[str, str]]
     algorithm: str
+    # Things worth knowing about the structure, e.g. that the edges contain a cycle
+    warnings: list[str] = Field(default_factory=list)
 
 
 class SensitivityResult(BaseModel):
@@ -58,6 +47,11 @@ class EffectEstimate(BaseModel):
     outcome: str
     ate: float
     estimator: str
+    # Sampling interval for the ATE (linear-regression estimator only; None otherwise). It does not
+    # cover unmeasured confounding or a wrong model.
+    std_error: Optional[float] = None
+    ci_low: Optional[float] = None
+    ci_high: Optional[float] = None
     refuter: Optional[str] = None
     refutation_passed: Optional[bool] = None
     # Permutation p-value behind `refutation_passed` (see pipeline/effect_estimation.py)
@@ -104,6 +98,9 @@ class InterventionRecommendation(BaseModel):
     expected_effect: float
     cost: float
     roi: float
+    # False when the estimated effect would RAISE the outcome (negative benefit): the action is
+    # listed so the reader can see it, but it is not something to do.
+    recommended: bool = True
     fairness_ratio: Optional[float] = None
     fairness_pass: bool = True
     rank: int

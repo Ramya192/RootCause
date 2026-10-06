@@ -41,13 +41,6 @@ def _resolve_env(value):
     return value
 
 
-class PipelineConfig(BaseModel):
-    module: str
-    class_name: str = Field(alias="class")
-
-    model_config = {"populate_by_name": True}
-
-
 class DomainConfig(BaseModel):
     id: str
     name: str
@@ -60,10 +53,6 @@ class DomainConfig(BaseModel):
     entity_noun_plural: Optional[str] = None
     outcome_label: Optional[str] = None
 
-    # Optional domain-specific stage override, unused by the shipped domains --
-    # present for a future domain that needs a non-default stage implementation.
-    pipeline: Optional[PipelineConfig] = None
-
     # Everything else in the YAML (causal_discovery, effect_estimation,
     # counterfactuals, interventions, explanation, ...) -- domain-specific,
     # resolved (env placeholders substituted) but otherwise untouched. Each
@@ -75,7 +64,7 @@ class DomainConfig(BaseModel):
         return self.status == "working"
 
 
-_KNOWN_TOP_KEYS = {"domain", "pipeline"}
+_KNOWN_TOP_KEYS = {"domain"}
 
 # Data-source kinds a domain's ingestion.datasets may name. real = observed data,
 # synthetic = fully simulated (known graph), semi_synthetic = real covariates with
@@ -105,7 +94,7 @@ def _validate_datasets(path: Path, ingestion: dict) -> None:
 
 class ConfigLoader:
     """Loads and validates configs/*.yaml. Construct once, reuse -- YAML is
-    only read from disk on load()/reload()."""
+    only read from disk on load()."""
 
     def __init__(self, configs_dir: str | Path = DEFAULT_CONFIGS_DIR):
         self.configs_dir = Path(configs_dir)
@@ -117,8 +106,6 @@ class ConfigLoader:
         for path in sorted(self.configs_dir.glob("*.yaml")):
             domain = self._load_one(path)
             self._domains[domain.id] = domain
-
-    reload = load  # explicit alias -- reload() reads the exact same files load() did
 
     def _load_one(self, path: Path) -> DomainConfig:
         with open(path, "r", encoding="utf-8") as f:
@@ -139,7 +126,6 @@ class ConfigLoader:
 
         return DomainConfig(
             **domain_section,
-            pipeline=raw.get("pipeline"),
             extra=extra,
         )
 

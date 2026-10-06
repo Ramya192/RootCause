@@ -26,7 +26,7 @@ ingestion:
   # One dataset kind per origination year: the vintages are different populations (2007-08 are
   # crisis-era loans with 12-16% defaults, 2010-11 a calm, refinance-heavy period with about 2%),
   # so pooling them would make the vintage a confounder of every lever. Each file is built from
-  # the raw Freddie Mac sample by scripts/prepare_freddie_mac.py and is gitignored, together
+  # the raw Freddie Mac sample by scripts/data/prepare_freddie_mac.py and is gitignored, together
   # with the raw files (a registered download; see data/freddie_mac/README.md).
   datasets:
     real_2007: data/freddie_mac/loans_2007.csv
@@ -34,7 +34,7 @@ ingestion:
     real_2010: data/freddie_mac/loans_2010.csv
     real_2011: data/freddie_mac/loans_2011.csv
     # Newer vintages, each with the 90+ day outcome and the relief-adjusted one (see
-    # scripts/prepare_freddie_mac.py --relief-adjusted). 2019's 90+ day outcome is ~92% pandemic
+    # scripts/data/prepare_freddie_mac.py --relief-adjusted). 2019's 90+ day outcome is ~92% pandemic
     # forbearance (97% of those loans returned to current); read it as a stress case, not as defaults.
     real_2016: data/freddie_mac/loans_2016.csv
     real_2016_relief_adjusted: data/freddie_mac/loans_2016_relief_adjusted.csv
@@ -43,7 +43,7 @@ ingestion:
     real_2022: data/freddie_mac/loans_2022.csv
     real_2022_relief_adjusted: data/freddie_mac/loans_2022_relief_adjusted.csv
     # the 2007 loans' real covariates with a SIMULATED default (planted lever effects, known truth);
-    # built by scripts/generate_semi_synthetic_freddie_mac_data.py, gitignored like the real files
+    # built by scripts/data/generate_semi_synthetic_freddie_mac_data.py, gitignored like the real files
     semi_synthetic: data/freddie_mac/loans_2007_semi_synthetic.csv
   default_dataset: real_2007  # the most defaults, so the most stable estimates
   id_column: loan_id

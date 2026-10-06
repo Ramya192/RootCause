@@ -60,7 +60,7 @@ def main(argv: list[str] | None = None) -> int:
                         "to <name>_<algorithm>.md/json so the default runs are not overwritten")
     parser.add_argument("--domain", action="append", help="only this domain id (repeatable)")
     parser.add_argument("--dataset", action="append", help="only this dataset kind (repeatable)")
-    parser.add_argument("--out", type=Path, default=REPO_ROOT / "docs" / "evaluation",
+    parser.add_argument("--out", type=Path, default=REPO_ROOT / "outputs" / "evaluation",
                         help="directory for results.md and results.json (default %(default)s)")
     parser.add_argument("--no-write", action="store_true", help="print only; don't write files")
     args = parser.parse_args(argv)

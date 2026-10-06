@@ -17,8 +17,8 @@ domain:
 ingestion:
   file_type: csv
   # real      = the RCT (data/illinois_wellness/wellness.csv, built from the public file by
-  #             scripts/prepare_illinois_wellness.py)
-  # synthetic = same schema, effect planted (scripts/generate_synthetic_wellness_data.py)
+  #             scripts/data/prepare_illinois_wellness.py)
+  # synthetic = same schema, effect planted (scripts/data/generate_synthetic_wellness_data.py)
   datasets:
     real: data/illinois_wellness/wellness.csv
     synthetic: data/illinois_wellness/wellness_synthetic.csv

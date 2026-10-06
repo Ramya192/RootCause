@@ -27,3 +27,15 @@ def test_required_edges_always_present(causal_graph, domain_config):
 def test_graph_nodes_match_configured_variables(causal_graph, domain_config):
     assert causal_graph.nodes == domain_config["causal_discovery"]["variables"]
     assert causal_graph.algorithm == "pc"
+
+
+def test_a_cycle_in_the_edges_is_reported_in_plain_language():
+    from causal_engine.pipeline import causal_discovery
+
+    assert causal_discovery.graph_warnings({("a", "b"), ("b", "c")}) == []
+    [warning] = causal_discovery.graph_warnings({("a", "b"), ("b", "c"), ("c", "a")})
+    assert "cycle" in warning and all(name in warning for name in ("a", "b", "c"))
+
+
+def test_the_committed_dataset_gives_an_acyclic_graph(causal_graph):
+    assert causal_graph.warnings == []

@@ -23,6 +23,9 @@ since they are asserted as domain knowledge, not hypotheses to test.
 
 from __future__ import annotations
 
+import logging
+
+import networkx as nx
 import numpy as np
 import pandas as pd
 from causallearn.graph.Endpoint import Endpoint
@@ -31,6 +34,8 @@ from causallearn.search.ConstraintBased.PC import pc
 from causallearn.utils.PCUtils.BackgroundKnowledge import BackgroundKnowledge
 
 from causal_engine.models.schemas import CausalGraph
+
+logger = logging.getLogger(__name__)
 
 ALGORITHMS = ("pc", "ges", "lingam")
 DEFAULT_LINGAM_THRESHOLD = 0.05
@@ -107,6 +112,17 @@ def _lingam_edges(data: np.ndarray, variables: list[str], forbidden: set[Edge], 
     }
 
 
+def graph_warnings(edges: set[Edge]) -> list[str]:
+    """Plain-language notes about the structure. Today: whether the edges contain a cycle, which a
+    causal DAG cannot (an algorithm's output plus the required edges can still produce one)."""
+    try:
+        cycle = nx.find_cycle(nx.DiGraph(sorted(edges)))
+    except nx.NetworkXNoCycle:
+        return []
+    path = " -> ".join([cycle[0][0], *(head for _, head in cycle)])
+    return [f"the edges contain a cycle ({path}); a causal graph should be acyclic, so treat this structure with caution"]
+
+
 def discover_graph(feature_df: pd.DataFrame, domain_config: dict) -> CausalGraph:
     cfg = domain_config["causal_discovery"]
     algorithm = cfg.get("algorithm", "pc")
@@ -133,4 +149,7 @@ def discover_graph(feature_df: pd.DataFrame, domain_config: dict) -> CausalGraph
         discovered = _lingam_edges(data, variables, forbidden_edges, cfg.get("lingam_threshold", DEFAULT_LINGAM_THRESHOLD))
 
     edges = (discovered - forbidden_edges) | set(required_edges)
-    return CausalGraph(nodes=variables, edges=sorted(edges), algorithm=algorithm)
+    warnings = graph_warnings(edges)
+    for warning in warnings:
+        logger.warning("causal discovery (%s): %s", algorithm, warning)
+    return CausalGraph(nodes=variables, edges=sorted(edges), algorithm=algorithm, warnings=warnings)

@@ -83,10 +83,10 @@ def test_domains_hide_datasets_whose_file_is_absent_on_this_host(fake_client, mo
 def test_bundled_ui_samples_are_valid_results(fake_client):
     from causal_engine.models.schemas import PipelineResult
 
-    index = fake_client.get("/static/samples/index.json").json()
-    assert index, "run scripts/build_ui_samples.py"
+    index = fake_client.get("/examples/index.json").json()
+    assert index, "run scripts/reports/build_ui_examples.py"
     for meta in index:
-        sample = fake_client.get(f"/static/samples/{meta['domain_id']}__{meta['dataset']}.json").json()
+        sample = fake_client.get(f"/examples/{meta['domain_id']}__{meta['dataset']}.json").json()
         result = PipelineResult.model_validate(sample["result"])  # same schema the API returns
         graph = result.causal_graph
         assert all(a in graph.nodes and b in graph.nodes for a, b in graph.edges)
@@ -157,7 +157,17 @@ def test_invalid_orchestration_is_422(fake_client):
     assert resp.status_code == 422
 
 
+def test_crew_is_refused_unless_the_server_switches_it_on(fake_client, monkeypatch):
+    monkeypatch.delenv("ROOTCAUSE_ALLOW_CREW", raising=False)
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test-fake-does-not-hit-network")  # a key alone must not be enough
+    resp = fake_client.post("/domains/employee_attrition/analyze", json={"orchestration": "crew"})
+    assert resp.status_code == 403
+    assert "ROOTCAUSE_ALLOW_CREW" in resp.json()["detail"]
+    assert fake_client.get("/jobs").json() == []  # nothing was queued
+
+
 def test_crew_without_api_key_is_rejected_up_front(fake_client, monkeypatch):
+    monkeypatch.setenv("ROOTCAUSE_ALLOW_CREW", "1")
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     resp = fake_client.post("/domains/employee_attrition/analyze", json={"orchestration": "crew"})
     assert resp.status_code == 400
@@ -165,6 +175,7 @@ def test_crew_without_api_key_is_rejected_up_front(fake_client, monkeypatch):
 
 
 def test_crew_with_api_key_queues(fake_client, monkeypatch):
+    monkeypatch.setenv("ROOTCAUSE_ALLOW_CREW", "1")
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test-fake-does-not-hit-network")
     resp = fake_client.post("/domains/employee_attrition/analyze", json={"orchestration": "crew"})
     assert resp.status_code == 202

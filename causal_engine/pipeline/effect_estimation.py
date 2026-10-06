@@ -36,7 +36,6 @@ PERMUTATION_PLACEBO = "permutation_placebo"
 DEFAULT_SIMULATIONS = 100
 DEFAULT_ALPHA = 0.05
 DEFAULT_SEED = 0
-COPY_CORRELATION = 0.99  # an adjustment column this correlated with the treatment is a proxy of it, not a confounder
 
 
 def permutation_placebo_p_value(
@@ -123,12 +122,21 @@ def estimate_effects(feature_df: pd.DataFrame, domain_config: dict) -> list[Effe
         if run_sensitivity and estimator in sensitivity.LINEAR_ESTIMATORS:
             sens = sensitivity.linear_sensitivity(feature_df, treatment, outcome, list(confounders), sens_alpha)
 
+        std_error = ci_low = ci_high = None
+        if estimator in sensitivity.LINEAR_ESTIMATORS:
+            std_error, ci_low, ci_high = sensitivity.linear_interval(
+                feature_df, treatment, outcome, list(confounders), cfg.get("ci_alpha", DEFAULT_ALPHA)
+            )
+
         results.append(
             EffectEstimate(
                 treatment=treatment,
                 outcome=outcome,
                 ate=float(estimate.value),
                 estimator=estimator,
+                std_error=std_error,
+                ci_low=ci_low,
+                ci_high=ci_high,
                 refuter=refuter,
                 refutation_passed=refutation_passed,
                 refutation_p_value=p_value,

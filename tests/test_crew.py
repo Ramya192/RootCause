@@ -14,7 +14,7 @@ from __future__ import annotations
 import pytest
 from crewai import Process
 
-from causal_engine.agents.crew import _AGENT_SPECS, _STAGE_ORDER, _STAGE_TOOL_NAMES, build_crew
+from causal_engine.agents.crew import _AGENT_SPECS, _STAGE_ORDER, _STAGE_TOOL_NAMES, build_crew, missing_stages
 
 
 @pytest.fixture(scope="module")
@@ -45,3 +45,12 @@ def test_tasks_are_chained_in_stage_order(built_crew):
     crew, _ = built_crew
     for prev_task, task in zip(crew.tasks, crew.tasks[1:]):
         assert task.context == [prev_task]
+
+
+def test_a_crew_run_that_skipped_stages_is_reported_by_name(domain_config, data_path):
+    _, run = build_crew(domain_config, str(data_path), manager_llm="gpt-4o-mini")
+    assert missing_stages(run) == list(_STAGE_ORDER)  # nothing has run
+    run.completed.update({"ingestion", "feature_store", "causal_discovery", "explanation"})
+    assert missing_stages(run) == ["effect_estimation", "counterfactuals", "interventions"]
+    run.completed.update(_STAGE_ORDER)
+    assert missing_stages(run) == []

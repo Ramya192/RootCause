@@ -58,6 +58,11 @@ def _shap_summary(feature_df: pd.DataFrame, domain_config: dict) -> dict[str, fl
     return {col: float(v) for col, v in zip(feature_cols, mean_abs)}
 
 
+def _top_recommended(recommendations: list[InterventionRecommendation]) -> InterventionRecommendation | None:
+    """The best-ranked action that is expected to help; None when every candidate would raise the outcome."""
+    return next((r for r in recommendations if r.recommended), None)
+
+
 def _template_narrative(
     domain_config: dict,
     effect_estimates: list[EffectEstimate],
@@ -85,17 +90,21 @@ def _template_narrative(
     for cf in counterfactuals:
         lines.append(f"- {cf.description}")
     if recommendations:
-        top = recommendations[0]
+        top = _top_recommended(recommendations)
+        ref = recommendations[0]  # fairness is a population-level fact, the same on every recommendation
         fairness_note = (
             "fairness check passed"
-            if top.fairness_pass
+            if ref.fairness_pass
             else "FAIRNESS FLAG: population-level disparity detected"
-            + (f" (group ratio {top.fairness_ratio:.2f})" if top.fairness_ratio is not None else "")
+            + (f" (group ratio {ref.fairness_ratio:.2f})" if ref.fairness_ratio is not None else "")
         )
-        lines.append(
-            f"Recommended action: '{top.id}' (ROI={top.roi:.3g}, "
-            f"cost=${top.cost:,.0f}) -- {fairness_note}"
-        )
+        if top is None:
+            lines.append(f"No candidate action is expected to reduce {outcome} -- {fairness_note}")
+        else:
+            lines.append(
+                f"Recommended action: '{top.id}' (ROI={top.roi:.3g}, "
+                f"cost=${top.cost:,.0f}) -- {fairness_note}"
+            )
     return "\n".join(lines)
 
 
@@ -125,7 +134,8 @@ def _llm_narrative(
         f"was flagged.\n\nFacts:\n{facts}"
         + (f"\n\nYour narrative MUST:\n{requirements}" if requirements else "")
     )
-    response = OpenAI().chat.completions.create(
+    # A stalled call would otherwise hold the API's single worker (every queued run waits behind it).
+    response = OpenAI(timeout=cfg.get("llm_timeout_seconds", 60)).chat.completions.create(
         model=cfg.get("llm_model", "gpt-4o-mini"),
         messages=[{"role": "user", "content": prompt}],
     )
@@ -144,7 +154,8 @@ def _tier_order(domain_config: dict) -> list[str]:
 
 
 def _roi_below_cost(recommendations: list[InterventionRecommendation]) -> bool:
-    return bool(recommendations) and recommendations[0].roi < 1.0
+    top = _top_recommended(recommendations)
+    return top is not None and top.roi < 1.0
 
 
 def _grounding(

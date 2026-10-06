@@ -169,6 +169,20 @@ def subgroup_effects(feature_df: pd.DataFrame, cate: np.ndarray, columns: list[s
     return effects
 
 
+def _describe(domain_config: dict, vocab, treatment_col: str, mean_cate: float) -> str:
+    """What the mean effect means: it is averaged over ALL units (each one's modelled effect of being
+    at or above the threshold rather than below it), not over only the units that are below it."""
+    if domain_config.get("explanation", {}).get("observational"):
+        return (
+            f"Across all {vocab.entities}, being at or above the {treatment_col} threshold rather than below it goes with "
+            f"a difference of {mean_cate:+.4f} in mean predicted {vocab.outcome} (an association in observational data)"
+        )
+    return (
+        f"Across all {vocab.entities}, being at or above the {treatment_col} threshold rather than below it "
+        f"is estimated to change mean predicted {vocab.outcome} by {mean_cate:+.4f}"
+    )
+
+
 def estimate_counterfactuals(
     feature_df: pd.DataFrame, domain_config: dict
 ) -> list[CounterfactualResult]:
@@ -207,11 +221,7 @@ def estimate_counterfactuals(
             outcome=outcome_col,
             meta_learner=f"{meta_learner} ({used})",
             mean_cate=mean_cate,
-            description=(
-                f"If {vocab.entities} below the {treatment_col} threshold were shifted "
-                f"to match those above it, mean predicted {vocab.outcome} would "
-                f"change by {mean_cate:+.4f}"
-            ),
+            description=_describe(domain_config, vocab, treatment_col, mean_cate),
             cate_std=float(np.std(cate)),
             subgroups=subgroups,
             extreme_propensity_share=fit.extreme_propensity_share,

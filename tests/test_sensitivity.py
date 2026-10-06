@@ -176,3 +176,20 @@ def test_a_covariate_that_explains_the_treatment_exactly_is_skipped_not_a_crash(
     assert result.benchmark_covariate in {"x1", "x2"}
     assert np.isnan(sensitivity.benchmark_partial_r2(1.0, 0.1)[0])
     assert np.isnan(sensitivity.benchmark_partial_r2(0.1, 1.0)[0])
+
+
+def test_linear_interval_matches_statsmodels_and_is_centred_on_the_estimate():
+    import statsmodels.api as sm
+
+    rng = np.random.default_rng(0)
+    n = 400
+    z = rng.normal(size=n)
+    t = 0.5 * z + rng.normal(size=n)
+    df = pd.DataFrame({"t": t, "z": z, "y": 2.0 * t + z + rng.normal(size=n)})
+    se, low, high = sensitivity.linear_interval(df, "t", "y", ["z"])
+    fit = sm.OLS(df["y"], sm.add_constant(df[["t", "z"]])).fit()
+    assert se == pytest.approx(fit.bse["t"])
+    assert (low, high) == pytest.approx(tuple(fit.conf_int().loc["t"]))
+    assert low < fit.params["t"] < high and low < 2.0 < high  # the planted effect is inside
+    _, low50, high50 = sensitivity.linear_interval(df, "t", "y", ["z"], alpha=0.5)
+    assert (high50 - low50) < (high - low)  # a lower confidence level gives a narrower interval

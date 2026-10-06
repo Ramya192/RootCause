@@ -20,7 +20,7 @@ from causal_engine.evaluation.scms import SCM_REGISTRY
 from causal_engine.pipeline import preprocessing, runner
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
+sys.path.insert(0, str(REPO_ROOT / "scripts" / "data"))
 import prepare_freddie_mac as prepare  # noqa: E402
 
 DOMAIN = "freddie_mac"

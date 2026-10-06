@@ -63,6 +63,9 @@ def test_llm_prompt_and_template_use_domain_wording(monkeypatch, domain_config):
     captured = {}
 
     class _FakeClient:
+        def __init__(self, **_):
+            pass
+
         class chat:
             class completions:
                 @staticmethod

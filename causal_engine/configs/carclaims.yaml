@@ -18,7 +18,7 @@ domain:
 ingestion:
   file_type: csv
   # real       = the 15,420 claims (data/carclaims/claims.csv, built from the raw carclaims.csv by
-  #              scripts/prepare_carclaims.py). No synthetic twin: see data/carclaims/README.md.
+  #              scripts/data/prepare_carclaims.py). No synthetic twin: see data/carclaims/README.md.
   datasets:
     real: data/carclaims/claims.csv
   default_dataset: real

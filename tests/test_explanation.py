@@ -56,3 +56,16 @@ def test_llm_failure_falls_back_to_template(
     assert result.narrative.startswith("Top-line drivers of attrition")
     assert result.narrative_tier == "template"
     assert [a.outcome for a in result.narrative_log] == ["error", "error", "used"]
+
+
+def test_narrative_says_so_when_no_candidate_action_would_help(domain_config):
+    from causal_engine.models.schemas import InterventionRecommendation
+
+    rec = InterventionRecommendation(
+        id="x", target_variable="compensation", expected_effect=-0.01, cost=100.0, roi=-1e-4,
+        recommended=False, fairness_ratio=0.99, rank=1,
+    )
+    text = explanation._template_narrative(domain_config, [], [], [rec], {"compensation": 1.0})
+    assert "No candidate action is expected to reduce attrition" in text
+    assert "Recommended action" not in text
+    assert explanation._roi_below_cost([rec]) is False  # there is no recommended action to judge

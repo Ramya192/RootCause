@@ -59,6 +59,7 @@ class PipelineRun:
     counterfactual_results: list[CounterfactualResult] = field(default_factory=list)
     recommendations: list[InterventionRecommendation] = field(default_factory=list)
     explanation_result: Optional[Explanation] = None
+    completed: set[str] = field(default_factory=set)  # stages whose tool ran to completion
 
 
 def _build_tools(run: PipelineRun) -> dict[str, object]:
@@ -66,6 +67,7 @@ def _build_tools(run: PipelineRun) -> dict[str, object]:
     def ingest_tool() -> str:
         """Load and validate the domain's raw CSV data. Always the first stage to run."""
         run.raw_data = ingestion.ingest(run.data_path, run.domain_config)
+        run.completed.add("ingestion")
         return f"Ingested {len(run.raw_data)} rows, columns={list(run.raw_data.columns)}"
 
     @tool("build_feature_vectors")
@@ -75,6 +77,7 @@ def _build_tools(run: PipelineRun) -> dict[str, object]:
         if run.raw_data is None:
             return "ERROR: no ingested data yet -- run the ingestion tool first"
         run.feature_df = feature_store.build_feature_vectors(run.raw_data, run.domain_config)
+        run.completed.add("feature_store")
         return (
             f"Built feature vectors for {len(run.feature_df)} entities, "
             f"columns={list(run.feature_df.columns)}"
@@ -87,6 +90,7 @@ def _build_tools(run: PipelineRun) -> dict[str, object]:
         if run.feature_df is None:
             return "ERROR: no feature vectors yet -- run the feature store tool first"
         run.causal_graph = causal_discovery.discover_graph(run.feature_df, run.domain_config)
+        run.completed.add("causal_discovery")
         return f"Discovered graph edges: {run.causal_graph.edges}"
 
     @tool("estimate_causal_effects")
@@ -97,6 +101,7 @@ def _build_tools(run: PipelineRun) -> dict[str, object]:
         if run.feature_df is None:
             return "ERROR: no feature vectors yet -- run the feature store tool first"
         run.effect_estimates = effect_estimation.estimate_effects(run.feature_df, run.domain_config)
+        run.completed.add("effect_estimation")
         return "; ".join(f"{e.treatment}->{e.outcome}: ATE={e.ate:+.4f}" for e in run.effect_estimates)
 
     @tool("simulate_counterfactuals")
@@ -109,6 +114,7 @@ def _build_tools(run: PipelineRun) -> dict[str, object]:
         run.counterfactual_results = counterfactuals.estimate_counterfactuals(
             run.feature_df, run.domain_config
         )
+        run.completed.add("counterfactuals")
         return "; ".join(cf.description for cf in run.counterfactual_results)
 
     @tool("rank_interventions")
@@ -121,6 +127,7 @@ def _build_tools(run: PipelineRun) -> dict[str, object]:
         run.recommendations = interventions.rank_interventions(
             run.raw_data, run.effect_estimates, run.domain_config
         )
+        run.completed.add("interventions")
         return "; ".join(
             f"#{r.rank} {r.id} (roi={r.roi:.3g}, fairness_pass={r.fairness_pass})"
             for r in run.recommendations
@@ -140,6 +147,7 @@ def _build_tools(run: PipelineRun) -> dict[str, object]:
             run.recommendations,
             run.domain_config,
         )
+        run.completed.add("explanation")
         return run.explanation_result.narrative
 
     return {
@@ -308,14 +316,20 @@ def build_crew(domain_config: dict, data_path: str, manager_llm: str) -> tuple[C
     return crew, run
 
 
+def missing_stages(run: PipelineRun) -> list[str]:
+    """Stages, in order, whose tool never completed (the manager LLM skipped or mis-delegated them)."""
+    return [stage for stage in _STAGE_ORDER if stage not in run.completed]
+
+
 def run_pipeline(domain_id: str, domain_config: dict, data_path: str) -> PipelineResult:
     manager_llm = domain_config.get("explanation", {}).get("llm_model", "gpt-4o-mini")
     crew, run = build_crew(domain_config, data_path, manager_llm)
     crew.kickoff()
 
-    if run.causal_graph is None or run.explanation_result is None:
+    missing = missing_stages(run)
+    if missing:
         raise RuntimeError(
-            "Crew finished without running every stage -- the manager LLM "
+            f"Crew finished without running every stage (missing: {', '.join(missing)}) -- the manager LLM "
             "skipped or mis-delegated a task. Check crew.kickoff()'s output above."
         )
 

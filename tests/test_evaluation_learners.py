@@ -15,7 +15,7 @@ def _run(learner="t_learner", base="linear", mean=0.0, women=-0.03, men=0.05, sd
     return learners.LearnerRun(
         learner=learner, base=base, mean_cate=mean, cate_std=sd,
         subgroup_cates={"male=0": women, "male=1": men, "age50=0": 0.0, "age50=1": 0.0},
-        extreme_propensity_share=None if learner in ("t_learner", "s_learner") else 0.0, seconds=0.1,
+        extreme_propensity_share=None if learner in ("t_learner", "s_learner") else 0.0,
     )
 
 
@@ -23,7 +23,7 @@ def test_sex_reversal_needs_women_negative_and_men_positive():
     assert learners._sex_reversal(_run(women=-0.03, men=0.05))
     assert not learners._sex_reversal(_run(women=0.002, men=0.002))  # a constant effect, as a linear S-learner gives
     assert not learners._sex_reversal(_run(women=0.03, men=-0.05))  # the wrong way round
-    assert not learners._sex_reversal(learners.LearnerRun("t_learner", "linear", 0, 0, {}, None, 0))  # no subgroups reported
+    assert not learners._sex_reversal(learners.LearnerRun("t_learner", "linear", 0, 0, {}, None))  # no subgroups reported
 
 
 def test_subgroup_mae_uses_only_subgroups_both_sides_have():

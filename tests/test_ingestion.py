@@ -29,3 +29,12 @@ def test_ingest_unsupported_file_type_raises(domain_config, data_path):
     bad_config["ingestion"]["file_type"] = "pdf"
     with pytest.raises(NotImplementedError, match="not supported"):
         ingestion.ingest(data_path, bad_config)
+
+
+def test_ingest_rejects_a_non_binary_outcome(domain_config, tmp_path):
+    csv = tmp_path / "data.csv"
+    csv.write_text("employee_id,attrition\n1,0\n2,1\n3,2\n4,0.5\n", encoding="utf-8")
+    config = copy.deepcopy(domain_config)
+    config["ingestion"].update(id_column="employee_id", outcome_column="attrition")
+    with pytest.raises(ValueError, match=r"must be 0/1, found \[0.5, 2.0\]"):
+        ingestion.ingest(csv, config)

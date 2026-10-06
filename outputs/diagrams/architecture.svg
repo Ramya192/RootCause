@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 590" role="img" aria-label="Clients post to a FastAPI job queue, which starts the runner, which calls seven stage functions. Stages use Feast and optionally OpenAI. The result returns to clients by polling. A separate evaluation harness simulates data with known truth, runs the same stages, and scores them."><style>
+svg{color:#17181a;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.bx{fill:#fff;stroke:#e3e5e8;stroke-width:1.4}
+.bx.hi{stroke:#2a78d6;stroke-width:2;fill:#e8f0fb}
+.bx.dsh{stroke-dasharray:5 4}
+.bx.out{fill:none;stroke-dasharray:6 5}
+.ln{fill:none;stroke:currentColor;stroke-width:1.5;opacity:.75}
+.ln.dsh{stroke-dasharray:5 4}
+.ln.acc{stroke:#2a78d6;opacity:1;stroke-width:2}
+.t{font:600 13px system-ui,sans-serif;fill:currentColor}
+.pt{font:12px system-ui,sans-serif;fill:currentColor}
+.s,.lbl,.ax{font:11px system-ui,sans-serif;fill:#5f6368}
+.cap{font:600 10.5px system-ui,sans-serif;fill:#5f6368;letter-spacing:.06em}
+.num{fill:#2a78d6}
+.numt{font:700 12px system-ui,sans-serif;fill:#fff}
+.grid{stroke:#e3e5e8;stroke-width:1}
+.l-truth{fill:none;stroke:#2a78d6;stroke-width:2.5}
+.l-est{fill:none;stroke:#eb6834;stroke-width:2.5}
+.c-truth{fill:#2a78d6;stroke:#f7f8fa;stroke-width:2}
+.c-est{fill:#eb6834;stroke:#f7f8fa;stroke-width:2}
+.lab-truth,.lab-est{font:600 12px system-ui,sans-serif;fill:#17181a}
+.gap{stroke:#5f6368;stroke-width:1.2;stroke-dasharray:3 3}
+</style><rect width="1040" height="590" fill="#ffffff"/>
+      <defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+
+      <rect class="bx out" x="200" y="84" width="650" height="246" rx="14"/>
+      <text class="cap" x="214" y="102">ONE CONTAINER · CLOUD RUN, 1 INSTANCE</text>
+
+      <path class="ln" d="M955 110 V62 H85 V108" marker-end="url(#a1)"/>
+      <text class="lbl" x="520" y="55" text-anchor="middle">client polls GET /jobs/{id}; graph PNG at /jobs/{id}/graph</text>
+
+      <rect class="bx" x="20" y="110" width="130" height="80" rx="8"/>
+      <text class="t" x="85" y="136" text-anchor="middle">Clients</text><text class="pt" x="85" y="156" text-anchor="middle">browser UI</text><text class="pt" x="85" y="173" text-anchor="middle">REST / curl</text>
+
+      <rect class="bx" x="210" y="114" width="165" height="76" rx="8"/>
+      <text class="t" x="292" y="138" text-anchor="middle">FastAPI + queue</text><text class="pt" x="292" y="157" text-anchor="middle">1 worker, max 3 pending</text><text class="pt" x="292" y="173" text-anchor="middle">more gets HTTP 429</text>
+
+      <rect class="bx" x="435" y="114" width="130" height="76" rx="8"/>
+      <text class="t" x="500" y="138" text-anchor="middle">Runner</text><text class="pt" x="500" y="157" text-anchor="middle">direct (default)</text><text class="pt" x="500" y="173" text-anchor="middle">or CrewAI crew</text>
+
+      <rect class="bx hi" x="625" y="100" width="210" height="104" rx="8"/>
+      <text class="t" x="730" y="128" text-anchor="middle">7 stage functions</text><text class="pt" x="730" y="148" text-anchor="middle">pure, typed in and out</text><text class="pt" x="730" y="165" text-anchor="middle">same code for live runs</text><text class="pt" x="730" y="182" text-anchor="middle">and for evaluation</text>
+
+      <rect class="bx" x="885" y="110" width="135" height="80" rx="8"/>
+      <text class="t" x="952" y="132" text-anchor="middle">PipelineResult</text><text class="pt" x="952" y="150" text-anchor="middle">graph · effects</text><text class="pt" x="952" y="166" text-anchor="middle">interventions</text><text class="pt" x="952" y="182" text-anchor="middle">narrative + SHAP</text>
+
+      <path class="ln" d="M150 150 H208" marker-end="url(#a1)"/><text class="lbl" x="179" y="142" text-anchor="middle">POST</text>
+      <path class="ln" d="M375 152 H433" marker-end="url(#a1)"/><text class="lbl" x="404" y="144" text-anchor="middle">queue</text>
+      <path class="ln" d="M565 152 H623" marker-end="url(#a1)"/><text class="lbl" x="594" y="144" text-anchor="middle">run</text>
+      <path class="ln" d="M835 150 H883" marker-end="url(#a1)"/>
+
+      <rect class="bx" x="245" y="256" width="130" height="60" rx="8"/>
+      <text class="t" x="310" y="278" text-anchor="middle">Dataset CSV</text><text class="pt" x="310" y="295" text-anchor="middle">real · synthetic</text><text class="pt" x="310" y="309" text-anchor="middle">semi-synthetic</text>
+      <rect class="bx" x="435" y="256" width="130" height="60" rx="8"/>
+      <text class="t" x="500" y="278" text-anchor="middle">Domain YAML</text><text class="pt" x="500" y="295" text-anchor="middle">levers · priors</text><text class="pt" x="500" y="309" text-anchor="middle">costs · groups</text>
+      <path class="ln" d="M500 256 V192" marker-end="url(#a1)"/><text class="lbl" x="508" y="226">config</text>
+      <path class="ln" d="M310 256 V232 H470 V192" marker-end="url(#a1)"/><text class="lbl" x="318" y="226">data</text>
+
+      <rect class="bx" x="625" y="256" width="100" height="60" rx="8"/>
+      <text class="t" x="675" y="278" text-anchor="middle">Feast</text><text class="pt" x="675" y="295" text-anchor="middle">SQLite store</text><text class="pt" x="675" y="309" text-anchor="middle">per dataset</text>
+      <path class="ln" d="M675 204 V254" marker-start="url(#a1)" marker-end="url(#a1)"/><text class="lbl" x="683" y="236">stage 2</text>
+
+      <rect class="bx dsh" x="880" y="240" width="140" height="60" rx="8"/>
+      <text class="t" x="950" y="262" text-anchor="middle">OpenAI</text><text class="pt" x="950" y="279" text-anchor="middle">optional, needs a key</text><text class="pt" x="950" y="293" text-anchor="middle">writes the narrative</text>
+      <path class="ln dsh" d="M815 204 V270 H878" marker-end="url(#a1)"/><text class="lbl" x="823" y="246">stage 7</text>
+
+      <rect class="bx out" x="20" y="360" width="1000" height="214" rx="14"/>
+      <text class="cap" x="36" y="382">EVALUATION HARNESS · OFFLINE, NOT IN THE REQUEST PATH</text>
+      <rect class="bx" x="40" y="400" width="210" height="84" rx="8"/>
+      <text class="t" x="145" y="424" text-anchor="middle">Simulated world</text><text class="pt" x="145" y="444" text-anchor="middle">known graph, true effects</text><text class="pt" x="145" y="460" text-anchor="middle">true ATE from do()</text>
+      <rect class="bx hi" x="310" y="400" width="190" height="84" rx="8"/>
+      <text class="t" x="405" y="424" text-anchor="middle">Stages 1 to 6</text><text class="pt" x="405" y="444" text-anchor="middle">the same functions</text><text class="pt" x="405" y="460" text-anchor="middle">as the live pipeline</text>
+      <rect class="bx" x="560" y="400" width="210" height="84" rx="8"/>
+      <text class="t" x="665" y="424" text-anchor="middle">Scorer</text><text class="pt" x="665" y="444" text-anchor="middle">edge precision, recall</text><text class="pt" x="665" y="460" text-anchor="middle">ATE error, rank vs true ROI</text>
+      <rect class="bx" x="830" y="400" width="170" height="84" rx="8"/>
+      <text class="t" x="915" y="424" text-anchor="middle">Reports</text><text class="pt" x="915" y="444" text-anchor="middle">outputs/evaluation</text><text class="pt" x="915" y="460" text-anchor="middle">tables + JSON</text>
+      <path class="ln" d="M250 442 H308" marker-end="url(#a1)"/><text class="lbl" x="279" y="434" text-anchor="middle">data</text>
+      <path class="ln" d="M500 442 H558" marker-end="url(#a1)"/><text class="lbl" x="529" y="434" text-anchor="middle">estimates</text>
+      <path class="ln" d="M770 442 H828" marker-end="url(#a1)"/><text class="lbl" x="799" y="434" text-anchor="middle">writes</text>
+      <text class="s" x="36" y="520">Real data has no true graph, so there the harness re-runs on bootstrap resamples of the file and reports stability, not accuracy.</text>
+      <text class="s" x="36" y="540">Randomized trials are the exception: the trial's own difference in means is the reference the pipeline is compared against.</text>
+    </svg>

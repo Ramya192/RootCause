@@ -10,6 +10,34 @@ A domain-agnostic **causal decision intelligence** pipeline (the CDIA architectu
 
 The pipeline runs end to end on five domains: a semi-synthetic employee-attrition dataset with a known ground-truth causal graph (so every stage can be checked against the truth), a real randomized workplace-wellness trial paired with a synthetic mirror of it, real German Credit and carclaims data, and Freddie Mac mortgage loans across seven origination years (see Evaluation).
 
+## Why not just feature importance?
+
+The levers a manager can pull (pay, management, workload) act on attrition through two mediators: job satisfaction and burnout. A model that conditions on every column, or a SHAP ranking, sees the mediators and misses the levers.
+
+![The true graph of the attrition simulation: three levers feed two mediators, which feed attrition](outputs/diagrams/why_mediators.svg)
+
+*The true graph of the bundled attrition simulation (6 edges, effects of -1.2 and +1.0 on the last hop). Controlling for the dashed box removes the effect you set out to measure.*
+
+## Architecture
+
+One request path, one source of truth for each domain (a YAML file), and an offline harness that scores the same stage functions against simulated worlds with known answers.
+
+![Architecture: clients, FastAPI job queue, runner, seven stage functions, Feast, optional OpenAI, and the offline evaluation harness](outputs/diagrams/architecture.svg)
+
+*Everything a request needs sits in one container. The harness reuses the stage functions unchanged, so a score describes the code that serves live runs.*
+
+## Five domains, one pipeline
+
+| Domain | Outcome | Levers | Data |
+|--------|---------|--------|------|
+| employee_attrition | attrition | compensation, manager quality, workload | Simulation with a known graph |
+| illinois_wellness | termination by Jan 2019 | wellness program | Real randomized trial + synthetic mirror |
+| german_credit | loan default | duration, amount, installment rate | Real (1,000 applicants) + semi-synthetic twin |
+| carclaims | fraud found | police report, internal agent, deductible | Real (15,420 claims) |
+| freddie_mac | serious delinquency in 36 months | interest rate, loan-to-value, debt-to-income | Real, seven origination years, never pooled; semi-synthetic twin. Not redistributable, so not in the repo or the live demo |
+
+A new domain is one YAML file: the variables, the prior edges, the levers with their costs, the sensitive attribute and the narrative wording.
+
 ## Pipeline
 
 | # | Stage | What it does | Built with |
@@ -23,6 +51,10 @@ The pipeline runs end to end on five domains: a semi-synthetic employee-attritio
 | 7 | Explanation | SHAP attribution plus a plain-language narrative written by the first of three tiers (AutoGen team, single LLM call, template) whose text passes a grounding check | SHAP, AutoGen, OpenAI |
 
 Each stage is a pure function in `causal_engine/pipeline/`. They can run directly, or behind a **CrewAI hierarchical crew** (`causal_engine/agents/crew.py`): 7 specialized agents plus a manager LLM that delegates one stage to each.
+
+![The seven stages, each with its tool, its output and the check that guards it](outputs/diagrams/seven_stages.svg)
+
+*Stage 4 takes its adjustment set from the YAML file, not from Stage 3's graph, so a partly wrong graph does not change the effect estimates. The cost is that the analyst's causal knowledge has to be written down.*
 
 ### What it finds on the bundled dataset
 
@@ -39,6 +71,16 @@ Ranked interventions: manager training, then workload rebalancing, then compensa
 > These numbers come from synthetic data with a known answer, which is the point — real observational data has no ground truth to validate a causal claim against.
 
 ### Evaluation
+
+The same pipeline is checked against progressively less forgiving data. Each rung says what it can and cannot show.
+
+| Rung | Data | Result | What it shows |
+|------|------|--------|---------------|
+| 1. Known answer | Attrition simulation, 10 fresh draws | Edge precision 0.97, recall 0.93; effect error 0.007 on effects of about 0.12 to 0.14; right first pick 10/10; exact graph in 8 of 10 draws | The method recovers what was planted |
+| 2. Real randomized trial | Illinois workplace wellness, 4,834 employees | Pipeline +0.0020 sits inside the trial's interval [-0.0222, +0.0265]; placebo fails (p = 0.89), the right answer for a published null; finds the trial's sex reversal (women -0.031, men +0.046) | It does not invent an average effect on real data. It cannot rule out an effect of a couple of points |
+| 3. Planted effect, real covariates | Illinois mirror, German Credit and Freddie Mac twins | Mirror: -0.0475 ± 0.0100 vs true -0.0475, placebo passes 10/10. Credit: effect error 0.006, fairness verdict right 10/10. Mortgage rate within about 13% of the planted effect | The method works on realistic covariates; it says nothing about what causes default |
+| 4. Stress | Small n, hidden confounder, curved and U-shaped effects | Hidden confounder inflates the estimate while the placebo still passes 10/10 (chart in the hidden-confounder section below); a U-shaped effect is read as about zero | Where it breaks, stated rather than hidden |
+| 5. Real observational | German Credit, carclaims, Freddie Mac (seven origination years) | Signs are stable across bootstrap resamples; sizes are not comparable across years; fairness flags (credit 0.69, claims 0.69) describe outcome rates | Stability only. No ground truth, so these are associations, not proven causes |
 
 ```bash
 .venv/Scripts/python.exe -m causal_engine.evaluation --replicates 10
@@ -234,6 +276,19 @@ Effects are changes in the probability of the outcome. Full tables: `outputs/eva
 
 Placebo passes 10/10, the fairness verdict matches the true one 10/10 (ratio 0.880 estimated vs 0.876 true), and the pipeline's top-ranked intervention (lower the interest rate) matches the true ROI ranking in all 10 replicates. Full table: `outputs/evaluation/freddie_mac/twin_results.md`. **Read this as: when the pipeline's assumptions hold (no unmeasured confounding), it recovers the planted effects to within about 13% for the rate and comes in low for LTV and DTI, whose true effects are tiny; it does not mean the real 2007-11 estimates above are unconfounded.**
 
+### The hidden-confounder test: the placebo cannot see it
+
+![As a hidden confounder gets stronger the pipeline's estimate drifts from -0.114 to -0.214 while the true effect stays near -0.11](outputs/diagrams/hidden_confounder.svg)
+
+| Confounder strength | True effect | Pipeline estimate |
+|---------------------|-------------|-------------------|
+| 0 | -0.116 | -0.114 |
+| 0.30 | -0.113 | -0.148 |
+| 0.60 | -0.110 | -0.183 |
+| 0.85 | -0.108 | -0.214 |
+
+Seniority raises pay and lowers attrition but is withheld from the data (10 draws, 2,000 rows each). The estimate drifts to twice the truth and the permutation placebo still passes in 10 of 10 draws. The sensitivity analysis can turn "what if?" into a number, but its robustness value rises as the bias grows, so it is not reassurance.
+
 ### Stress tests
 
 ```bash
@@ -384,6 +439,10 @@ The honest reading: causal flagging now edges out Mahalanobis on swaps and on bi
 
 ### Stage 7 narrative tiers (AutoGen, single call, template)
 
+![Stage 7 fallback chain: AutoGen team, single LLM call, template, each checked by a grounding check](outputs/diagrams/stage7_fallback.svg)
+
+*Three writers are tried in order and the first whose text passes the programmatic check wins; the template always works, so a run never fails for want of a key. The check catches invented figures and dropped caveats, not a wrong claim built from correct numbers.*
+
 ```bash
 .venv/Scripts/python.exe scripts/reports/explain_tiers.py --domain carclaims --repeat 5             # which tier wins, and why others lost
 .venv/Scripts/python.exe scripts/reports/explain_tiers.py --domain carclaims --repeat 10 --compare  # each LLM tier on its own
@@ -520,6 +579,7 @@ scripts/data/          prepare_* (raw -> prepared) and generate_* (synthetic and
 scripts/reports/       build_ui_examples.py, plot_causal_graphs.py, flag_anomalies.py, explain_tiers.py
 outputs/evaluation/    reports written by `python -m causal_engine.evaluation`
 outputs/figures/       causal graph figures
+outputs/diagrams/      architecture and pipeline diagrams used in this README
 outputs/ui_examples/   saved results the web page opens instantly (served at /examples)
 tests/
 ```

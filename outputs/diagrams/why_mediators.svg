@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 270" role="img" aria-label="Three levers feed two mediators, job satisfaction and burnout, which feed attrition. Regression on every column and SHAP rank the mediators first."><style>
+svg{color:#17181a;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.bx{fill:#fff;stroke:#e3e5e8;stroke-width:1.4}
+.bx.hi{stroke:#2a78d6;stroke-width:2;fill:#e8f0fb}
+.bx.dsh{stroke-dasharray:5 4}
+.bx.out{fill:none;stroke-dasharray:6 5}
+.ln{fill:none;stroke:currentColor;stroke-width:1.5;opacity:.75}
+.ln.dsh{stroke-dasharray:5 4}
+.ln.acc{stroke:#2a78d6;opacity:1;stroke-width:2}
+.t{font:600 13px system-ui,sans-serif;fill:currentColor}
+.pt{font:12px system-ui,sans-serif;fill:currentColor}
+.s,.lbl,.ax{font:11px system-ui,sans-serif;fill:#5f6368}
+.cap{font:600 10.5px system-ui,sans-serif;fill:#5f6368;letter-spacing:.06em}
+.num{fill:#2a78d6}
+.numt{font:700 12px system-ui,sans-serif;fill:#fff}
+.grid{stroke:#e3e5e8;stroke-width:1}
+.l-truth{fill:none;stroke:#2a78d6;stroke-width:2.5}
+.l-est{fill:none;stroke:#eb6834;stroke-width:2.5}
+.c-truth{fill:#2a78d6;stroke:#f7f8fa;stroke-width:2}
+.c-est{fill:#eb6834;stroke:#f7f8fa;stroke-width:2}
+.lab-truth,.lab-est{font:600 12px system-ui,sans-serif;fill:#17181a}
+.gap{stroke:#5f6368;stroke-width:1.2;stroke-dasharray:3 3}
+</style><rect width="1040" height="270" fill="#ffffff"/>
+      <defs><marker id="a0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+      <text class="cap" x="40" y="24">LEVERS YOU CAN PULL</text>
+      <text class="cap" x="430" y="24">MEDIATORS</text>
+      <text class="cap" x="840" y="24">OUTCOME</text>
+      <rect class="bx hi" x="40" y="46" width="200" height="46" rx="8"/><text class="t" x="140" y="74" text-anchor="middle">compensation</text>
+      <rect class="bx hi" x="40" y="116" width="200" height="46" rx="8"/><text class="t" x="140" y="144" text-anchor="middle">manager quality</text>
+      <rect class="bx hi" x="40" y="186" width="200" height="46" rx="8"/><text class="t" x="140" y="214" text-anchor="middle">workload</text>
+      <rect class="bx" x="400" y="62" width="200" height="46" rx="8"/><text class="t" x="500" y="90" text-anchor="middle">job satisfaction</text>
+      <rect class="bx" x="400" y="170" width="200" height="46" rx="8"/><text class="t" x="500" y="198" text-anchor="middle">burnout</text>
+      <rect class="bx" x="800" y="116" width="200" height="46" rx="8"/><text class="t" x="900" y="144" text-anchor="middle">attrition</text>
+      <path class="ln" d="M240 69 L398 83" marker-end="url(#a0)"/>
+      <path class="ln" d="M240 133 L398 94" marker-end="url(#a0)"/>
+      <path class="ln" d="M240 148 L398 190" marker-end="url(#a0)"/>
+      <path class="ln" d="M240 209 L398 202" marker-end="url(#a0)"/>
+      <path class="ln" d="M600 85 L798 130" marker-end="url(#a0)"/>
+      <path class="ln" d="M600 193 L798 150" marker-end="url(#a0)"/>
+      <rect x="388" y="52" width="224" height="174" rx="12" fill="none" stroke="#eb6834" stroke-width="2" stroke-dasharray="6 4"/>
+      <text class="s" x="500" y="246" text-anchor="middle" style="fill:#eb6834;font-weight:600">what "regress on everything" and SHAP rank first</text>
+      <text class="s" x="140" y="258" text-anchor="middle" style="fill:#2a78d6;font-weight:600">what RootCause estimates</text>
+    </svg>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 310" role="img" aria-label="With a hidden confounder the pipeline's estimate of pay's effect drifts from -0.114 to -0.214 while the true effect stays near -0.11."><style>
+svg{color:#17181a;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.bx{fill:#fff;stroke:#e3e5e8;stroke-width:1.4}
+.bx.hi{stroke:#2a78d6;stroke-width:2;fill:#e8f0fb}
+.bx.dsh{stroke-dasharray:5 4}
+.bx.out{fill:none;stroke-dasharray:6 5}
+.ln{fill:none;stroke:currentColor;stroke-width:1.5;opacity:.75}
+.ln.dsh{stroke-dasharray:5 4}
+.ln.acc{stroke:#2a78d6;opacity:1;stroke-width:2}
+.t{font:600 13px system-ui,sans-serif;fill:currentColor}
+.pt{font:12px system-ui,sans-serif;fill:currentColor}
+.s,.lbl,.ax{font:11px system-ui,sans-serif;fill:#5f6368}
+.cap{font:600 10.5px system-ui,sans-serif;fill:#5f6368;letter-spacing:.06em}
+.num{fill:#2a78d6}
+.numt{font:700 12px system-ui,sans-serif;fill:#fff}
+.grid{stroke:#e3e5e8;stroke-width:1}
+.l-truth{fill:none;stroke:#2a78d6;stroke-width:2.5}
+.l-est{fill:none;stroke:#eb6834;stroke-width:2.5}
+.c-truth{fill:#2a78d6;stroke:#f7f8fa;stroke-width:2}
+.c-est{fill:#eb6834;stroke:#f7f8fa;stroke-width:2}
+.lab-truth,.lab-est{font:600 12px system-ui,sans-serif;fill:#17181a}
+.gap{stroke:#5f6368;stroke-width:1.2;stroke-dasharray:3 3}
+</style><rect width="760" height="310" fill="#ffffff"/>
+  <line class="grid" x1="78" x2="600" y1="30.0" y2="30.0"/><text class="ax" x="70" y="34.0" text-anchor="end">0</text><line class="grid" x1="78" x2="600" y1="74.0" y2="74.0"/><text class="ax" x="70" y="78.0" text-anchor="end">−0.05</text><line class="grid" x1="78" x2="600" y1="118.0" y2="118.0"/><text class="ax" x="70" y="122.0" text-anchor="end">−0.10</text><line class="grid" x1="78" x2="600" y1="162.0" y2="162.0"/><text class="ax" x="70" y="166.0" text-anchor="end">−0.15</text><line class="grid" x1="78" x2="600" y1="206.0" y2="206.0"/><text class="ax" x="70" y="210.0" text-anchor="end">−0.20</text><line class="grid" x1="78" x2="600" y1="250.0" y2="250.0"/><text class="ax" x="70" y="254.0" text-anchor="end">−0.25</text><text class="ax" x="78.0" y="272" text-anchor="middle">0</text><text class="ax" x="252.0" y="272" text-anchor="middle">0.30</text><text class="ax" x="426.0" y="272" text-anchor="middle">0.60</text><text class="ax" x="600.0" y="272" text-anchor="middle">0.85</text>
+  <polyline class="l-truth" points="78.0,132.1 252.0,129.4 426.0,126.8 600.0,125.0"/>
+  <polyline class="l-est" points="78.0,130.3 252.0,160.2 426.0,191.0 600.0,218.3"/>
+  <circle class="c-truth" cx="78.0" cy="132.1" r="4.5"><title>Confounder strength 0: true effect −0.116</title></circle><circle class="c-est" cx="78.0" cy="130.3" r="4.5"><title>Confounder strength 0: pipeline estimate −0.114</title></circle><circle class="c-truth" cx="252.0" cy="129.4" r="4.5"><title>Confounder strength 0.30: true effect −0.113</title></circle><circle class="c-est" cx="252.0" cy="160.2" r="4.5"><title>Confounder strength 0.30: pipeline estimate −0.148</title></circle><circle class="c-truth" cx="426.0" cy="126.8" r="4.5"><title>Confounder strength 0.60: true effect −0.110</title></circle><circle class="c-est" cx="426.0" cy="191.0" r="4.5"><title>Confounder strength 0.60: pipeline estimate −0.183</title></circle><circle class="c-truth" cx="600.0" cy="125.0" r="4.5"><title>Confounder strength 0.85: true effect −0.108</title></circle><circle class="c-est" cx="600.0" cy="218.3" r="4.5"><title>Confounder strength 0.85: pipeline estimate −0.214</title></circle>
+  <text class="lab-truth" x="612.0" y="129.0">truth −0.108</text>
+  <text class="lab-est" x="612.0" y="222.3">estimate −0.214</text>
+  <line class="gap" x1="600.0" x2="600.0" y1="133.0" y2="210.3"/>
+  <text class="ax" x="339.0" y="296" text-anchor="middle">how strongly the hidden confounder (seniority) tracks pay</text>
+  <text class="ax" transform="translate(14 140) rotate(-90)" text-anchor="middle">effect of pay on attrition probability</text>
+</svg>

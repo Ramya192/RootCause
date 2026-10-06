@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 310" role="img" aria-label="A fact sheet feeds three narrative writers in order: an AutoGen team, a single LLM call, and a template. The first two must pass a grounding check; the template is always accepted."><style>
+svg{color:#17181a;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.bx{fill:#fff;stroke:#e3e5e8;stroke-width:1.4}
+.bx.hi{stroke:#2a78d6;stroke-width:2;fill:#e8f0fb}
+.bx.dsh{stroke-dasharray:5 4}
+.bx.out{fill:none;stroke-dasharray:6 5}
+.ln{fill:none;stroke:currentColor;stroke-width:1.5;opacity:.75}
+.ln.dsh{stroke-dasharray:5 4}
+.ln.acc{stroke:#2a78d6;opacity:1;stroke-width:2}
+.t{font:600 13px system-ui,sans-serif;fill:currentColor}
+.pt{font:12px system-ui,sans-serif;fill:currentColor}
+.s,.lbl,.ax{font:11px system-ui,sans-serif;fill:#5f6368}
+.cap{font:600 10.5px system-ui,sans-serif;fill:#5f6368;letter-spacing:.06em}
+.num{fill:#2a78d6}
+.numt{font:700 12px system-ui,sans-serif;fill:#fff}
+.grid{stroke:#e3e5e8;stroke-width:1}
+.l-truth{fill:none;stroke:#2a78d6;stroke-width:2.5}
+.l-est{fill:none;stroke:#eb6834;stroke-width:2.5}
+.c-truth{fill:#2a78d6;stroke:#f7f8fa;stroke-width:2}
+.c-est{fill:#eb6834;stroke:#f7f8fa;stroke-width:2}
+.lab-truth,.lab-est{font:600 12px system-ui,sans-serif;fill:#17181a}
+.gap{stroke:#5f6368;stroke-width:1.2;stroke-dasharray:3 3}
+</style><rect width="1040" height="310" fill="#ffffff"/>
+      <defs><marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+      <rect class="bx" x="20" y="30" width="170" height="250" rx="10"/>
+      <text class="t" x="105" y="134" text-anchor="middle">Fact sheet</text><text class="pt" x="105" y="156" text-anchor="middle">numbers from</text><text class="pt" x="105" y="172" text-anchor="middle">stages 4 to 6</text><text class="pt" x="105" y="188" text-anchor="middle">plus SHAP</text>
+
+      <rect class="bx" x="240" y="40" width="300" height="60" rx="8"/>
+      <text class="t" x="390" y="62" text-anchor="middle">1 · AutoGen team</text><text class="pt" x="390" y="79" text-anchor="middle">analyst drafts, skeptic audits, writer finalizes</text><text class="s" x="390" y="93" text-anchor="middle">needs an OpenAI key and the autogen package</text>
+      <rect class="bx" x="240" y="130" width="300" height="60" rx="8"/>
+      <text class="t" x="390" y="152" text-anchor="middle">2 · Single LLM call</text><text class="pt" x="390" y="169" text-anchor="middle">one request over the same facts</text><text class="s" x="390" y="183" text-anchor="middle">needs an OpenAI key</text>
+      <rect class="bx hi" x="240" y="220" width="300" height="60" rx="8"/>
+      <text class="t" x="390" y="242" text-anchor="middle">3 · Template</text><text class="pt" x="390" y="259" text-anchor="middle">deterministic text built from the facts</text><text class="s" x="390" y="273" text-anchor="middle">needs nothing, always works</text>
+
+      <path class="ln" d="M190 70 H238" marker-end="url(#a3)"/><path class="ln" d="M190 160 H238" marker-end="url(#a3)"/><path class="ln" d="M190 250 H238" marker-end="url(#a3)"/>
+
+      <rect class="bx" x="600" y="40" width="190" height="60" rx="8"/>
+      <text class="t" x="695" y="62" text-anchor="middle">Grounding check</text><text class="pt" x="695" y="79" text-anchor="middle">every number is in the facts</text><text class="s" x="695" y="93" text-anchor="middle">caveats kept · plain language</text>
+      <rect class="bx" x="600" y="130" width="190" height="60" rx="8"/>
+      <text class="t" x="695" y="152" text-anchor="middle">Grounding check</text><text class="pt" x="695" y="169" text-anchor="middle">every number is in the facts</text><text class="s" x="695" y="183" text-anchor="middle">caveats kept · plain language</text>
+      <path class="ln" d="M540 70 H598" marker-end="url(#a3)"/><path class="ln" d="M540 160 H598" marker-end="url(#a3)"/>
+
+      <path class="ln" d="M390 100 V128" marker-end="url(#a3)"/><text class="lbl" x="400" y="118">no key, error or rejected: next writer</text>
+      <path class="ln" d="M390 190 V218" marker-end="url(#a3)"/><text class="lbl" x="400" y="208">no key, error or rejected: next writer</text>
+
+      <rect class="bx hi" x="850" y="110" width="170" height="100" rx="8"/>
+      <text class="t" x="935" y="140" text-anchor="middle">Narrative</text><text class="pt" x="935" y="160" text-anchor="middle">plus the tier that wrote it</text><text class="pt" x="935" y="176" text-anchor="middle">and why the others</text><text class="pt" x="935" y="192" text-anchor="middle">were skipped</text>
+      <path class="ln acc" d="M790 70 H820 V135 H848" marker-end="url(#a3)"/><text class="lbl" x="800" y="62">pass</text>
+      <path class="ln acc" d="M790 160 H848" marker-end="url(#a3)"/><text class="lbl" x="800" y="152">pass</text>
+      <path class="ln acc" d="M540 250 H820 V185 H848" marker-end="url(#a3)"/><text class="lbl" x="560" y="244">always accepted</text>
+    </svg>

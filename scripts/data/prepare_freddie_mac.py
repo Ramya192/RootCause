@@ -7,9 +7,9 @@ Clarity / SFLLD data-download page. The raw files are NOT redistributed here (da
 gitignored): put `sample_orig_YYYY.txt` and `sample_perf_YYYY.txt` under
 data/freddie_mac/raw/sample_YYYY/ and run
 
-    python scripts/prepare_freddie_mac.py            # every vintage found under raw/
-    python scripts/prepare_freddie_mac.py 2007 2010  # just these
-    python scripts/prepare_freddie_mac.py --relief-adjusted 2019   # the relief-adjusted outcome (below)
+    python scripts/data/prepare_freddie_mac.py            # every vintage found under raw/
+    python scripts/data/prepare_freddie_mac.py 2007 2010  # just these
+    python scripts/data/prepare_freddie_mac.py --relief-adjusted 2019   # the relief-adjusted outcome (below)
 
 Both raw files are pipe-delimited with NO header. The files this script was written against have 31
 origination and 35 performance columns (the January 2026 user guide lists 32 origination columns;
@@ -63,13 +63,12 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = REPO_ROOT / "data" / "freddie_mac"
 RAW_DIR = DATA_DIR / "raw"
 
 HORIZON = 36  # months of loan age over which default is observed
 ORIG_COLUMNS = 31
-PERF_COLUMNS = 35
 
 # 0-based positions in the raw files (see the module docstring).
 ORIG = {"credit_score": 0, "first_payment": 1, "first_time": 2, "mi_pct": 5, "units": 6,

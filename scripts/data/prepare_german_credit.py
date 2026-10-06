@@ -2,7 +2,7 @@
 
 Source: Hofmann, H. (1994), Statlog (German Credit Data), UCI Machine Learning Repository,
 https://archive.ics.uci.edu/dataset/144/statlog+german+credit+data  (kept next to the
-output as german.data, with the codebook german.doc). 1,000 loan applicants at a German
+raw/ as german.data, with the codebook german.doc). 1,000 loan applicants at a German
 bank, 700 repaid ("good") and 300 did not ("bad"); observational, and the outcome is only
 known for loans that were granted.
 
@@ -20,7 +20,7 @@ them visible in the output:
     the sensitive attribute Stage 6 checks and is derived from `age`.
   * default = 1 for "bad" (the outcome; the raw class is 1 good / 2 bad).
 
-    python scripts/prepare_german_credit.py
+    python scripts/data/prepare_german_credit.py
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ from pathlib import Path
 
 import pandas as pd
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = REPO_ROOT / "data" / "german_credit"
 
 RAW_COLUMNS = [
@@ -92,12 +92,12 @@ def prepare(raw: pd.DataFrame) -> pd.DataFrame:
 
 
 def main() -> None:
-    source = DATA_DIR / "german.data"
+    source = DATA_DIR / "raw" / "german.data"
     if not source.exists():
         sys.exit(
             f"{source} not found. Download the zip from "
             "https://archive.ics.uci.edu/static/public/144/statlog+german+credit+data.zip "
-            "and put german.data (and german.doc) there."
+            "and put german.data (and german.doc) in that raw/ folder."
         )
     raw = pd.read_csv(source, sep=" ", header=None, names=RAW_COLUMNS)
     out = prepare(raw)

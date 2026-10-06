@@ -15,7 +15,7 @@
   "sensitive_attribute": "first_time_buyer",
   "observational": true,
   "entity_noun_plural": "loans",
-  "built": "2026-10-04"
+  "built": "2026-10-06"
  },
  "result": {
   "domain_id": "freddie_mac",
@@ -84,14 +84,18 @@
      "ltv"
     ]
    ],
-   "algorithm": "pc"
+   "algorithm": "pc",
+   "warnings": []
   },
   "effect_estimates": [
    {
     "treatment": "interest_rate",
     "outcome": "default",
-    "ate": 0.008952538105377907,
+    "ate": 0.008952538105377997,
     "estimator": "backdoor.linear_regression",
+    "std_error": 0.002005393368086139,
+    "ci_low": 0.005021796951725208,
+    "ci_high": 0.012883279259030787,
     "refuter": "permutation_placebo",
     "refutation_passed": true,
     "refutation_p_value": 0.009900990099009901,
@@ -112,8 +116,11 @@
    {
     "treatment": "ltv",
     "outcome": "default",
-    "ate": -4.5123074215997275e-05,
+    "ate": -4.51230742159886e-05,
     "estimator": "backdoor.linear_regression",
+    "std_error": 5.7956939051125764e-05,
+    "ci_low": -0.00015872359224574126,
+    "ci_high": 6.847744381375471e-05,
     "refuter": "permutation_placebo",
     "refutation_passed": false,
     "refutation_p_value": 0.27722772277227725,
@@ -134,8 +141,11 @@
    {
     "treatment": "dti",
     "outcome": "default",
-    "ate": -1.1782192658455273e-05,
+    "ate": -1.1782192658450069e-05,
     "estimator": "backdoor.linear_regression",
+    "std_error": 7.655176788565199e-05,
+    "ci_low": -0.00016183015292481153,
+    "ci_high": 0.00013826576760790591,
     "refuter": "permutation_placebo",
     "refutation_passed": false,
     "refutation_p_value": 0.8712871287128713,
@@ -160,7 +170,7 @@
     "outcome": "default",
     "meta_learner": "t_learner (causalml.BaseTRegressor)",
     "mean_cate": -0.0018003130601175717,
-    "description": "If loans below the ltv threshold were shifted to match those above it, mean predicted serious delinquency within 36 months would change by -0.0018",
+    "description": "Across all loans, being at or above the ltv threshold rather than below it goes with a difference of -0.0018 in mean predicted serious delinquency within 36 months (an association in observational data)",
     "cate_std": 0.013670202578931355,
     "subgroups": [],
     "extreme_propensity_share": null
@@ -170,9 +180,10 @@
    {
     "id": "lower_interest_rate",
     "target_variable": "interest_rate",
-    "expected_effect": 0.004476269052688954,
+    "expected_effect": 0.004476269052688999,
     "cost": 1500.0,
-    "roi": 2.9841793684593026e-06,
+    "roi": 2.9841793684593327e-06,
+    "recommended": true,
     "fairness_ratio": 0.68030250288664,
     "fairness_pass": false,
     "rank": 1
@@ -180,9 +191,10 @@
    {
     "id": "cap_dti",
     "target_variable": "dti",
-    "expected_effect": -5.8910963292276367e-05,
+    "expected_effect": -5.8910963292250346e-05,
     "cost": 300.0,
-    "roi": -1.9636987764092123e-07,
+    "roi": -1.9636987764083448e-07,
+    "recommended": false,
     "fairness_ratio": 0.68030250288664,
     "fairness_pass": false,
     "rank": 2
@@ -190,16 +202,17 @@
    {
     "id": "cap_ltv",
     "target_variable": "ltv",
-    "expected_effect": -0.00045123074215997275,
+    "expected_effect": -0.000451230742159886,
     "cost": 400.0,
-    "roi": -1.128076855399932e-06,
+    "roi": -1.1280768553997151e-06,
+    "recommended": false,
     "fairness_ratio": 0.68030250288664,
     "fairness_pass": false,
     "rank": 3
    }
   ],
   "explanation": {
-   "narrative": "Associations with serious delinquency within 36 months in observational data (not proven causes), ranked by estimated effect size:\n- interest_rate: ATE=+0.0090 (backdoor.linear_regression)\n- ltv: ATE=-0.0000 (backdoor.linear_regression) -- placebo check FAILED (permutation p=0.277): no evidence of an effect beyond noise\n- dti: ATE=-0.0000 (backdoor.linear_regression) -- placebo check FAILED (permutation p=0.871): no evidence of an effect beyond noise\nSHAP attribution agrees 'two_plus_borrowers' carries the most predictive weight.\n- If loans below the ltv threshold were shifted to match those above it, mean predicted serious delinquency within 36 months would change by -0.0018\nRecommended action: 'lower_interest_rate' (ROI=2.98e-06, cost=$1,500) -- FAIRNESS FLAG: population-level disparity detected (group ratio 0.68)",
+   "narrative": "Associations with serious delinquency within 36 months in observational data (not proven causes), ranked by estimated effect size:\n- interest_rate: ATE=+0.0090 (backdoor.linear_regression)\n- ltv: ATE=-0.0000 (backdoor.linear_regression) -- placebo check FAILED (permutation p=0.277): no evidence of an effect beyond noise\n- dti: ATE=-0.0000 (backdoor.linear_regression) -- placebo check FAILED (permutation p=0.871): no evidence of an effect beyond noise\nSHAP attribution agrees 'two_plus_borrowers' carries the most predictive weight.\n- Across all loans, being at or above the ltv threshold rather than below it goes with a difference of -0.0018 in mean predicted serious delinquency within 36 months (an association in observational data)\nRecommended action: 'lower_interest_rate' (ROI=2.98e-06, cost=$1,500) -- FAIRNESS FLAG: population-level disparity detected (group ratio 0.68)",
    "shap_summary": {
     "credit_score": 0.40249168869279417,
     "ltv": 0.09231505776955967,

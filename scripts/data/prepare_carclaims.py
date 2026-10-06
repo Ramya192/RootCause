@@ -3,7 +3,7 @@
 Source: the `carclaims` sample shipped with Angoss KnowledgeSEEKER (claims from 1994-96 at an
 unnamed US insurer), used in many fraud-detection studies (e.g. Phua et al. 2004). Copy used:
 https://raw.githubusercontent.com/Rashmi-77/Vehicle-Insurance-Fraud-Detection/main/carclaims.csv
-(also on Kaggle as "Vehicle Claim Fraud Detection"), kept next to the output as carclaims.csv.
+(also on Kaggle as "Vehicle Claim Fraud Detection"), kept in raw/ as carclaims.csv.
 15,420 claims, 923 (6.0%) with FraudFound = Yes; observational, and the outcome is fraud that
 was FOUND among claims that were filed.
 
@@ -25,7 +25,7 @@ output:
   * deductible_100usd = Deductible / 100 (300-700 dollars becomes 3-7), so one unit is $100.
   * fraud_found = 1 for FraudFound = Yes (the outcome).
 
-    python scripts/prepare_carclaims.py
+    python scripts/data/prepare_carclaims.py
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ from pathlib import Path
 
 import pandas as pd
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = REPO_ROOT / "data" / "carclaims"
 
 RAW_COLUMNS = [
@@ -138,7 +138,7 @@ def prepare(raw: pd.DataFrame) -> pd.DataFrame:
 
 
 def main() -> None:
-    source = DATA_DIR / "carclaims.csv"
+    source = DATA_DIR / "raw" / "carclaims.csv"
     if not source.exists():
         sys.exit(
             f"{source} not found. Download it from "

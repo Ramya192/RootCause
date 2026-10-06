@@ -2,14 +2,14 @@
 .github
 .venv
 .env
-.claude
 .vscode
 .idea
 .pytest_cache
 __pycache__
 *.pyc
 notebooks
-docs
+outputs/evaluation
+outputs/figures
 
 # Freddie Mac loan files (1+ GB, registered download)
 data/freddie_mac

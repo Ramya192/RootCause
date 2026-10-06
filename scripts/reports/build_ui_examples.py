@@ -1,7 +1,7 @@
 """Run the pipeline on a few (domain, dataset) pairs and save each result as a JSON sample for the web UI.
 
-    python scripts/build_ui_samples.py
-    python scripts/build_ui_samples.py --only german_credit/real
+    python scripts/reports/build_ui_examples.py
+    python scripts/reports/build_ui_examples.py --only german_credit/real
 
 The UI (causal_engine/api/ui.html) loads these so it works instantly with no server round trip. Each
 file holds the PipelineResult plus the domain facts the page needs to explain it (what the outcome
@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pandas as pd
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
 from causal_engine.evaluation import harness  # noqa: E402
@@ -30,7 +30,7 @@ from causal_engine.evaluation.scms import SCM_REGISTRY  # noqa: E402
 from causal_engine.pipeline import runner  # noqa: E402
 from causal_engine.utils.config_loader import ConfigLoader  # noqa: E402
 
-OUT_DIR = REPO_ROOT / "causal_engine" / "api" / "static" / "samples"
+OUT_DIR = REPO_ROOT / "outputs" / "ui_examples"
 
 # (domain, dataset, label shown in the UI)
 SAMPLES = [

@@ -2,8 +2,8 @@
 
 | File | What it is |
 |---|---|
-| `carclaims.csv` | The raw file, unmodified (SHA-256 `a9ff2d9b…f6403bf6ace2d6`), from https://raw.githubusercontent.com/Rashmi-77/Vehicle-Insurance-Fraud-Detection/main/carclaims.csv (also on Kaggle as "Vehicle Claim Fraud Detection"). 15,420 vehicle-insurance claims from 1994-96, 33 columns, no missing values, `FraudFound` = Yes on 923 (5.99%). The `carclaims` sample distributed with Angoss KnowledgeSEEKER, used in many fraud-detection papers (e.g. Phua et al. 2004). |
-| `claims.csv` | Derived by `scripts/prepare_carclaims.py`: bins decoded into snake_case levels, columns renamed, an id (`claim_id` = the source's PolicyNumber, 1-15,420), and the outcome `fraud_found`. The dataset the pipeline reads. |
+| `raw/carclaims.csv` | The raw file, unmodified (SHA-256 `a9ff2d9b…f6403bf6ace2d6`), from https://raw.githubusercontent.com/Rashmi-77/Vehicle-Insurance-Fraud-Detection/main/carclaims.csv (also on Kaggle as "Vehicle Claim Fraud Detection"). 15,420 vehicle-insurance claims from 1994-96, 33 columns, no missing values, `FraudFound` = Yes on 923 (5.99%). The `carclaims` sample distributed with Angoss KnowledgeSEEKER, used in many fraud-detection papers (e.g. Phua et al. 2004). |
+| `claims.csv` | Derived by `scripts/data/prepare_carclaims.py`: bins decoded into snake_case levels, columns renamed, an id (`claim_id` = the source's PolicyNumber, 1-15,420), and the outcome `fraud_found`. The dataset the pipeline reads. |
 
 There is **no synthetic or semi-synthetic twin** of this dataset, and the pipeline's numbers on it are not validated against anything. See "What this data can and cannot support".
 

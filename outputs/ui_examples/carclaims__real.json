@@ -15,7 +15,7 @@
   "sensitive_attribute": "female",
   "observational": true,
   "entity_noun_plural": "claims",
-  "built": "2026-10-04"
+  "built": "2026-10-06"
  },
  "result": {
   "domain_id": "carclaims",
@@ -101,14 +101,18 @@
      "fraud_found"
     ]
    ],
-   "algorithm": "pc"
+   "algorithm": "pc",
+   "warnings": []
   },
   "effect_estimates": [
    {
     "treatment": "police_report_filed",
     "outcome": "fraud_found",
-    "ate": -0.02479440637154825,
+    "ate": -0.024794406371548533,
     "estimator": "backdoor.linear_regression",
+    "std_error": 0.011519799229170655,
+    "ci_low": -0.04737457427309666,
+    "ci_high": -0.0022142384700000427,
     "refuter": "permutation_placebo",
     "refutation_passed": true,
     "refutation_p_value": 0.019801980198019802,
@@ -129,8 +133,11 @@
    {
     "treatment": "agent_internal",
     "outcome": "fraud_found",
-    "ate": -0.009915252508769207,
+    "ate": -0.009915252508769151,
     "estimator": "backdoor.linear_regression",
+    "std_error": 0.01502877713221022,
+    "ci_low": -0.039373431792045256,
+    "ci_high": 0.019542926774507197,
     "refuter": "permutation_placebo",
     "refutation_passed": false,
     "refutation_p_value": 0.5346534653465347,
@@ -151,8 +158,11 @@
    {
     "treatment": "deductible_100usd",
     "outcome": "fraud_found",
-    "ate": 0.009242014065164228,
+    "ate": 0.009242014065164176,
     "estimator": "backdoor.linear_regression",
+    "std_error": 0.004284310156705091,
+    "ci_low": 0.0008442598373177776,
+    "ci_high": 0.0176397682930106,
     "refuter": "permutation_placebo",
     "refutation_passed": true,
     "refutation_p_value": 0.04950495049504951,
@@ -177,7 +187,7 @@
     "outcome": "fraud_found",
     "meta_learner": "t_learner (causalml.BaseTRegressor)",
     "mean_cate": -0.02611205448321443,
-    "description": "If claims below the police_report_filed threshold were shifted to match those above it, mean predicted fraud found would change by -0.0261",
+    "description": "Across all claims, being at or above the police_report_filed threshold rather than below it goes with a difference of -0.0261 in mean predicted fraud found (an association in observational data)",
     "cate_std": 0.06898208216727475,
     "subgroups": [],
     "extreme_propensity_share": null
@@ -187,9 +197,10 @@
    {
     "id": "require_police_report",
     "target_variable": "police_report_filed",
-    "expected_effect": 0.02479440637154825,
+    "expected_effect": 0.024794406371548533,
     "cost": 50.0,
-    "roi": 0.000495888127430965,
+    "roi": 0.0004958881274309706,
+    "recommended": true,
     "fairness_ratio": 0.6895471720988502,
     "fairness_pass": false,
     "rank": 1
@@ -197,9 +208,10 @@
    {
     "id": "sell_through_internal_agents",
     "target_variable": "agent_internal",
-    "expected_effect": 0.009915252508769207,
+    "expected_effect": 0.009915252508769151,
     "cost": 80.0,
-    "roi": 0.00012394065635961508,
+    "roi": 0.0001239406563596144,
+    "recommended": true,
     "fairness_ratio": 0.6895471720988502,
     "fairness_pass": false,
     "rank": 2
@@ -207,16 +219,17 @@
    {
     "id": "raise_deductible_by_100",
     "target_variable": "deductible_100usd",
-    "expected_effect": -0.009242014065164228,
+    "expected_effect": -0.009242014065164176,
     "cost": 30.0,
-    "roi": -0.0003080671355054743,
+    "roi": -0.00030806713550547254,
+    "recommended": false,
     "fairness_ratio": 0.6895471720988502,
     "fairness_pass": false,
     "rank": 3
    }
   ],
   "explanation": {
-   "narrative": "Associations with fraud found in observational data (not proven causes), ranked by estimated effect size:\n- police_report_filed: ATE=-0.0248 (backdoor.linear_regression)\n- agent_internal: ATE=-0.0099 (backdoor.linear_regression) -- placebo check FAILED (permutation p=0.535): no evidence of an effect beyond noise\n- deductible_100usd: ATE=+0.0092 (backdoor.linear_regression)\nSHAP attribution agrees 'fault_policy_holder' carries the most predictive weight.\n- If claims below the police_report_filed threshold were shifted to match those above it, mean predicted fraud found would change by -0.0261\nRecommended action: 'require_police_report' (ROI=0.000496, cost=$50) -- FAIRNESS FLAG: population-level disparity detected (group ratio 0.69)",
+   "narrative": "Associations with fraud found in observational data (not proven causes), ranked by estimated effect size:\n- police_report_filed: ATE=-0.0248 (backdoor.linear_regression)\n- agent_internal: ATE=-0.0099 (backdoor.linear_regression) -- placebo check FAILED (permutation p=0.535): no evidence of an effect beyond noise\n- deductible_100usd: ATE=+0.0092 (backdoor.linear_regression)\nSHAP attribution agrees 'fault_policy_holder' carries the most predictive weight.\n- Across all claims, being at or above the police_report_filed threshold rather than below it goes with a difference of -0.0261 in mean predicted fraud found (an association in observational data)\nRecommended action: 'require_police_report' (ROI=0.000496, cost=$50) -- FAIRNESS FLAG: population-level disparity detected (group ratio 0.69)",
    "shap_summary": {
     "female": 0.037689180627794576,
     "deductible_100usd": 0.04237225235277042,

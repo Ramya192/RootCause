@@ -3,7 +3,7 @@
 Source: Jones, Molitor & Reif (2019), "What do Workplace Wellness Programs do?
 Evidence from the Illinois Workplace Wellness Study", QJE. CC0 public-use data,
 https://github.com/reifjulian/illinois-wellness-data (file data/csv/firm_admin.csv,
-kept next to the output as firm_admin.csv). Its terms forbid using it to investigate
+kept in raw/ as firm_admin.csv). Its terms forbid using it to investigate
 specific research subjects.
 
 The study randomized 4,834 enrolled employees (3,300 treated, 1,534 control) to a
@@ -21,7 +21,7 @@ sick leave after Aug 2016, terminated_0717, promotions): adjusting for those wou
 the estimate. The salary/title columns are entirely censored in the public file. The
 six public files cannot be linked to each other, so only firm_admin is used.
 
-    python scripts/prepare_illinois_wellness.py
+    python scripts/data/prepare_illinois_wellness.py
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ from pathlib import Path
 
 import pandas as pd
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = REPO_ROOT / "data" / "illinois_wellness"
 
 TREATMENT = "treat"
@@ -55,11 +55,11 @@ def prepare(raw: pd.DataFrame) -> pd.DataFrame:
 
 
 def main() -> None:
-    source = DATA_DIR / "firm_admin.csv"
+    source = DATA_DIR / "raw" / "firm_admin.csv"
     if not source.exists():
         sys.exit(
             f"{source} not found. Download data/csv/firm_admin.csv from "
-            "https://github.com/reifjulian/illinois-wellness-data and save it there."
+            "https://github.com/reifjulian/illinois-wellness-data and save it in that raw/ folder."
         )
     out = prepare(pd.read_csv(source))
     path = DATA_DIR / "wellness.csv"

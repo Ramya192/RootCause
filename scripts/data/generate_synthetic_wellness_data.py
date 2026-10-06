@@ -5,7 +5,7 @@ The data-generating process lives in causal_engine/evaluation/scms.py (`illinois
 which is also what the evaluation harness intervenes on to compute the true effect, so the
 CSV and its ground truth cannot drift apart (tests/test_evaluation_scm.py checks this).
 
-    python scripts/generate_synthetic_wellness_data.py
+    python scripts/data/generate_synthetic_wellness_data.py
 """
 
 from __future__ import annotations
@@ -15,8 +15,8 @@ from pathlib import Path
 
 import pandas as pd
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT))  # so `python scripts/...` finds the causal_engine package
+REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT))  # so `python scripts/<group>/<script>.py` finds the causal_engine package
 
 from causal_engine.evaluation.scms import (  # noqa: E402
     WELLNESS_N_ROWS,
@@ -24,7 +24,7 @@ from causal_engine.evaluation.scms import (  # noqa: E402
     illinois_wellness_scm,
 )
 
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
+sys.path.insert(0, str(REPO_ROOT / "scripts" / "data"))
 from prepare_illinois_wellness import COLUMNS  # noqa: E402  (same columns, same order as the real file)
 
 

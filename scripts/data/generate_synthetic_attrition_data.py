@@ -24,8 +24,8 @@ from pathlib import Path
 
 import pandas as pd
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT))  # so `python scripts/...` finds the causal_engine package
+REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT))  # so `python scripts/<group>/<script>.py` finds the causal_engine package
 
 from causal_engine.evaluation.scms import N_ROWS, SEED, attrition_scm  # noqa: E402
 

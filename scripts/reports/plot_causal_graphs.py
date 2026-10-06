@@ -1,8 +1,8 @@
-"""Draw the Stage 3 causal graph for each domain's dataset into docs/figures/.
+"""Draw the Stage 3 causal graph for each domain's dataset into outputs/figures/.
 
-    python scripts/plot_causal_graphs.py                       # every domain, its default dataset, PC
-    python scripts/plot_causal_graphs.py --algorithm ges       # same with GES
-    python scripts/plot_causal_graphs.py --domain carclaims --dataset real
+    python scripts/reports/plot_causal_graphs.py                       # every domain, its default dataset, PC
+    python scripts/reports/plot_causal_graphs.py --algorithm ges       # same with GES
+    python scripts/reports/plot_causal_graphs.py --domain carclaims --dataset real
 
 Runs Stages 1-3 only (ingestion, encoding, discovery), so it is fast. The graph is what the
 algorithm found on that dataset and, on real data, is descriptive: there is no true graph to
@@ -15,7 +15,7 @@ import argparse
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
 from causal_engine.pipeline import causal_discovery, ingestion, preprocessing, runner  # noqa: E402
@@ -28,7 +28,7 @@ def main() -> int:
     parser.add_argument("--domain", action="append", help="only this domain id (repeatable)")
     parser.add_argument("--dataset", help="dataset kind (default: each domain's default_dataset)")
     parser.add_argument("--algorithm", choices=causal_discovery.ALGORITHMS, default="pc")
-    parser.add_argument("--out", type=Path, default=REPO_ROOT / "docs" / "figures")
+    parser.add_argument("--out", type=Path, default=REPO_ROOT / "outputs" / "figures")
     parser.add_argument("--dot", action="store_true", help="also write Graphviz DOT files")
     args = parser.parse_args()
 

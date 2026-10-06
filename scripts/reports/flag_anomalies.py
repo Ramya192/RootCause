@@ -1,7 +1,7 @@
 """List the records a domain's causal model explains least (causal anomaly flagging).
 
-    python scripts/flag_anomalies.py --domain carclaims            # top 15 on the default dataset
-    python scripts/flag_anomalies.py --domain german_credit --top 25 --algorithm ges
+    python scripts/reports/flag_anomalies.py --domain carclaims            # top 15 on the default dataset
+    python scripts/reports/flag_anomalies.py --domain german_credit --top 25 --algorithm ges
 
 Runs Stages 1-3 (ingestion, encoding, discovery), fits each variable's mechanism given its parents in
 the discovered graph, and prints the records with the largest total surprise, the variable to look at
@@ -19,7 +19,7 @@ import argparse
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
 from causal_engine.pipeline import anomalies, causal_discovery, ingestion, preprocessing, runner  # noqa: E402

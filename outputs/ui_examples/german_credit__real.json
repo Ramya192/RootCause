@@ -15,7 +15,7 @@
   "sensitive_attribute": "young",
   "observational": true,
   "entity_noun_plural": "applicants",
-  "built": "2026-10-04"
+  "built": "2026-10-06"
  },
  "result": {
   "domain_id": "german_credit",
@@ -77,14 +77,18 @@
      "employment_since"
     ]
    ],
-   "algorithm": "pc"
+   "algorithm": "pc",
+   "warnings": []
   },
   "effect_estimates": [
    {
     "treatment": "duration_months",
     "outcome": "default",
-    "ate": 0.004723733749421782,
+    "ate": 0.004723733749421838,
     "estimator": "backdoor.linear_regression",
+    "std_error": 0.0014975731583572668,
+    "ci_low": 0.0017848312821939737,
+    "ci_high": 0.007662636216649723,
     "refuter": "permutation_placebo",
     "refutation_passed": true,
     "refutation_p_value": 0.009900990099009901,
@@ -105,8 +109,11 @@
    {
     "treatment": "credit_amount_kdm",
     "outcome": "default",
-    "ate": 0.015873716181788344,
+    "ate": 0.0158737161817884,
     "estimator": "backdoor.linear_regression",
+    "std_error": 0.007061177812721555,
+    "ci_low": 0.002016554827410538,
+    "ci_high": 0.02973087753616651,
     "refuter": "permutation_placebo",
     "refutation_passed": true,
     "refutation_p_value": 0.009900990099009901,
@@ -127,8 +134,11 @@
    {
     "treatment": "installment_rate",
     "outcome": "default",
-    "ate": 0.04262925694217873,
+    "ate": 0.04262925694217862,
     "estimator": "backdoor.linear_regression",
+    "std_error": 0.013168740327529621,
+    "ci_low": 0.01678635022147258,
+    "ci_high": 0.0684721636628847,
     "refuter": "permutation_placebo",
     "refutation_passed": true,
     "refutation_p_value": 0.009900990099009901,
@@ -153,7 +163,7 @@
     "outcome": "default",
     "meta_learner": "t_learner (causalml.BaseTRegressor)",
     "mean_cate": 0.05514110587032681,
-    "description": "If applicants below the duration_months threshold were shifted to match those above it, mean predicted default would change by +0.0551",
+    "description": "Across all applicants, being at or above the duration_months threshold rather than below it goes with a difference of +0.0551 in mean predicted default (an association in observational data)",
     "cate_std": 0.19688135170133242,
     "subgroups": [],
     "extreme_propensity_share": null
@@ -163,9 +173,10 @@
    {
     "id": "lower_installment_burden",
     "target_variable": "installment_rate",
-    "expected_effect": 0.04262925694217873,
+    "expected_effect": 0.04262925694217862,
     "cost": 100.0,
-    "roi": 0.0004262925694217873,
+    "roi": 0.0004262925694217862,
+    "recommended": true,
     "fairness_ratio": 0.6860010402419525,
     "fairness_pass": false,
     "rank": 1
@@ -173,9 +184,10 @@
    {
     "id": "shorten_loan_term",
     "target_variable": "duration_months",
-    "expected_effect": 0.028342402496530694,
+    "expected_effect": 0.028342402496531027,
     "cost": 130.0,
-    "roi": 0.0002180184807425438,
+    "roi": 0.00021801848074254636,
+    "recommended": true,
     "fairness_ratio": 0.6860010402419525,
     "fairness_pass": false,
     "rank": 2
@@ -183,16 +195,17 @@
    {
     "id": "cap_credit_amount",
     "target_variable": "credit_amount_kdm",
-    "expected_effect": 0.015873716181788344,
+    "expected_effect": 0.0158737161817884,
     "cost": 140.0,
-    "roi": 0.00011338368701277388,
+    "roi": 0.00011338368701277429,
+    "recommended": true,
     "fairness_ratio": 0.6860010402419525,
     "fairness_pass": false,
     "rank": 3
    }
   ],
   "explanation": {
-   "narrative": "Associations with default in observational data (not proven causes), ranked by estimated effect size:\n- installment_rate: ATE=+0.0426 (backdoor.linear_regression)\n- credit_amount_kdm: ATE=+0.0159 (backdoor.linear_regression)\n- duration_months: ATE=+0.0047 (backdoor.linear_regression)\nSHAP attribution agrees 'checking_status__lt_0' carries the most predictive weight.\n- If applicants below the duration_months threshold were shifted to match those above it, mean predicted default would change by +0.0551\nRecommended action: 'lower_installment_burden' (ROI=0.000426, cost=$100) -- FAIRNESS FLAG: population-level disparity detected (group ratio 0.69)",
+   "narrative": "Associations with default in observational data (not proven causes), ranked by estimated effect size:\n- installment_rate: ATE=+0.0426 (backdoor.linear_regression)\n- credit_amount_kdm: ATE=+0.0159 (backdoor.linear_regression)\n- duration_months: ATE=+0.0047 (backdoor.linear_regression)\nSHAP attribution agrees 'checking_status__lt_0' carries the most predictive weight.\n- Across all applicants, being at or above the duration_months threshold rather than below it goes with a difference of +0.0551 in mean predicted default (an association in observational data)\nRecommended action: 'lower_installment_burden' (ROI=0.000426, cost=$100) -- FAIRNESS FLAG: population-level disparity detected (group ratio 0.69)",
    "shap_summary": {
     "duration_months": 0.35579233198833854,
     "credit_amount_kdm": 0.2621463498955679,

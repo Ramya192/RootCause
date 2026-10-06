@@ -4,9 +4,9 @@ Needs OPENAI_API_KEY (read from the environment or .env) to exercise the AutoGen
 single-call tiers; without one both are skipped and the template is used. Costs a few
 cents at most: the AutoGen chain is exactly three model turns.
 
-    PYTHONPATH=. .venv/Scripts/python.exe scripts/explain_tiers.py --domain german_credit
-    PYTHONPATH=. .venv/Scripts/python.exe scripts/explain_tiers.py --domain carclaims --repeat 5
-    PYTHONPATH=. .venv/Scripts/python.exe scripts/explain_tiers.py --domain carclaims --repeat 10 --compare
+    PYTHONPATH=. .venv/Scripts/python.exe scripts/reports/explain_tiers.py --domain german_credit
+    PYTHONPATH=. .venv/Scripts/python.exe scripts/reports/explain_tiers.py --domain carclaims --repeat 5
+    PYTHONPATH=. .venv/Scripts/python.exe scripts/reports/explain_tiers.py --domain carclaims --repeat 10 --compare
 
 `--compare` runs each LLM tier ON ITS OWN (the other is switched off, the template stays as the
 last resort) and counts how often its text passed the grounding check, so the tiers can be

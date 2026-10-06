@@ -5,9 +5,9 @@ Same columns as the real data/german_credit/credit.csv. The data-generating proc
 causal_engine/evaluation/scms.py (`german_credit_semi_synthetic_scm`), which is also what the
 evaluation harness intervenes on to compute the true effects, so the CSV and its ground truth
 cannot drift apart (tests/test_evaluation_credit.py checks this). Needs credit.csv, which
-scripts/prepare_german_credit.py builds from the raw UCI file.
+scripts/data/prepare_german_credit.py builds from the raw UCI file.
 
-    python scripts/generate_semi_synthetic_credit_data.py
+    python scripts/data/generate_semi_synthetic_credit_data.py
 """
 
 from __future__ import annotations
@@ -17,8 +17,8 @@ from pathlib import Path
 
 import pandas as pd
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT))  # so `python scripts/...` finds the causal_engine package
+REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT))  # so `python scripts/<group>/<script>.py` finds the causal_engine package
 
 from causal_engine.evaluation.scms import (  # noqa: E402
     CREDIT_ID_COLUMN,
@@ -27,7 +27,7 @@ from causal_engine.evaluation.scms import (  # noqa: E402
     german_credit_semi_synthetic_scm,
 )
 
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
+sys.path.insert(0, str(REPO_ROOT / "scripts" / "data"))
 from prepare_german_credit import COLUMNS  # noqa: E402  (same columns, same order as the real file)
 
 

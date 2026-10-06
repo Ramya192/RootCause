@@ -15,7 +15,7 @@
   "sensitive_attribute": "gender",
   "observational": false,
   "entity_noun_plural": "employees",
-  "built": "2026-10-04",
+  "built": "2026-10-06",
   "truth": {
    "edges": [
     [
@@ -88,7 +88,8 @@
      "burnout"
     ]
    ],
-   "algorithm": "pc"
+   "algorithm": "pc",
+   "warnings": []
   },
   "effect_estimates": [
    {
@@ -96,6 +97,9 @@
     "outcome": "attrition",
     "ate": -0.1286417985615826,
     "estimator": "backdoor.linear_regression",
+    "std_error": 0.010776312951612122,
+    "ci_low": -0.1497757864191478,
+    "ci_high": -0.10750781070401778,
     "refuter": "permutation_placebo",
     "refutation_passed": true,
     "refutation_p_value": 0.009900990099009901,
@@ -118,6 +122,9 @@
     "outcome": "attrition",
     "ate": -0.1351765837127778,
     "estimator": "backdoor.linear_regression",
+    "std_error": 0.010799191915360854,
+    "ci_low": -0.1563554406961957,
+    "ci_high": -0.11399772672935929,
     "refuter": "permutation_placebo",
     "refutation_passed": true,
     "refutation_p_value": 0.009900990099009901,
@@ -140,6 +147,9 @@
     "outcome": "attrition",
     "ate": 0.11888094089854495,
     "estimator": "backdoor.linear_regression",
+    "std_error": 0.01074781538898678,
+    "ci_low": 0.09780284109334081,
+    "ci_high": 0.13995904070374957,
     "refuter": "permutation_placebo",
     "refutation_passed": true,
     "refutation_p_value": 0.009900990099009901,
@@ -164,7 +174,7 @@
     "outcome": "attrition",
     "meta_learner": "t_learner (causalml.BaseTRegressor)",
     "mean_cate": -0.17868158092103104,
-    "description": "If employees below the job_satisfaction threshold were shifted to match those above it, mean predicted attrition would change by -0.1787",
+    "description": "Across all employees, being at or above the job_satisfaction threshold rather than below it is estimated to change mean predicted attrition by -0.1787",
     "cate_std": 0.03921056993811567,
     "subgroups": [],
     "extreme_propensity_share": null
@@ -177,6 +187,7 @@
     "expected_effect": 0.1351765837127778,
     "cost": 15000.0,
     "roi": 9.01177224751852e-06,
+    "recommended": true,
     "fairness_ratio": 0.9993501729378472,
     "fairness_pass": true,
     "rank": 1
@@ -187,6 +198,7 @@
     "expected_effect": 0.11888094089854495,
     "cost": 20000.0,
     "roi": 5.944047044927248e-06,
+    "recommended": true,
     "fairness_ratio": 0.9993501729378472,
     "fairness_pass": true,
     "rank": 2
@@ -197,13 +209,14 @@
     "expected_effect": 0.1286417985615826,
     "cost": 40000.0,
     "roi": 3.2160449640395647e-06,
+    "recommended": true,
     "fairness_ratio": 0.9993501729378472,
     "fairness_pass": true,
     "rank": 3
    }
   ],
   "explanation": {
-   "narrative": "Top-line drivers of attrition, ranked by causal effect size:\n- manager_quality: ATE=-0.1352 (backdoor.linear_regression)\n- compensation: ATE=-0.1286 (backdoor.linear_regression)\n- workload: ATE=+0.1189 (backdoor.linear_regression)\nSHAP attribution agrees 'job_satisfaction' carries the most predictive weight.\n- If employees below the job_satisfaction threshold were shifted to match those above it, mean predicted attrition would change by -0.1787\nRecommended action: 'manager_training' (ROI=9.01e-06, cost=$15,000) -- fairness check passed",
+   "narrative": "Top-line drivers of attrition, ranked by causal effect size:\n- manager_quality: ATE=-0.1352 (backdoor.linear_regression)\n- compensation: ATE=-0.1286 (backdoor.linear_regression)\n- workload: ATE=+0.1189 (backdoor.linear_regression)\nSHAP attribution agrees 'job_satisfaction' carries the most predictive weight.\n- Across all employees, being at or above the job_satisfaction threshold rather than below it is estimated to change mean predicted attrition by -0.1787\nRecommended action: 'manager_training' (ROI=9.01e-06, cost=$15,000) -- fairness check passed",
    "shap_summary": {
     "compensation": 0.13738857987406497,
     "manager_quality": 0.10491454465158578,

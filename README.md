@@ -1,5 +1,11 @@
 # RootCause
 
+[![CI](https://github.com/Ramya192/RootCause/actions/workflows/ci.yml/badge.svg)](https://github.com/Ramya192/RootCause/actions/workflows/ci.yml) **[Live demo](https://rootcause-142084972380.us-central1.run.app)**
+
+**Start here (2 minutes):** open the live demo, press *Start live analysis*, read the four charts under "At a glance", then the Freddie Mac 2019 finding.
+
+**Why it matters:** a lender asking "which lever would cut defaults, and how sure are we?" or an HR team asking "what would keep people from leaving?" needs more than a risk score. It needs the lever, the size of the effect and an honest confidence.
+
 A domain-agnostic **causal decision intelligence** pipeline (the CDIA architecture). Instead of predicting *who* will churn, it asks *why* — learns the causal structure of a domain, estimates how much each lever actually moves the outcome, and ranks interventions by ROI with a fairness check.
 
 The pipeline runs end to end on five domains: a semi-synthetic employee-attrition dataset with a known ground-truth causal graph (so every stage can be checked against the truth), a real randomized workplace-wellness trial paired with a synthetic mirror of it, real German Credit and carclaims data, and Freddie Mac mortgage loans across seven origination years (see Evaluation).
@@ -11,9 +17,9 @@ The pipeline runs end to end on five domains: a semi-synthetic employee-attritio
 | 1 | Ingestion | Loads and validates the domain CSV | pandas |
 | 2 | Feature store | Writes/materializes causal feature vectors and reads them back through the online-serving path | Feast (parquet offline, SQLite online) |
 | 3 | Causal discovery | Learns the DAG with PC, GES or LiNGAM, seeded with required/forbidden domain-prior edges; NetworkX plot | causal-learn, lingam, NetworkX |
-| 4 | Effect estimation | ATE per treatment with a permutation-placebo check and an unmeasured-confounder sensitivity analysis | DoWhy, statsmodels |
+| 4 | Effect estimation | ATE per treatment with a 95% interval, a permutation-placebo check and an unmeasured-confounder sensitivity analysis | DoWhy, statsmodels |
 | 5 | Counterfactuals | "What if satisfaction were high?" via a T-, S-, X-, R- or doubly-robust learner | CausalML |
-| 6 | Interventions | Ranks candidate actions by ROI; four-fifths-rule fairness check | fairlearn |
+| 6 | Interventions | Ranks candidate actions by ROI (an action that would raise the outcome is listed as not recommended); four-fifths-rule fairness check | fairlearn |
 | 7 | Explanation | SHAP attribution plus a plain-language narrative written by the first of three tiers (AutoGen team, single LLM call, template) whose text passes a grounding check | SHAP, AutoGen, OpenAI |
 
 Each stage is a pure function in `causal_engine/pipeline/`. They can run directly, or behind a **CrewAI hierarchical crew** (`causal_engine/agents/crew.py`): 7 specialized agents plus a manager LLM that delegates one stage to each.
@@ -38,7 +44,7 @@ Ranked interventions: manager training, then workload rebalancing, then compensa
 .venv/Scripts/python.exe -m causal_engine.evaluation --replicates 10
 ```
 
-Runs Stages 1–6 on every dataset in every domain config and writes `docs/evaluation/results.md` and `results.json`. Where the data comes from a known structural causal model (`causal_engine/evaluation/scms.py`) it scores against ground truth, including a **true ATE computed by simulating `do()` on that model**, not just its direct coefficients. `--replicates K` also re-runs on K fresh draws, since one draw is an anecdote. Real data has no model to redraw from, so there K means K bootstrap resamples of the file, which measure stability rather than accuracy. The report also has a Stage 6 fairness section: the sample's four-fifths verdict against the simulated population's true ratio.
+Runs Stages 1–6 on every dataset in every domain config and writes `outputs/evaluation/results.md` and `results.json`. Where the data comes from a known structural causal model (`causal_engine/evaluation/scms.py`) it scores against ground truth, including a **true ATE computed by simulating `do()` on that model**, not just its direct coefficients. `--replicates K` also re-runs on K fresh draws, since one draw is an anecdote. Real data has no model to redraw from, so there K means K bootstrap resamples of the file, which measure stability rather than accuracy. The report also has a Stage 6 fairness section: the sample's four-fifths verdict against the simulated population's true ratio.
 
 Over 10 fresh 2,000-row draws of the attrition model (mean ± sd):
 
@@ -139,13 +145,13 @@ None of the three is a result. The signs are mostly stable, but the internal-age
 ### Real mortgage data: Freddie Mac
 
 ```bash
-.venv/Scripts/python.exe scripts/prepare_freddie_mac.py     # raw samples -> one row per loan, about 20 s
-.venv/Scripts/python.exe -m causal_engine.evaluation --domain freddie_mac --replicates 10 --out docs/evaluation/freddie_mac
+.venv/Scripts/python.exe scripts/data/prepare_freddie_mac.py     # raw samples -> one row per loan, about 20 s
+.venv/Scripts/python.exe -m causal_engine.evaluation --domain freddie_mac --replicates 10 --out outputs/evaluation/freddie_mac
 ```
 
 The `freddie_mac` domain uses Freddie Mac's Single-Family Loan-Level Dataset, in its published 50,000-loan random samples of fixed-rate loans, for seven origination years: 2007, 2008, 2010 and 2011 (the main table below) and 2016, 2019 and 2022 (recent vintages and a pandemic stress case, after the table). The data are a registered download, so **nothing from them is committed** (`data/freddie_mac/*` is gitignored; see `data/freddie_mac/README.md` for how to get and prepare them, and for where the files differ from the user guide). The outcome is serious delinquency within 36 months: ever 90+ days late, REO, short sale or charge-off. The three levers are the interest rate, the loan-to-value ratio and the debt-to-income ratio, each adjusted for the other 24 encoded loan columns (credit score, loan size and term, mortgage insurance, purpose, occupancy, channel, property type, origination quarter and so on).
 
-Choices that matter, all made in `scripts/prepare_freddie_mac.py`:
+Choices that matter, all made in `scripts/data/prepare_freddie_mac.py`:
 
 - **One dataset kind per vintage (`real_2007` ... `real_2011`), never pooled.** 2007-08 are crisis-era loans and 2010-11 a calm, refinance-heavy period, so pooling would make the vintage a confounder of every lever.
 - **Loans that left before month 36 without defaulting are excluded, not counted as good.** That removes 33-49% of each sample (almost all prepaid or refinanced), so the default rates below describe loans that *stayed*, not lifetime default probabilities, and the survivors are a selected group.
@@ -158,7 +164,7 @@ Choices that matter, all made in `scripts/prepare_freddie_mac.py`:
 | 2010 | 30,466 | 2.2% | +0.028 (0.003) | +0.0004 | -0.0001, **placebo passed 3/10** | lower rate 6, cap LTV 4 | 0.63 (10/10) |
 | 2011 | 33,210 | 1.6% | +0.010 (0.002) | +0.0004 | -0.0000, **placebo passed 0/10** | cap LTV, 10 | 0.88 (2/10) |
 
-Effects are changes in the probability of serious delinquency. Full tables: `docs/evaluation/freddie_mac/results.md`. One pipeline run on about 30,000 loans takes about 65 seconds.
+Effects are changes in the probability of serious delinquency. Full tables: `outputs/evaluation/freddie_mac/results.md`. One pipeline run on about 30,000 loans takes about 65 seconds.
 
 **How to read it, honestly:**
 
@@ -172,9 +178,9 @@ Effects are changes in the probability of serious delinquency. Full tables: `doc
 **Recent vintages and a pandemic stress case (2016, 2019, 2022).** Three more samples, each run under two outcomes (`real_2016`, `real_2016_relief_adjusted`, and the same for 2019 and 2022):
 
 ```bash
-.venv/Scripts/python.exe scripts/prepare_freddie_mac.py 2016 2019 2022                    # 90+ day outcome
-.venv/Scripts/python.exe scripts/prepare_freddie_mac.py --relief-adjusted 2016 2019 2022  # relief-adjusted outcome
-.venv/Scripts/python.exe -m causal_engine.evaluation --domain freddie_mac --dataset real_2019 --dataset real_2019_relief_adjusted --replicates 10 --out docs/evaluation/freddie_mac_recent   # about 80 minutes for all six
+.venv/Scripts/python.exe scripts/data/prepare_freddie_mac.py 2016 2019 2022                    # 90+ day outcome
+.venv/Scripts/python.exe scripts/data/prepare_freddie_mac.py --relief-adjusted 2016 2019 2022  # relief-adjusted outcome
+.venv/Scripts/python.exe -m causal_engine.evaluation --domain freddie_mac --dataset real_2019 --dataset real_2019_relief_adjusted --replicates 10 --out outputs/evaluation/freddie_mac_recent   # about 80 minutes for all six
 ```
 
 - **Why 2022 is the newest year.** The data end 2026-03-31 and the outcome needs 36 months of loan age, so only loans originated through about early 2023 can be labelled. 2023 is only partly observable and 2024-2026 not at all; a shorter horizon would be a different outcome. Loan age does not advance for every month a delinquent loan misses, so 24 non-defaulted 2022 loans were still active with age under 36 and are dropped and counted (a loan that had already defaulted keeps its known outcome).
@@ -201,23 +207,23 @@ Effects are changes in the probability of serious delinquency. Full tables: `doc
 | 2022, 90+ day | +0.0088 (0.0018) | +0.0002 (8/10) | +0.0003 (9/10) | cap DTI 8, cap LTV 2 | 0.83 (2/10) |
 | 2022, relief-adjusted | +0.0040 (0.0014) | +0.0000 (3/10) | +0.0001 (3/10) | cap DTI 5, lower rate 4, cap LTV 1 | 0.87 (0/10) |
 
-Effects are changes in the probability of the outcome. Full tables: `docs/evaluation/freddie_mac_recent/results.md`.
+Effects are changes in the probability of the outcome. Full tables: `outputs/evaluation/freddie_mac_recent/results.md`.
 
 **How to read it, honestly:**
 
 - **The conclusions depend on how the outcome is defined, and the pipeline cannot tell you that.** In 2019 the interest-rate estimate is 7 times smaller under the relief-adjusted outcome (+0.062 to +0.009), the LTV and DTI effects go from placebo-passing in 10 of 10 resamples to indistinguishable from zero, the top-ranked intervention flips from "cap DTI" (10 of 10) to "lower the interest rate" (10 of 10), and the first-time-buyer verdict flips from rarely flagged (1 of 10) to mostly flagged (9 of 10). A plausible reason (not tested here) is that under the 90+ day outcome the pipeline is partly measuring who took up forbearance, not who failed to pay. The fix is in data preparation, not in a pipeline stage: Stage 4 never sees the relief flags.
 - **This is a sensitivity result, not proof that the pipeline "handles" a pandemic.** The relief-adjusted 2019 outcome has only 194 events in 19,654 loans, so its LTV and DTI estimates are noisy (the sign matches the full sample in 8 of 10 resamples) and I would not read anything into their size. The adjusted outcome is better than the 90+ day one for 2019, not a verified loss definition.
 - **2016 and 2022 are affected less but not trivially.** About half of their 90+ day delinquencies are relief-flagged, the rate estimate shrinks 2-3 times under the adjusted outcome (+0.0154 to +0.0053, +0.0088 to +0.0040), and the 2022 ranking becomes unstable (5, 4 and 1 of 10 across three interventions). The four older vintages are barely affected (2-8% relief-flagged), so their results above stand.
-- **The discovered graphs agree with that (descriptive only).** On the 2019 90+ day data the PC graph has six variables pointing at the outcome (credit score, loan size, LTV, DTI, mortgage insurance and the rate); on the relief-adjusted data it has two (credit score and the rate). Figures: `docs/figures/freddie_mac_real_2019_pc.png` and `docs/figures/freddie_mac_real_2019_relief_adjusted_pc.png` (and 2016, 2022). There is no true graph to compare them with, and in the figures a long edge can pass behind a node.
+- **The discovered graphs agree with that (descriptive only).** On the 2019 90+ day data the PC graph has six variables pointing at the outcome (credit score, loan size, LTV, DTI, mortgage insurance and the rate); on the relief-adjusted data it has two (credit score and the rate). Figures: `outputs/figures/freddie_mac_real_2019_pc.png` and `outputs/figures/freddie_mac_real_2019_relief_adjusted_pc.png` (and 2016, 2022). There is no true graph to compare them with, and in the figures a long edge can pass behind a node.
 - **All of these remain confounded associations.** There is no ground truth for the real vintages (see the twin below for the one place there is), lenders set the rate from risk, and the placebo test and the sensitivity analysis cannot see that. The vintages are never pooled and their effect sizes are not comparable.
 
 **Data source and terms.** Freddie Mac's Single-Family Loan-Level Dataset, used under its dataset and website terms: analysis for personal or internal purposes, and noncommercial research results that cannot be used to recreate the data or identify anyone. This repository publishes only aggregates (the tables above, figures, code), no loan-level rows and no real loan identifiers, and is not affiliated with or endorsed by Freddie Mac. Details in `data/freddie_mac/README.md`.
 
-**Semi-synthetic twin, scored against a known answer.** `causal_engine/configs/freddie_mac.yaml` has a further dataset kind, `semi_synthetic`: the real 2007 loans' covariates with a *simulated* default, whose lever effects are planted (`causal_engine/evaluation/scms.py::freddie_mac_semi_synthetic_scm`, built by `scripts/generate_semi_synthetic_freddie_mac_data.py`, same idea as the German Credit twin). It keeps the real correlation between the rate and the borrower's credit score, but unlike the real data, here every driver of default *is* a recorded column, so there is no unmeasured confounding — this validates the method, not what actually causes default.
+**Semi-synthetic twin, scored against a known answer.** `causal_engine/configs/freddie_mac.yaml` has a further dataset kind, `semi_synthetic`: the real 2007 loans' covariates with a *simulated* default, whose lever effects are planted (`causal_engine/evaluation/scms.py::freddie_mac_semi_synthetic_scm`, built by `scripts/data/generate_semi_synthetic_freddie_mac_data.py`, same idea as the German Credit twin). It keeps the real correlation between the rate and the borrower's credit score, but unlike the real data, here every driver of default *is* a recorded column, so there is no unmeasured confounding — this validates the method, not what actually causes default.
 
 ```bash
-.venv/Scripts/python.exe scripts/generate_semi_synthetic_freddie_mac_data.py
-.venv/Scripts/python.exe -m causal_engine.evaluation --domain freddie_mac --dataset semi_synthetic --replicates 10 --out docs/evaluation/freddie_mac
+.venv/Scripts/python.exe scripts/data/generate_semi_synthetic_freddie_mac_data.py
+.venv/Scripts/python.exe -m causal_engine.evaluation --domain freddie_mac --dataset semi_synthetic --replicates 10 --out outputs/evaluation/freddie_mac
 ```
 
 | Treatment | True ATE (+1 shift) | Estimated ATE (10 replicates) | Bias |
@@ -226,7 +232,7 @@ Effects are changes in the probability of the outcome. Full tables: `docs/evalua
 | ltv | +0.0012 | +0.0007 ± 0.0001 | -0.0005 |
 | dti | +0.0019 | +0.0017 ± 0.0002 | -0.0002 |
 
-Placebo passes 10/10, the fairness verdict matches the true one 10/10 (ratio 0.880 estimated vs 0.876 true), and the pipeline's top-ranked intervention (lower the interest rate) matches the true ROI ranking in all 10 replicates. Full table: `docs/evaluation/freddie_mac/twin_results.md`. **Read this as: when the pipeline's assumptions hold (no unmeasured confounding), it recovers the planted effects to within about 13% for the rate and comes in low for LTV and DTI, whose true effects are tiny; it does not mean the real 2007-11 estimates above are unconfounded.**
+Placebo passes 10/10, the fairness verdict matches the true one 10/10 (ratio 0.880 estimated vs 0.876 true), and the pipeline's top-ranked intervention (lower the interest rate) matches the true ROI ranking in all 10 replicates. Full table: `outputs/evaluation/freddie_mac/twin_results.md`. **Read this as: when the pipeline's assumptions hold (no unmeasured confounding), it recovers the planted effects to within about 13% for the rate and comes in low for LTV and DTI, whose true effects are tiny; it does not mean the real 2007-11 estimates above are unconfounded.**
 
 ### Stress tests
 
@@ -234,7 +240,7 @@ Placebo passes 10/10, the fairness verdict matches the true one 10/10 (ratio 0.8
 .venv/Scripts/python.exe -m causal_engine.evaluation --stress
 ```
 
-The baseline data is easy (linear, independent root causes, no confounding), so scoring well on it proves little. `--stress` changes **one** thing at a time, runs 10 draws of each on the same seeds, and scores against the true effects simulated from that variant's model. Results are in `docs/evaluation/stress.md`.
+The baseline data is easy (linear, independent root causes, no confounding), so scoring well on it proves little. `--stress` changes **one** thing at a time, runs 10 draws of each on the same seeds, and scores against the true effects simulated from that variant's model. Results are in `outputs/evaluation/stress.md`.
 
 | What changed | What happened |
 |---|---|
@@ -255,7 +261,7 @@ What to take from this: the pipeline's own checks cannot see a hidden confounder
 
 Add `--workers 8` (to this or `--stress`) to run scenarios in parallel; results are identical and the full run takes about 80 seconds instead of ~10 minutes.
 
-"Isn't this just feature importance?" Same scenarios, same 10 draws, same true effects, but each draw is also analysed by three shortcuts: a regression of attrition on **every** column, a regression on the treatment alone, and a **SHAP** ranking (gradient-boosted model, mean |SHAP| of the variable each intervention moves, divided by cost). Results are in `docs/evaluation/baselines.md`.
+"Isn't this just feature importance?" Same scenarios, same 10 draws, same true effects, but each draw is also analysed by three shortcuts: a regression of attrition on **every** column, a regression on the treatment alone, and a **SHAP** ranking (gradient-boosted model, mean |SHAP| of the variable each intervention moves, divided by cost). Results are in `outputs/evaluation/baselines.md`.
 
 | Method | On the unmodified data (10 draws) | Where it breaks |
 |---|---|---|
@@ -301,7 +307,7 @@ Two things to take from it. The omitted-variable-bias formula is exact given the
 | DR | −0.031 | +0.046 | 10/10 |
 | **S** | **+0.002** | **+0.002** | **0/10** |
 
-The linear S-learner gives one coefficient for the treatment, so it reports the same effect for everyone (per-person sd exactly 0) and cannot see who is helped and who is harmed. With gradient boosting it sees the pattern in 8–10 of 10 resamples but shrinks it (S: −0.011 / +0.022). All learners put the average inside the trial's interval. **The simulated mirror cannot rank them on heterogeneity**: its planted effect is a constant on the logit scale, so the true subgroup effects are almost equal and the learner that reports one number for everyone scores best there; mirror bias and subgroup error mostly measure noise. The R-learner takes seconds where the others take a fraction of a second (cross-fitting). Full tables are in `docs/evaluation/learners.md`.
+The linear S-learner gives one coefficient for the treatment, so it reports the same effect for everyone (per-person sd exactly 0) and cannot see who is helped and who is harmed. With gradient boosting it sees the pattern in 8–10 of 10 resamples but shrinks it (S: −0.011 / +0.022). All learners put the average inside the trial's interval. **The simulated mirror cannot rank them on heterogeneity**: its planted effect is a constant on the logit scale, so the true subgroup effects are almost equal and the learner that reports one number for everyone scores best there; mirror bias and subgroup error mostly measure noise. The R-learner takes seconds where the others take a fraction of a second (cross-fitting). Full tables are in `outputs/evaluation/learners.md`.
 
 ### Causal discovery algorithms (Stage 3)
 
@@ -326,24 +332,24 @@ PC stays the default. GES matches it on the easy baseline but loses ground at sm
 ### Causal graph plots
 
 ```bash
-.venv/Scripts/python.exe scripts/plot_causal_graphs.py --dot      # every domain -> docs/figures/
+.venv/Scripts/python.exe scripts/reports/plot_causal_graphs.py --dot      # every domain -> outputs/figures/
 ```
 
 `causal_engine/utils/graph_plot.py` draws the Stage 3 graph as a layered DAG with NetworkX and matplotlib (no Graphviz binary needed): causes read top to bottom, treatments are blue, the outcome red, the sensitive attribute orange, dashed edges are domain priors (asserted, not discovered), and variables with no edges are listed under the figure. `to_dot` writes the same graph as Graphviz DOT, and `GET /jobs/{id}/graph` serves a finished job's graph (`?format=dot` for DOT).
 
-![Attrition causal graph found by PC](docs/figures/employee_attrition_synthetic_pc.png)
+![Attrition causal graph found by PC](outputs/figures/employee_attrition_synthetic_pc.png)
 
 ### Causal anomaly flagging
 
 ```bash
 .venv/Scripts/python.exe -m causal_engine.evaluation --anomalies          # simulated data, known graph
 .venv/Scripts/python.exe -m causal_engine.evaluation --anomalies-real     # real carclaims / German Credit / Freddie Mac 2007 covariates
-.venv/Scripts/python.exe scripts/flag_anomalies.py --domain carclaims # top records on real data
+.venv/Scripts/python.exe scripts/reports/flag_anomalies.py --domain carclaims # top records on real data
 ```
 
 `causal_engine/pipeline/anomalies.py` fits each variable's mechanism given its parents in the discovered graph and scores every record by how surprising its values are *given their causes* (centred negative log-likelihood, summed), naming the variable that breaks its mechanism most. The mechanism follows the variable's **type**: logistic for a binary variable, **multinomial logistic for a categorical or ordinal one** (a non-binary column with at most 12 distinct values, such as a deductible or an age band), linear-Gaussian for the rest. Variables with no parents in the graph are reported but **not scored** by default (`score_roots=True` includes them). Tested by corrupting 3% of records, either by swapping in another record's value (every value stays ordinary, so no single-variable check can see it) or by pushing it 3 sd away.
 
-**On real data the first version failed, and this is the fix.** It modelled every non-binary column as Gaussian, so on carclaims a 4-level deductible whose mode is one value looked like a continuous variable with a tiny sd: **100% of the 100 top-ranked claims were one deductible level** (a level held by 2% of claims). With type-aware mechanisms and roots not scored, the top of the list is varied, and each row carries the probability its causes gave the observed value (for example a claim flagged as fraud when its causes gave that a 0.1% chance). Measured in `docs/evaluation/anomalies_real.md`:
+**On real data the first version failed, and this is the fix.** It modelled every non-binary column as Gaussian, so on carclaims a 4-level deductible whose mode is one value looked like a continuous variable with a tiny sd: **100% of the 100 top-ranked claims were one deductible level** (a level held by 2% of claims). With type-aware mechanisms and roots not scored, the top of the list is varied, and each row carries the probability its causes gave the observed value (for example a claim flagged as fraud when its causes gave that a 0.1% chance). Measured in `outputs/evaluation/anomalies_real.md`:
 
 | carclaims, real covariates (top 100, no injection) | Earlier (Gaussian, roots scored) | Type-aware |
 |---|---|---|
@@ -372,15 +378,15 @@ On simulated data with a known graph (attrition, continuous variable corrupted, 
 | isolation forest | 0.56 | 0.90 | – |
 | marginal z-score | 0.52 | 0.94 | – |
 
-The honest reading: causal flagging now edges out Mahalanobis on swaps and on binary flips (attrition: 0.74 vs 0.68 and 0.65 vs 0.59), **but part of that edge is by construction**: faults are injected into non-root variables, which are exactly the ones now scored, so leaving the roots out removes noise from variables that were never corrupted. The cost shows in the `root` sections of `docs/evaluation/anomalies.md`: a corrupted root is visible only through its children, so a 3-sd shift in an attrition root scores AUC 0.96 and average precision 0.68 (0.99 and 0.87 with roots scored, matching Mahalanobis), and on the Illinois mirror a swapped root scores 0.52 against 0.56 with roots scored and 0.60 for Mahalanobis. On the Illinois mirror the causal detector is otherwise level with Mahalanobis (0.95 vs 0.93 on shifts). Its lasting contribution is **attribution** (which variable to look at); it clearly beats an isolation forest and single-variable checks. Flipping a **binary** variable to a value that was plausible anyway is nearly invisible to every method. A fault also makes its children look surprising, so the named variable is sometimes a child (the "or one of its children" column counts that). There are no labelled anomalies on any real dataset: nothing here is a claim about finding real fraud or credit anomalies, only about what the detector can see when a fault has a known form. Flagged means "not explained by this model" (a missing cause, a wrong functional form and a data-entry error look the same).
+The honest reading: causal flagging now edges out Mahalanobis on swaps and on binary flips (attrition: 0.74 vs 0.68 and 0.65 vs 0.59), **but part of that edge is by construction**: faults are injected into non-root variables, which are exactly the ones now scored, so leaving the roots out removes noise from variables that were never corrupted. The cost shows in the `root` sections of `outputs/evaluation/anomalies.md`: a corrupted root is visible only through its children, so a 3-sd shift in an attrition root scores AUC 0.96 and average precision 0.68 (0.99 and 0.87 with roots scored, matching Mahalanobis), and on the Illinois mirror a swapped root scores 0.52 against 0.56 with roots scored and 0.60 for Mahalanobis. On the Illinois mirror the causal detector is otherwise level with Mahalanobis (0.95 vs 0.93 on shifts). Its lasting contribution is **attribution** (which variable to look at); it clearly beats an isolation forest and single-variable checks. Flipping a **binary** variable to a value that was plausible anyway is nearly invisible to every method. A fault also makes its children look surprising, so the named variable is sometimes a child (the "or one of its children" column counts that). There are no labelled anomalies on any real dataset: nothing here is a claim about finding real fraud or credit anomalies, only about what the detector can see when a fault has a known form. Flagged means "not explained by this model" (a missing cause, a wrong functional form and a data-entry error look the same).
 
 **Freddie Mac 2007 (31,780 loans, 8 variables, 19 edges, faults injected as above, 5 draws).** Continuous variable pushed 3 sd: causal 0.93 AUC vs Mahalanobis 0.89, isolation forest 0.76, marginal z 0.86, and it names the corrupted variable 89% of the time (97% counting its children). Continuous value swapped: 0.58 vs 0.56 / 0.55 / 0.52, i.e. barely above chance for every detector. Binary flipped: causal 0.73, **below** Mahalanobis 0.74 and isolation forest 0.76. The real top-100 has no dominant (variable, value): the most common one is `ltv` = 13 at 4%, a value held by 0.1% of loans. So the attribution advantage holds here, the detection advantage only for large shifts.
 
 ### Stage 7 narrative tiers (AutoGen, single call, template)
 
 ```bash
-.venv/Scripts/python.exe scripts/explain_tiers.py --domain carclaims --repeat 5             # which tier wins, and why others lost
-.venv/Scripts/python.exe scripts/explain_tiers.py --domain carclaims --repeat 10 --compare  # each LLM tier on its own
+.venv/Scripts/python.exe scripts/reports/explain_tiers.py --domain carclaims --repeat 5             # which tier wins, and why others lost
+.venv/Scripts/python.exe scripts/reports/explain_tiers.py --domain carclaims --repeat 10 --compare  # each LLM tier on its own
 ```
 
 Stage 7 tries three writers over the same fact sheet (the effects, refutation results, counterfactual, top recommendation and fairness result from Stages 4-6) and keeps the **first whose text passes a programmatic check**:
@@ -406,7 +412,7 @@ That is 37/40 against 34/40, **not a difference 40 runs can resolve**, and each 
 
 **Observational domains (`explanation.observational: true`).** The first live Freddie Mac narratives passed every check yet called the interest rate "a key factor driving" delinquency, which is causal language on a confounded association. For the three real observational domains (`freddie_mac`, `german_credit`, `carclaims`) the check now also requires the text to say the findings are associations (or observational, correlational, unmeasured, "not proven causes") and rejects causal wording ("drives", "causes", "leads to", "key factor", "main driver", "contributing to"; a negated mention such as "not proven causes" is allowed). The instruction is also given to the writers and the template header changes from "Top-line drivers ... causal effect size" to "Associations with ... (not proven causes)". Re-run live on Freddie Mac 2007 (3 runs, `gpt-4o-mini`): all three used "associated with" and added an observational caveat. The check is keyword-based, so it can be fooled by a rephrasing, and it still does not catch a wrong meaning built from correct numbers in general. One such case is now covered: two of those three runs called the ROI of 0.0000391 "favorable" when it is tiny, so for every domain, when the recommended action's ROI (benefit / cost) is below 1 the check rejects favorable wording ("favorable", "worthwhile", "good investment", "pays off", "cost-effective", ...; negations such as "not worthwhile" are allowed) and the writers are told to say the benefit is smaller than the cost. This is a keyword rule for that one known failure, not a general meaning check; it was not re-run live.
 
-AutoGen is optional (`autogen-agentchat`, `autogen-ext[openai]`); without it, tier 1 is skipped. Its `autogen-core` pins `protobuf~=5.29`, but CrewAI and Feast need `protobuf>=6.33.5` (a 5.x runtime fails on their generated code), so it lives in `requirements-autogen.txt`, not `requirements.txt` (listed together, pip's resolver falls back to a placeholder `autogen-agentchat 0.0.2`). Install it after the main requirements: `pip install -r requirements-autogen.txt` and then `pip install --no-deps "protobuf>=6.33.5,<7"`. `pip check` will report autogen-core's pin; it is harmless for local chats, which do not use its gRPC runtime.
+AutoGen is optional (`autogen-agentchat`, `autogen-ext[openai]`); without it, tier 1 is skipped. Its `autogen-core` pins `protobuf~=5.29`, but CrewAI and Feast need `protobuf>=6.33.5` (a 5.x runtime fails on their generated code), so it lives in `requirements-autogen.txt`, not `requirements.txt` (listed together, pip's resolver falls back to a placeholder `autogen-agentchat 0.0.2`). Install it after the main requirements: `pip install -r requirements-autogen.txt` and then `pip install --no-deps "protobuf==6.33.6"`. `pip check` will report autogen-core's pin; it is harmless for local chats, which do not use its gRPC runtime.
 
 ## Setup
 
@@ -416,12 +422,12 @@ Requires **Python 3.11** (causal-learn / DoWhy / CausalML wheel support lags on 
 python -m venv .venv
 .venv/Scripts/python.exe -m pip install --upgrade pip      # Windows; use .venv/bin/python on macOS/Linux
 .venv/Scripts/python.exe -m pip install -r requirements-dev.txt
-python scripts/generate_synthetic_attrition_data.py         # only needed to regenerate the dataset
+python scripts/data/generate_synthetic_attrition_data.py         # only needed to regenerate the dataset
 ```
 
 The dataset is already in `data/employee_attrition/`. The generator rewrites `attrition.csv` and `ground_truth.json`.
 
-Copy `.env.example` to `.env` and set `OPENAI_API_KEY` if you want an LLM-written narrative (AutoGen team or single call) or the crew. Without it, the direct pipeline still runs and uses the template narrative.
+Copy `.env.example` to `.env` and set `OPENAI_API_KEY` if you want an LLM-written narrative (AutoGen team or single call). Without it, the direct pipeline still runs and uses the template narrative. The crew additionally needs `ROOTCAUSE_ALLOW_CREW=1` (see Orchestration modes). Direct dependencies are pinned in `requirements*.txt` to the versions the suite passes on; bump them deliberately.
 
 ## Run the API
 
@@ -433,16 +439,16 @@ Interactive docs at <http://localhost:8000/docs>. A browser UI is served at <htt
 
 **Live demo:** https://rootcause-142084972380.us-central1.run.app (Google Cloud Run; the first visit after idle takes a few seconds to wake, and a live run takes about a minute. Freddie Mac runs are not offered there because that data is not redistributable, but its saved examples are.)
 
-**Web UI.** The root page explains the idea, the seven stages and how each result is validated, and lets you open a saved example instantly or run the pipeline live on any bundled dataset. A result is shown as a plain-language answer, a clickable causal graph (optionally overlaid with the true graph where one is known), the interventions compared with their fairness flags, and an evidence panel per lever (effect, noise check, how strong a hidden confounder would have to be). The saved examples are real pipeline outputs in 
-ootcause/api/static/samples/ (aggregates only, no row-level data); rebuild them with `python scripts/build_ui_samples.py`. A link like `/#example=german_credit__real&node=duration_months` opens one directly. The UI only runs the datasets named in the domain configs; it does not accept uploads.
+**Web UI.** The root page explains the idea, the seven stages and how each result is validated, and lets you open a saved example instantly or run the pipeline live on any bundled dataset. A result is shown as a plain-language answer, a clickable causal graph (optionally overlaid with the true graph where one is known), the interventions compared with their fairness flags, and an evidence panel per lever (effect, noise check, how strong a hidden confounder would have to be). The saved examples are real pipeline outputs in `outputs/ui_examples/` (aggregates only, no row-level data); rebuild them with `python scripts/reports/build_ui_examples.py`. A link like `/#example=german_credit__real&node=duration_months` opens one directly. The UI only runs the datasets named in the domain configs; it does not accept uploads.
 
 | Method | Path | |
 |--------|------|-|
 | GET | `/health` | Liveness |
 | GET | `/domains` | Configured domains, whether each can run, and its available `datasets` |
-| POST | `/domains/{id}/analyze` | Queue a run → `202` + job. Body (all optional): `{"orchestration": "direct" \| "crew", "dataset": "real" \| "synthetic" \| "semi_synthetic"}`. `dataset` defaults to the domain's `default_dataset`; `400` if the domain doesn't have it, `409` if it's configured but the file is missing |
+| POST | `/domains/{id}/analyze` | Queue a run → `202` + job. Body (all optional): `{"orchestration": "direct" \| "crew", "dataset": "real" \| "synthetic" \| "semi_synthetic"}`. `dataset` defaults to the domain's `default_dataset`; `400` if the domain doesn't have it, `409` if it's configured but the file is missing, `429` if too many runs are queued, `403` for `crew` unless the server enables it |
 | GET | `/jobs` | Recent jobs (no results) |
 | GET | `/jobs/{job_id}` | Status; carries the full result once `succeeded` |
+| GET | `/jobs/{job_id}/graph` | The discovered causal graph as a PNG (`?format=dot` for Graphviz DOT); `409` until the job has succeeded |
 
 ```bash
 curl -X POST localhost:8000/domains/employee_attrition/analyze
@@ -454,13 +460,15 @@ curl localhost:8000/jobs/ed1c…
 **Orchestration modes**
 
 - `direct` — calls the stage functions in order. Takes seconds.
-- `crew` — the hierarchical CrewAI run. Takes several minutes and makes many paid OpenAI calls per run, far more than the analysis itself needs (manager/delegation overhead). Returns `400` immediately if `OPENAI_API_KEY` isn't set.
+- `crew` — the hierarchical CrewAI run. Takes several minutes and makes many paid OpenAI calls per run, far more than the analysis itself needs (manager/delegation overhead). It is refused (`403`) unless the server sets `ROOTCAUSE_ALLOW_CREW=1`, and `400` if `OPENAI_API_KEY` isn't set. A run that finishes with any of the seven stages missing is reported as an error naming them.
 
 **Limits to know about**
 
 - Runs are executed one at a time. Stage 2 keeps one Feast store per (domain, dataset), so different pairs wouldn't collide, but two runs of the same pair would corrupt each other.
 - Jobs are kept in memory only (newest 100), so they're lost on restart.
 - No auth and no upload: the API only analyzes the files named under `ingestion.datasets` in the domain config.
+- At most `ROOTCAUSE_MAX_PENDING` runs (default 3) may be queued or running at once; further submissions get `429` with a `Retry-After` header. Set it higher for a private deployment.
+- `orchestration: "crew"` is off by default (each run makes many paid calls); turn it on only on a private server.
 
 ## Tests
 
@@ -468,7 +476,7 @@ curl localhost:8000/jobs/ed1c…
 .venv/Scripts/python.exe -m pytest
 ```
 
-454 tests, about 6 minutes (on a clean checkout, as in CI and the Docker image, 436 run and 18 skip: the 18 Freddie Mac tests (13 on the real files, 5 on the semi-synthetic twin) skip when that registered download is absent; the outcome/censoring rules and the twin's planted-effect constants are still tested on a small fake file in the real layout). They run real code on the real dataset (Feast round-trip, DoWhy, causal-learn) with no mocks, and assert the pipeline still recovers the ground-truth graph and effect signs. They never call OpenAI. The crew is only checked for wiring; a full crew run is deliberately not in the suite because of its cost.
+467 tests, about 9 minutes (on a clean checkout, as in CI and the Docker image, 449 run and 18 skip: the 18 Freddie Mac tests (13 on the real files, 5 on the semi-synthetic twin) skip when that registered download is absent; the outcome/censoring rules and the twin's planted-effect constants are still tested on a small fake file in the real layout). They run real code on the real dataset (Feast round-trip, DoWhy, causal-learn) with no mocks, and assert the pipeline still recovers the ground-truth graph and effect signs. They never call OpenAI. The crew is only checked for wiring; a full crew run is deliberately not in the suite because of its cost.
 
 ## Docker and CI
 
@@ -478,7 +486,7 @@ docker run --rm -p 8000:8000 -e OPENAI_API_KEY=... rootcause          # the API,
 docker run --rm rootcause python -m pytest -q                          # the test suite inside the image
 ```
 
-The image is `python:3.11-slim` plus `requirements-dev.txt` and AutoGen, installed last with protobuf put back to 6.x (see `requirements-autogen.txt`). `.dockerignore` keeps the build context small: `data/freddie_mac` (over 1 GB, gitignored), `docs`, `.env` and the virtualenv. The key is read from the environment and never baked in.
+The image is `python:3.11-slim` plus `requirements-dev.txt` and AutoGen, installed last with protobuf put back to 6.x (see `requirements-autogen.txt`). `.dockerignore` keeps the build context small: `data/freddie_mac` (over 1 GB, gitignored), `outputs/evaluation`, `outputs/figures`, `.env` and the virtualenv (`outputs/ui_examples` stays: the web page loads it). The container runs as an unprivileged user and has a health check for local `docker run`. The key is read from the environment and never baked in.
 
 `.github/workflows/ci.yml` runs on every push to `main` and every pull request: a `test` job (Python 3.11 on Ubuntu, `pip install -r requirements-dev.txt`, `pytest`) and a `docker` job that builds the image without pushing it. It needs no secrets, because the suite never calls OpenAI. It runs on a clean checkout, so the tests that need files that are not in git skip themselves: the Freddie Mac real-file tests (the download is gitignored; its rule tests run on a small fake file). Everything else, including the AutoGen-narrative tests, runs.
 
@@ -492,26 +500,30 @@ A domain whose real data is a randomized trial can be listed in `causal_engine/e
 
 Optional keys: `causal_discovery.algorithm` (`pc`, `ges`, `lingam`; anything else raises) and `lingam_threshold`; `effect_estimation.sensitivity` (on); `counterfactuals.meta_learner` (`t_learner`, `s_learner`, `x_learner`, `r_learner`, `dr_learner`), `base_learner` (`linear`, `gbm`), `propensity` (`estimated`, `constant`) and `propensity_clip`.
 
-One thing isn't validated and fails silently: each name in `effect_estimation.treatments` must match an `interventions.candidates[].target_variable`. If they don't line up, Stage 6 returns an empty recommendation list rather than an error.
+One thing isn't validated and fails silently: each name in `effect_estimation.treatments` must match an `interventions.candidates[].target_variable`. If they don't line up, Stage 6 skips that candidate and logs a warning rather than raising an error.
 
 ## Layout
 
 ```
-causal_engine/
-  api/          FastAPI app + in-memory job store
-  agents/       CrewAI hierarchical orchestration
-  pipeline/     the 7 stage functions + runner (direct / crew); sensitivity, anomalies and narrative (Stage 7 tiers and grounding check) helpers
-  evaluation/   SCMs with true-effect simulation, metrics, harness, stress scenarios, naive baselines, and the extra checks (sensitivity, learners, anomalies)
-  feature_repo/ Feast definitions and local stores
-  models/       Pydantic contracts passed between stages
-  configs/      one YAML per domain
-  utils/        config loader, causal graph plotting
-scripts/        data preparation (incl. prepare_freddie_mac.py), synthetic data generators, graph plots, anomaly listing, Stage 7 tier comparison (explain_tiers.py)
-docs/           evaluation reports (docs/evaluation) and causal graph figures (docs/figures)
-data/           datasets + ground truth (data/freddie_mac holds only a README in git: the raw and prepared loan files are gitignored)
+causal_engine/         the package
+  api/                 FastAPI app, in-memory job store, browser page (ui.html)
+  agents/              CrewAI hierarchical orchestration
+  pipeline/            the 7 stage functions + runner (direct / crew); sensitivity, anomalies and narrative helpers
+  evaluation/          SCMs with true-effect simulation, metrics, harness, stress scenarios, baselines, extra checks
+  feature_repo/        Feast definitions (local state is written under feature_repo/data, gitignored)
+  models/              Pydantic contracts passed between stages
+  configs/             one YAML per domain
+  utils/               config loader, causal graph plotting
+data/<domain>/         prepared datasets the pipeline reads, ground truth, a README per domain
+data/<domain>/raw/     the files exactly as downloaded (data/freddie_mac holds only a README in git: its data is gitignored)
+scripts/data/          prepare_* (raw -> prepared) and generate_* (synthetic and semi-synthetic data)
+scripts/reports/       build_ui_examples.py, plot_causal_graphs.py, flag_anomalies.py, explain_tiers.py
+outputs/evaluation/    reports written by `python -m causal_engine.evaluation`
+outputs/figures/       causal graph figures
+outputs/ui_examples/   saved results the web page opens instantly (served at /examples)
 tests/
 ```
 
 ## Scope
 
-Deliberately not built: GAN-based counterfactuals (V2), audio ingestion, a semi-synthetic insurance or mortgage dataset (carclaims and Freddie Mac are real and observational only), ChromaDB agent memory, and human-in-the-loop review. Time-series forecasting (RNN/LSTM) and drift detection are out of scope: none of the datasets here is a time series or a stream.
+Deliberately not built: GAN-based counterfactuals (V2), audio ingestion, PDF and image ingestion (dropped: no free dataset pairs real photos or documents with the claim records they belong to, and pairing them synthetically would plant the table's information into the pixels), a semi-synthetic insurance or mortgage dataset (carclaims and Freddie Mac are real and observational only), ChromaDB agent memory, and human-in-the-loop review. Time-series forecasting (RNN/LSTM) and drift detection are out of scope: none of the datasets here is a time series or a stream.

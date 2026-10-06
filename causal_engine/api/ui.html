@@ -177,6 +177,8 @@
   <div class="eyebrow hero-eyebrow">Causal decision intelligence</div>
   <h1>From &ldquo;what happened?&rdquo; to &ldquo;what would happen if we acted?&rdquo;</h1>
   <p class="lede">Dashboards and prediction models show what is <em>associated</em> with an outcome. RootCause goes further: it learns the causal structure of a domain, estimates what each lever really moves, and ranks interventions by return and fairness, saying how far to trust each answer.</p>
+  <p class="lede" style="margin-top:-6px"><b>Why it matters:</b> a lender asking &ldquo;which lever would cut defaults, and how sure are we?&rdquo; or an HR team asking &ldquo;what would keep people from leaving?&rdquo; needs more than a risk score. It needs the lever, the size of the effect and an honest confidence.</p>
+  <p class="meta" style="margin:-4px 0 14px;font-size:14px"><b>Start here (2 minutes):</b> 1) press <i>Start live analysis</i> below, 2) read the four charts under <a href="#glance">At a glance</a>, 3) see the one real finding in <a href="#finding">Freddie Mac 2019</a>.</p>
   <div class="runstrip">
     <div class="rs-text"><b>Visiting from my resume?</b> Start a live analysis (about 30&ndash;90 s) and read on while it runs. A pill in the top bar tells you when the result is ready.</div>
     <div class="rs-ctl">
@@ -189,7 +191,7 @@
     <div class="card"><div class="stat">0.97 / 0.93</div><div class="cap">Edge precision / recall of the discovered causal graph, on 10 simulated datasets where the true graph is known.</div></div>
     <div class="card"><div class="stat">0.007</div><div class="cap">Mean absolute error of the estimated effects, where the true effects are about &plusmn;0.12&ndash;0.14. The top-ranked intervention was the true best 10 of 10 times.</div></div>
     <div class="card"><div class="stat">+0.0020</div><div class="cap">Estimate on a real randomized trial (a workplace wellness programme) versus the trial's own +0.0022 [&minus;0.022, +0.027]. Both say: no effect.</div></div>
-    <div class="card"><div class="stat">453</div><div class="cap">Automated tests, run on every push in CI and in a clean Linux container. No test calls a paid API.</div></div>
+    <div class="card"><div class="stat">467</div><div class="cap">Automated tests, run on every push in CI and in a clean Linux container. No test calls a paid API.</div></div>
   </div>
   <div class="tags">
     <span class="pill acc">Causal discovery (PC, GES, LiNGAM)</span><span class="pill acc">DoWhy &middot; CausalML</span><span class="pill acc">Sensitivity analysis</span>
@@ -308,13 +310,14 @@
 <section id="skills">
   <div class="eyebrow">What this project demonstrates</div>
   <h2>Skills and depth</h2>
+  <p class="meta" style="font-size:14px">Transferable beyond causal inference: a production API with a job queue, evaluation against known ground truth, guardrails on LLM output, honest uncertainty, CI/CD and a cloud deploy. Relevant to applied science, data science, decision-support and experimentation roles.</p>
   <div class="grid g3 skills" style="margin-top:14px">
     <div class="card"><h3>Causal inference</h3><ul><li>Backdoor adjustment with refutation (DoWhy)</li><li>T/S/X/R/doubly-robust learners (CausalML)</li><li>Cinelli&ndash;Hazlett sensitivity, cross-checked against PySensemakr</li></ul></div>
     <div class="card"><h3>Causal discovery</h3><ul><li>PC, GES and DirectLiNGAM, benchmarked</li><li>Domain priors as required / forbidden edges</li><li>Stress tests: small n, non-Gaussian, nonlinear</li></ul></div>
     <div class="card"><h3>Evaluation rigour</h3><ul><li>Truth-scored simulations, true ATE by simulating <code>do()</code></li><li>Real-trial benchmark; bootstrap stability</li><li>Negative results written up, not hidden</li></ul></div>
     <div class="card"><h3>LLM and agents</h3><ul><li>CrewAI hierarchical crew (7 agents + manager)</li><li>AutoGen analyst &rarr; skeptic &rarr; writer</li><li>Programmatic grounding check on every number</li></ul></div>
     <div class="card"><h3>Data and ML engineering</h3><ul><li>Feast offline/online feature store</li><li>Five real and simulated domains from one config format</li></ul></div>
-    <div class="card"><h3>Software engineering</h3><ul><li>FastAPI service with async job queue</li><li>Docker image and GitHub Actions CI</li><li>454 tests; bugs found by CI fixed with regression tests</li></ul></div>
+    <div class="card"><h3>Software engineering</h3><ul><li>FastAPI service with async job queue</li><li>Docker image and GitHub Actions CI</li><li>467 tests; bugs found by CI fixed with regression tests</li></ul></div>
   </div>
 </section>
 
@@ -338,11 +341,11 @@ let samples = [], domains = [], current = null, selected = null, showTruth = fal
 /* ---------- loading ---------- */
 async function loadSamples() {
   try {
-    samples = await (await fetch("/static/samples/index.json")).json();
+    samples = await (await fetch("/examples/index.json")).json();
   } catch (e) { samples = []; }
   $("samples").innerHTML = samples.length ? samples.map((m, i) =>
     `<button class="opt" data-i="${i}" aria-pressed="false"><b>${esc(m.label)}</b><span>${esc(m.domain_name)} &middot; ${esc(m.dataset)}${m.n_rows ? " &middot; " + m.n_rows.toLocaleString() + " " + esc(m.entity_noun_plural) : ""}</span></button>`
-  ).join("") : `<div class="note">Saved examples are not available. Run <code>python scripts/build_ui_samples.py</code>.</div>`;
+  ).join("") : `<div class="note">Saved examples are not available. Run <code>python scripts/reports/build_ui_examples.py</code>.</div>`;
   document.querySelectorAll(".opt").forEach(b => b.onclick = () => openSample(+b.dataset.i));
   renderFeatured();
   // deep link: #example=german_credit__real opens that saved example on load
@@ -357,7 +360,7 @@ async function loadSamples() {
   }
 }
 async function getSample(m) {
-  return (await fetch(`/static/samples/${m.domain_id}__${m.dataset}.json`)).json();
+  return (await fetch(`/examples/${m.domain_id}__${m.dataset}.json`)).json();
 }
 async function openSample(i) {
   document.querySelectorAll(".opt").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.i === i)));
@@ -594,6 +597,7 @@ function drawEvidence() {
   if (est) {
     const o = nice(meta.outcome), s = est.sensitivity;
     h += `<h4>Estimated effect</h4><p><b>${sgn(est.ate)}</b> change in ${esc(o)} for each +1 in ${esc(nice(n))} (${pp(est.ate)} of ${esc(o)} rate), holding the adjustment set fixed.</p>`;
+    if (est.ci_low != null) h += `<p>95% interval from the regression: <b>${sgn(est.ci_low)}</b> to <b>${sgn(est.ci_high)}</b>. It reflects sampling noise only, not hidden confounding.</p>`;
     if (meta.truth && meta.truth.effects && n in meta.truth.effects)
       h += `<p>Simulated truth: <b>${sgn(meta.truth.effects[n])}</b>. Estimation error ${f(Math.abs(est.ate - meta.truth.effects[n]), 4)}.</p>`;
     h += `<h4>Noise check (permutation placebo)</h4>`;
@@ -628,8 +632,9 @@ function drawInterventions() {
     const fair = r.fairness_ratio == null ? "" : r.fairness_pass
       ? `<span class="pill good" title="lowest group outcome rate / highest, must be at least 0.80">fairness OK (${esc(s)}): ${f(r.fairness_ratio, 2)}</span>`
       : `<span class="pill bad" title="lowest group outcome rate / highest, must be at least 0.80">fairness flag (${esc(s)}): ${f(r.fairness_ratio, 2)}</span>`;
+    const skip = r.recommended === false ? ` <span class="pill bad" title="its estimated effect would raise ${esc(nice(meta.outcome))}">not recommended</span>` : "";
     return `<div class="row" data-v="${esc(r.target_variable)}">
-      <div class="nm">#${r.rank} ${esc(nice(r.id))}<small>acts on ${esc(nice(r.target_variable))} &middot; cost ${r.cost.toLocaleString()} &middot; ROI ${f(r.roi, 6)}</small></div>
+      <div class="nm">#${r.rank} ${esc(nice(r.id))}${skip}<small>acts on ${esc(nice(r.target_variable))} &middot; cost ${r.cost.toLocaleString()} &middot; ROI ${f(r.roi, 6)}</small></div>
       <div><div class="track"><div class="fill ${neg ? "neg" : ""}" style="left:0;width:${w}%"></div></div><div style="margin-top:4px">${fair}</div></div>
       <div class="val"><b>${neg ? "+" : "−"}${Math.abs(r.expected_effect * 100).toFixed(2)} pts</b><br><span class="note">${neg ? "raises" : "lowers"} ${esc(nice(meta.outcome))}</span></div></div>`;
   }).join("") + `<div class="note">Costs are illustrative inputs set in each domain's config, not measured. A fairness flag means the groups' outcome rates differ by more than the four-fifths rule allows; it is a prompt to look closer, not a verdict.</div>`;
@@ -682,14 +687,14 @@ async function renderGlance() {
          <div class="note">Bar length = size of effect; the sign is in the label (negative = lowers attrition).</div>`;
   } else $("chA").innerHTML = `<div class="note">Build the samples to show this chart.</div>`;
 
-  // B: discovery algorithms, baseline row of the README benchmark (docs/evaluation/stress*.md)
+  // B: discovery algorithms, baseline row of the README benchmark (outputs/evaluation/stress*.md)
   const algs = [["PC (default)", .97, .93], ["GES", .96, .95], ["LiNGAM", .51, .92]];
   $("chB").innerHTML = algs.map(([n, p, r]) => `<div class="hb" style="align-items:start"><span>${n}</span><div class="pair">
       <div class="wrap2"><div class="bar" style="width:${p * 100}%;background:${p < .6 ? "var(--bad)" : "var(--accent)"}"><b>precision ${p.toFixed(2)}</b></div></div>
       <div class="wrap2"><div class="bar" style="width:${r * 100}%;background:#8aa8ee"><b>recall ${r.toFixed(2)}</b></div></div></div></div>`).join("")
     + `<div class="note">LiNGAM's precision falls to 0.51 once a binary outcome is in the data, so PC stays the default. On mixed data (Illinois mirror) GES drops to 0.60 / 0.29 vs PC 0.94 / 0.77.</div>`;
 
-  // C: interest-rate effect by vintage (docs/evaluation/freddie_mac*/results.md, full-sample estimates)
+  // C: interest-rate effect by vintage (outputs/evaluation/freddie_mac*/results.md, full-sample estimates)
   const v = [["2007", .1174, null], ["2008", .0991, null], ["2010", .0280, null], ["2011", .0102, null],
              ["2016", .0154, .0053], ["2019", .0623, .0090], ["2022", .0088, .0040]];
   const W = 460, H = 190, L = 8, B = 28, T = 16, bw = 22, gap = (W - L - v.length * bw * 2) / v.length, top = .12;

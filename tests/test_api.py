@@ -320,6 +320,15 @@ def test_the_page_offers_the_agent_crew_only_when_the_server_reports_it(fake_cli
     assert 'orchestration = "direct"' in page  # the default stays the free direct run
 
 
+def test_the_page_resets_the_crew_box_and_tells_the_truth_about_the_narrative_tier(fake_client):
+    page = fake_client.get("/").text
+
+    assert '$("crew").checked = false' in page  # one crew run must not silently make the next one a crew run
+    assert 'id="runNote"' in page and "c.llm_narrative" in page  # the note changes when the server has a key
+    # the dashed legend entry is only drawn when a node carries that style ("young" is derived, not a node)
+    assert "nodes.includes(meta.sensitive_attribute)" in page
+
+
 def test_the_page_and_saved_examples_are_revalidated_so_a_redeploy_is_not_hidden_by_a_stale_cache(fake_client):
     assert fake_client.get("/").headers["cache-control"] == "no-cache"
     index = fake_client.get("/examples/index.json")

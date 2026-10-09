@@ -192,7 +192,7 @@
     <div class="card"><div class="stat">0.97 / 0.93</div><div class="cap">Edge precision / recall of the discovered causal graph, on 10 simulated datasets where the true graph is known.</div></div>
     <div class="card"><div class="stat">0.007</div><div class="cap">Mean absolute error of the estimated effects, where the true effects are about &plusmn;0.12&ndash;0.14. The top-ranked intervention was the true best 10 of 10 times.</div></div>
     <div class="card"><div class="stat">+0.0020</div><div class="cap">Estimate on a real randomized trial (a workplace wellness programme) versus the trial's own +0.0022 [&minus;0.022, +0.027]. Both say: no effect.</div></div>
-    <div class="card"><div class="stat">550</div><div class="cap">Automated tests, run on every push in CI and in a clean Linux container. No test calls a paid API.</div></div>
+    <div class="card"><div class="stat">551</div><div class="cap">Automated tests, run on every push in CI and in a clean Linux container. No test calls a paid API.</div></div>
   </div>
   <div class="tags">
     <span class="pill acc">Causal discovery (PC, GES, LiNGAM)</span><span class="pill acc">DoWhy &middot; CausalML</span><span class="pill acc">Sensitivity analysis</span>
@@ -281,7 +281,7 @@
     </div>
     <div class="bar-anim" id="barAnim"><i></i></div>
     <div id="status"></div>
-    <div class="note">Runs the full pipeline on the server (the &ldquo;direct&rdquo; orchestration, no paid API needed; unless the server has a model key, the narrative then comes from the template tier). The optional agent crew runs the same seven stage functions behind seven agents and a manager model: it takes a few minutes, the numbers are the same, and the agents' own commentary is not shown because it is not checked.</div>
+    <div class="note" id="runNote">Runs the full pipeline on the server (the &ldquo;direct&rdquo; orchestration, no paid API needed; unless the server has a model key, the narrative then comes from the template tier). The optional agent crew runs the same seven stage functions behind seven agents and a manager model: it takes a few minutes, the numbers are the same, and the agents' own commentary is not shown because it is not checked.</div>
   </div>
 
   <div class="result" id="result" hidden></div>
@@ -319,7 +319,7 @@
     <div class="card"><h3>Evaluation rigour</h3><ul><li>Truth-scored simulations, true ATE by simulating <code>do()</code></li><li>Real-trial benchmark; bootstrap stability</li><li>Negative results written up, not hidden</li></ul></div>
     <div class="card"><h3>LLM and agents</h3><ul><li>CrewAI hierarchical crew (7 agents + manager)</li><li>AutoGen analyst &rarr; skeptic &rarr; writer</li><li>Programmatic grounding check on every number</li></ul></div>
     <div class="card"><h3>Data and ML engineering</h3><ul><li>Feast offline/online feature store</li><li>Five real and simulated domains from one config format</li></ul></div>
-    <div class="card"><h3>Software engineering</h3><ul><li>FastAPI service with async job queue</li><li>Docker image and GitHub Actions CI</li><li>550 tests; bugs found by CI fixed with regression tests</li></ul></div>
+    <div class="card"><h3>Software engineering</h3><ul><li>FastAPI service with async job queue</li><li>Docker image and GitHub Actions CI</li><li>551 tests; bugs found by CI fixed with regression tests</li></ul></div>
   </div>
 </section>
 
@@ -375,7 +375,11 @@ async function openSample(i) {
   show(s.meta, s.result, null);
 }
 async function loadCapabilities() {
-  try { $("crewOpt").hidden = !(await (await fetch("/capabilities")).json()).crew; } catch (e) { /* offer nothing extra */ }
+  try {
+    const c = await (await fetch("/capabilities")).json();
+    $("crewOpt").hidden = !c.crew;
+    if (c.llm_narrative) $("runNote").textContent = "Runs the full pipeline on the server. The narrative is written by a language-model team and accepted only after a programmatic check that every number matches the results; if that check fails, the deterministic template is used instead. The optional agent crew runs the same seven stage functions behind seven agents and a manager model: it takes a few minutes, the numbers are the same, and the agents' own commentary is not shown because it is not checked.";
+  } catch (e) { /* offer nothing extra */ }
 }
 async function loadDomains() {
   loadCapabilities();
@@ -441,7 +445,7 @@ async function runLive(domainId, dataset, scrollToResult, orchestration = "direc
     show(meta, job.result, job.id, scrollToResult);
     pill(scrollToResult ? "" : "Result ready · view ↓", scrollToResult ? "" : "done");
   } catch (e) { status("Error: " + e.message, true); pill("Run failed: " + e.message, "err"); }
-  finally { setBusy(false); }
+  finally { setBusy(false); if (orchestration === "crew") $("crew").checked = false; }
 }
 $("run").onclick = () => runLive($("domain").value, $("dataset").value, true, $("crew").checked ? "crew" : "direct");
 $("heroRun").onclick = () => {
@@ -569,7 +573,7 @@ function drawGraph() {
     el.onkeydown = ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); select(el.dataset.n); } };
   });
   const leg = [`<span><i style="background:var(--outcome)"></i>outcome</span>`, `<span><i style="background:var(--lever)"></i>lever (estimated)</span>`];
-  if (meta.sensitive_attribute) leg.push(`<span><i style="border:2px dashed var(--sens)"></i>fairness attribute</span>`);
+  if (nodes.includes(meta.sensitive_attribute)) leg.push(`<span><i style="border:2px dashed var(--sens)"></i>fairness attribute</span>`);
   if (truth) {
     const tp = edges.filter(x => x.st === "ok").length, fp = edges.filter(x => x.st === "spur").length, fn = edges.filter(x => x.st === "miss").length;
     leg.push(`<span><i style="background:var(--good)"></i>correct (${tp})</span>`, `<span><i style="background:#d07a00"></i>not in truth (${fp})</span>`, `<span><i style="background:var(--bad)"></i>missed (${fn})</span>`);

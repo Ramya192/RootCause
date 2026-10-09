@@ -6,13 +6,13 @@
 
 **Why it matters:** a lender asking "which lever would cut defaults, and how sure are we?" or an HR team asking "what would keep people from leaving?" needs more than a risk score. It needs the lever, the size of the effect and an honest confidence.
 
-A domain-agnostic **causal decision intelligence** pipeline (the CDIA architecture). Instead of predicting *who* will churn, it asks *why* — learns the causal structure of a domain, estimates how much each lever actually moves the outcome, and ranks interventions by ROI with a fairness check.
+A domain-agnostic **causal decision intelligence** pipeline (the CDIA architecture). Instead of predicting *who* will churn, it asks *why* — learns the causal structure of a domain, estimates how much each lever actually moves the outcome, and ranks interventions by ROI (return on investment) with a fairness check.
 
 The pipeline runs end to end on five domains: a semi-synthetic employee-attrition dataset with a known ground-truth causal graph (so every stage can be checked against the truth), a real randomized workplace-wellness trial paired with a synthetic mirror of it, real German Credit and carclaims data, and Freddie Mac mortgage loans across seven origination years (see Evaluation).
 
 ## Why not just feature importance?
 
-The levers a manager can pull (pay, management, workload) act on attrition through two mediators: job satisfaction and burnout. A model that conditions on every column, or a SHAP ranking, sees the mediators and misses the levers.
+The levers a manager can pull (pay, management, workload) act on attrition through two mediators: job satisfaction and burnout. A model that conditions on every column, or a SHAP (SHapley Additive exPlanations) ranking, sees the mediators and misses the levers.
 
 ![The true graph of the attrition simulation: three levers feed two mediators, which feed attrition](outputs/diagrams/why_mediators.svg)
 
@@ -47,7 +47,7 @@ A new domain is one YAML file: the variables, the prior edges, the levers with t
 | 3 | Causal discovery | Learns the DAG with PC, GES or LiNGAM, seeded with required/forbidden domain-prior edges; NetworkX plot | causal-learn, lingam, NetworkX |
 | 4 | Effect estimation | ATE per treatment with a 95% interval, a permutation-placebo check and an unmeasured-confounder sensitivity analysis | DoWhy, statsmodels |
 | 5 | Counterfactuals | "What if satisfaction were high?" via a T-, S-, X-, R- or doubly-robust learner | CausalML |
-| 6 | Interventions | Ranks candidate actions by ROI (an action that would raise the outcome is listed as not recommended); four-fifths-rule fairness check | fairlearn |
+| 6 | Interventions | Ranks candidate actions by ROI (an action that would raise the outcome, or whose effect failed its placebo check, is listed as not recommended); four-fifths-rule and equalized-odds fairness checks | fairlearn, scikit-learn |
 | 7 | Explanation | SHAP attribution plus a plain-language narrative written by the first of three tiers (AutoGen team, single LLM call, template) whose text passes a grounding check | SHAP, AutoGen, OpenAI |
 
 Each stage is a pure function in `causal_engine/pipeline/`. They can run directly, or behind a **CrewAI hierarchical crew** (`causal_engine/agents/crew.py`): 7 specialized agents plus a manager LLM that delegates one stage to each.
@@ -170,7 +170,7 @@ Duration and installment rate are recovered without visible bias. The credit-amo
 .venv/Scripts/python.exe -m causal_engine.evaluation --domain carclaims --replicates 10
 ```
 
-The `carclaims` domain uses a vendor sample of 15,420 vehicle-insurance claims from 1994-96 (923 with fraud found, 6.0%; see `data/carclaims/README.md`). Its provenance cannot be verified beyond the file's long use in the fraud-detection literature. It is **observational with no ground truth and no synthetic twin**, so like German Credit's real half the numbers below are stability checks, not validated effects, and the outcome is fraud *found*, which depends on investigation as well as on fraud. The three levers are a police report being on file, an internal sales agent and the deductible, each adjusted for every other claim column (33 encoded features, so 32 adjustment columns per lever). A full pipeline run takes about 2.5 minutes (15k rows, 32 adjustment columns), so the bootstrap is the slow part.
+The `carclaims` domain uses a vendor sample of 15,420 vehicle-insurance claims from 1994-96 (923 with fraud found, 6.0%; see `data/carclaims/README.md`). Its provenance cannot be verified beyond the file's long use in the fraud-detection literature. It is **observational with no ground truth and no synthetic twin**, so like German Credit's real half the numbers below are stability checks, not validated effects, and the outcome is fraud *found*, which depends on investigation as well as on fraud. The three levers are a police report being on file, an internal sales agent and the deductible, each adjusted for every other claim column (33 encoded features, so 32 adjustment columns per lever). A full pipeline run takes about 2.5 minutes (15k rows, 32 adjustment columns), so the bootstrap is the slow part. The graph is told what cannot run backwards in time (the claim details, fault and police report, cannot cause the policy details: base policy, vehicle price, deductible and agent); without this, PC drew those arrows backwards. An action whose effect fails its placebo check is shown as not recommended ("sell through internal agents" here).
 
 **10 bootstrap resamples of the 15,420 claims** (effects are on P(fraud found); per $100 for the deductible):
 
@@ -275,6 +275,12 @@ Effects are changes in the probability of the outcome. Full tables: `outputs/eva
 | dti | +0.0019 | +0.0017 ± 0.0002 | -0.0002 |
 
 Placebo passes 10/10, the fairness verdict matches the true one 10/10 (ratio 0.880 estimated vs 0.876 true), and the pipeline's top-ranked intervention (lower the interest rate) matches the true ROI ranking in all 10 replicates. Full table: `outputs/evaluation/freddie_mac/twin_results.md`. **Read this as: when the pipeline's assumptions hold (no unmeasured confounding), it recovers the planted effects to within about 13% for the rate and comes in low for LTV and DTI, whose true effects are tiny; it does not mean the real 2007-11 estimates above are unconfounded.**
+
+### Equalized odds (Stage 6)
+
+The four-fifths check compares outcome rates and needs no model. Equalized odds compares **error rates**, so it needs per-record predictions: Stage 6 fits a logistic regression of the outcome on the domain's other columns (never the sensitive attribute), scores every record out of fold, marks as positive the top-scoring fraction equal to the outcome's base rate (so a rare outcome is not predicted all-negative), and reports the largest group gap in true-positive or false-positive rate (`equalized_odds_difference`). It passes at or under `interventions.equalized_odds_threshold` (default 0.1). It is not computed when a group has fewer than 5 positives or 5 negatives.
+
+Measured on the bundled data (the sensitive attribute each domain's config names): employee_attrition 0.02, Illinois wellness 0.05, carclaims 0.06, German Credit 0.15 (flagged, with `young` as the attribute). **Read it as how a simple prediction model would treat the groups, not how any intervention would**: the pipeline does not predict what each action would do to each person, so this sits beside the four-fifths flag, shows in the web UI as the "error-rate gap" pill, and does not change the ranking.
 
 ### The hidden-confounder test: the placebo cannot see it
 
@@ -469,6 +475,8 @@ That is 37/40 against 34/40, **not a difference 40 runs can resolve**, and each 
 
 **What the check does not catch**, seen in the live runs: a narrative can use only correct numbers and still mislead. One AutoGen attrition draft called the ROI "very low at $15,000" (that is the cost, not the ROI); the check passed it. Sign is not checked (prose says "cuts by 2.5 points", not "-2.5"), the number-to-lever attribution is not checked, and an effect is stated without units. It is a guard against invented figures and dropped caveats, not proof that the text is right. The live tiers are not in the test suite (the suite never calls OpenAI: the chain is tested against AutoGen's replay client and the tiers against stubs).
 
+**ROI is not a return ratio (fixed 2026-10-07).** ROI here is the expected drop in the outcome per dollar, and no domain puts a price on the outcome, so it cannot be compared with 1 or with the cost. An earlier rule made every narrative say "benefit smaller than cost" whenever ROI was below 1, which is always true when a rate change is divided by thousands of dollars; a real crew run produced "the expected benefits are less than its cost" for an action it was also recommending. The fact sheet now states the expected change in points and the cost in dollars, and the check rejects a narrative that judges the action either way ("favorable", "pays off", "less than its cost", "not worth it").
+
 **Observational domains (`explanation.observational: true`).** The first live Freddie Mac narratives passed every check yet called the interest rate "a key factor driving" delinquency, which is causal language on a confounded association. For the three real observational domains (`freddie_mac`, `german_credit`, `carclaims`) the check now also requires the text to say the findings are associations (or observational, correlational, unmeasured, "not proven causes") and rejects causal wording ("drives", "causes", "leads to", "key factor", "main driver", "contributing to"; a negated mention such as "not proven causes" is allowed). The instruction is also given to the writers and the template header changes from "Top-line drivers ... causal effect size" to "Associations with ... (not proven causes)". Re-run live on Freddie Mac 2007 (3 runs, `gpt-4o-mini`): all three used "associated with" and added an observational caveat. The check is keyword-based, so it can be fooled by a rephrasing, and it still does not catch a wrong meaning built from correct numbers in general. One such case is now covered: two of those three runs called the ROI of 0.0000391 "favorable" when it is tiny, so for every domain, when the recommended action's ROI (benefit / cost) is below 1 the check rejects favorable wording ("favorable", "worthwhile", "good investment", "pays off", "cost-effective", ...; negations such as "not worthwhile" are allowed) and the writers are told to say the benefit is smaller than the cost. This is a keyword rule for that one known failure, not a general meaning check; it was not re-run live.
 
 AutoGen is optional (`autogen-agentchat`, `autogen-ext[openai]`); without it, tier 1 is skipped. Its `autogen-core` pins `protobuf~=5.29`, but CrewAI and Feast need `protobuf>=6.33.5` (a 5.x runtime fails on their generated code), so it lives in `requirements-autogen.txt`, not `requirements.txt` (listed together, pip's resolver falls back to a placeholder `autogen-agentchat 0.0.2`). Install it after the main requirements: `pip install -r requirements-autogen.txt` and then `pip install --no-deps "protobuf==6.33.6"`. `pip check` will report autogen-core's pin; it is harmless for local chats, which do not use its gRPC runtime.
@@ -503,6 +511,7 @@ Interactive docs at <http://localhost:8000/docs>. A browser UI is served at <htt
 | Method | Path | |
 |--------|------|-|
 | GET | `/health` | Liveness |
+| GET | `/capabilities` | What this server will do: `{"crew": bool, "llm_narrative": bool}`, so the page only offers the agent-crew option when it works (never exposes the key) |
 | GET | `/domains` | Configured domains, whether each can run, and its available `datasets` |
 | POST | `/domains/{id}/analyze` | Queue a run → `202` + job. Body (all optional): `{"orchestration": "direct" \| "crew", "dataset": "real" \| "synthetic" \| "semi_synthetic"}`. `dataset` defaults to the domain's `default_dataset`; `400` if the domain doesn't have it, `409` if it's configured but the file is missing, `429` if too many runs are queued, `403` for `crew` unless the server enables it |
 | GET | `/jobs` | Recent jobs (no results) |
@@ -519,15 +528,16 @@ curl localhost:8000/jobs/ed1c…
 **Orchestration modes**
 
 - `direct` — calls the stage functions in order. Takes seconds.
-- `crew` — the hierarchical CrewAI run. Takes several minutes and makes many paid OpenAI calls per run, far more than the analysis itself needs (manager/delegation overhead). It is refused (`403`) unless the server sets `ROOTCAUSE_ALLOW_CREW=1`, and `400` if `OPENAI_API_KEY` isn't set. A run that finishes with any of the seven stages missing is reported as an error naming them.
+- `crew` — the hierarchical CrewAI run. Takes several minutes and makes many paid OpenAI calls per run, far more than the analysis itself needs (manager/delegation overhead). It is refused (`403`) unless the server sets `ROOTCAUSE_ALLOW_CREW=1`, and `400` if `OPENAI_API_KEY` isn't set. A run that finishes with any of the seven stages missing is reported as an error naming them. The test suite checks only the crew's wiring; `scripts/reports/run_crew_once.py --yes` runs the real manager once (paid, several minutes) to confirm it delegates every stage. In the first real run (attrition, gpt-4o-mini, 57 s, 28 requests, 19.6k tokens) every stage tool ran once through the right agent (`outputs/evaluation/crew_run.json`). The agents' own commentary is not checked, though: it added claims the tools never made, so the result is built from what the tools wrote, never from the crew's printed answer, and the agents are now told to return tool output verbatim at temperature 0.
 
 **Limits to know about**
 
 - Runs are executed one at a time. Stage 2 keeps one Feast store per (domain, dataset), so different pairs wouldn't collide, but two runs of the same pair would corrupt each other.
 - Jobs are kept in memory only (newest 100), so they're lost on restart.
-- No auth and no upload: the API only analyzes the files named under `ingestion.datasets` in the domain config.
+- No auth and no upload (a login would stand between a visitor and the demo): the API only analyzes the files named under `ingestion.datasets` in the domain config.
 - At most `ROOTCAUSE_MAX_PENDING` runs (default 3) may be queued or running at once; further submissions get `429` with a `Retry-After` header. Set it higher for a private deployment.
-- `orchestration: "crew"` is off by default (each run makes many paid calls); turn it on only on a private server.
+- Each client may start at most `ROOTCAUSE_RATE_LIMIT` runs (default 6) per `ROOTCAUSE_RATE_WINDOW_SECONDS` (default 600), also answered with `429` and a `Retry-After`, so one visitor or bot cannot fill the shared queue. Clients are told apart by the address Cloud Run appends to `X-Forwarded-For` (`ROOTCAUSE_TRUSTED_PROXIES`, default 1); a limit of 0 turns it off. The counts are in memory, so they reset on a restart.
+- `orchestration: "crew"` is off by default (each run makes many paid calls). A deployment turns it on with `ROOTCAUSE_ALLOW_CREW=1` plus an `OPENAI_API_KEY`; the page then shows an "Agent crew (experimental)" checkbox (it asks `GET /capabilities`, which reports booleans and never the key). Crew runs have their own limit on top of the general one: `ROOTCAUSE_CREW_RATE_LIMIT` (default 2) per `ROOTCAUSE_CREW_RATE_WINDOW_SECONDS` (default 3600) per client. Keep a hard monthly spending cap on the OpenAI project that owns the key: a key on the server also lets ordinary runs use the LLM narrative tiers.
 
 ## Tests
 
@@ -535,7 +545,7 @@ curl localhost:8000/jobs/ed1c…
 .venv/Scripts/python.exe -m pytest
 ```
 
-467 tests, about 9 minutes (on a clean checkout, as in CI and the Docker image, 449 run and 18 skip: the 18 Freddie Mac tests (13 on the real files, 5 on the semi-synthetic twin) skip when that registered download is absent; the outcome/censoring rules and the twin's planted-effect constants are still tested on a small fake file in the real layout). They run real code on the real dataset (Feast round-trip, DoWhy, causal-learn) with no mocks, and assert the pipeline still recovers the ground-truth graph and effect signs. They never call OpenAI. The crew is only checked for wiring; a full crew run is deliberately not in the suite because of its cost.
+550 tests, about 5 to 12 minutes (on a clean checkout, as in CI and the Docker image, 532 run and 18 skip: the 18 Freddie Mac tests (13 on the real files, 5 on the semi-synthetic twin) skip when that registered download is absent; the outcome/censoring rules and the twin's planted-effect constants are still tested on a small fake file in the real layout). They run real code on the real dataset (Feast round-trip, DoWhy, causal-learn) with no mocks, and assert the pipeline still recovers the ground-truth graph and effect signs. They never call OpenAI. The crew is only checked for wiring; a full crew run is deliberately not in the suite because of its cost.
 
 ## Docker and CI
 
@@ -576,7 +586,7 @@ causal_engine/         the package
 data/<domain>/         prepared datasets the pipeline reads, ground truth, a README per domain
 data/<domain>/raw/     the files exactly as downloaded (data/freddie_mac holds only a README in git: its data is gitignored)
 scripts/data/          prepare_* (raw -> prepared) and generate_* (synthetic and semi-synthetic data)
-scripts/reports/       build_ui_examples.py, plot_causal_graphs.py, flag_anomalies.py, explain_tiers.py
+scripts/reports/       build_ui_examples.py, plot_causal_graphs.py, flag_anomalies.py, explain_tiers.py, run_crew_once.py
 outputs/evaluation/    reports written by `python -m causal_engine.evaluation`
 outputs/figures/       causal graph figures
 outputs/diagrams/      architecture and pipeline diagrams used in this README
@@ -584,6 +594,14 @@ outputs/ui_examples/   saved results the web page opens instantly (served at /ex
 tests/
 ```
 
-## Scope
+## Future work
 
-Deliberately not built: GAN-based counterfactuals (V2), audio ingestion, PDF and image ingestion (dropped: no free dataset pairs real photos or documents with the claim records they belong to, and pairing them synthetically would plant the table's information into the pixels), a semi-synthetic insurance or mortgage dataset (carclaims and Freddie Mac are real and observational only), ChromaDB agent memory, and human-in-the-loop review. Time-series forecasting (RNN/LSTM) and drift detection are out of scope: none of the datasets here is a time series or a stream.
+Ideas that would extend the project, none of them started:
+
+- **Image and PDF ingestion.** Needs a free dataset that pairs real photos or documents with the claim records they belong to. None was found, and pairing them synthetically would plant the table's information into the pixels.
+- **A semi-synthetic carclaims twin**, so that domain can be scored against a known truth like the others.
+- **GAN-based counterfactual scenarios** (a planned V2). Today the counterfactuals come from CausalML meta-learners.
+- **A human review step**, so an analyst approves or rejects a recommended action before it is shown.
+- **Agent memory** (ChromaDB), so the crew can refer to earlier runs.
+- **Drift monitoring and time-series models**, once there is a dataset that arrives over time: watch whether the causal graph changes.
+- **A larger comparison of the narrative tiers.** 40 runs could not separate the AutoGen team from the single call.

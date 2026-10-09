@@ -15,7 +15,7 @@
   "sensitive_attribute": "young",
   "observational": true,
   "entity_noun_plural": "applicants",
-  "built": "2026-10-06"
+  "built": "2026-10-09"
  },
  "result": {
   "domain_id": "german_credit",
@@ -84,7 +84,7 @@
    {
     "treatment": "duration_months",
     "outcome": "default",
-    "ate": 0.004723733749421838,
+    "ate": 0.004723733749421866,
     "estimator": "backdoor.linear_regression",
     "std_error": 0.0014975731583572668,
     "ci_low": 0.0017848312821939737,
@@ -109,7 +109,7 @@
    {
     "treatment": "credit_amount_kdm",
     "outcome": "default",
-    "ate": 0.0158737161817884,
+    "ate": 0.015873716181788455,
     "estimator": "backdoor.linear_regression",
     "std_error": 0.007061177812721555,
     "ci_low": 0.002016554827410538,
@@ -134,7 +134,7 @@
    {
     "treatment": "installment_rate",
     "outcome": "default",
-    "ate": 0.04262925694217862,
+    "ate": 0.04262925694217892,
     "estimator": "backdoor.linear_regression",
     "std_error": 0.013168740327529621,
     "ci_low": 0.01678635022147258,
@@ -173,39 +173,48 @@
    {
     "id": "lower_installment_burden",
     "target_variable": "installment_rate",
-    "expected_effect": 0.04262925694217862,
+    "expected_effect": 0.04262925694217892,
     "cost": 100.0,
-    "roi": 0.0004262925694217862,
+    "roi": 0.0004262925694217892,
     "recommended": true,
+    "not_recommended_reason": null,
     "fairness_ratio": 0.6860010402419525,
     "fairness_pass": false,
+    "equalized_odds_difference": 0.15322341057635175,
+    "equalized_odds_pass": false,
     "rank": 1
    },
    {
     "id": "shorten_loan_term",
     "target_variable": "duration_months",
-    "expected_effect": 0.028342402496531027,
+    "expected_effect": 0.028342402496531194,
     "cost": 130.0,
-    "roi": 0.00021801848074254636,
+    "roi": 0.00021801848074254766,
     "recommended": true,
+    "not_recommended_reason": null,
     "fairness_ratio": 0.6860010402419525,
     "fairness_pass": false,
+    "equalized_odds_difference": 0.15322341057635175,
+    "equalized_odds_pass": false,
     "rank": 2
    },
    {
     "id": "cap_credit_amount",
     "target_variable": "credit_amount_kdm",
-    "expected_effect": 0.0158737161817884,
+    "expected_effect": 0.015873716181788455,
     "cost": 140.0,
-    "roi": 0.00011338368701277429,
+    "roi": 0.00011338368701277468,
     "recommended": true,
+    "not_recommended_reason": null,
     "fairness_ratio": 0.6860010402419525,
     "fairness_pass": false,
+    "equalized_odds_difference": 0.15322341057635175,
+    "equalized_odds_pass": false,
     "rank": 3
    }
   ],
   "explanation": {
-   "narrative": "Associations with default in observational data (not proven causes), ranked by estimated effect size:\n- installment_rate: ATE=+0.0426 (backdoor.linear_regression)\n- credit_amount_kdm: ATE=+0.0159 (backdoor.linear_regression)\n- duration_months: ATE=+0.0047 (backdoor.linear_regression)\nSHAP attribution agrees 'checking_status__lt_0' carries the most predictive weight.\n- Across all applicants, being at or above the duration_months threshold rather than below it goes with a difference of +0.0551 in mean predicted default (an association in observational data)\nRecommended action: 'lower_installment_burden' (ROI=0.000426, cost=$100) -- FAIRNESS FLAG: population-level disparity detected (group ratio 0.69)",
+   "narrative": "Associations with default in observational data (not proven causes), ranked by estimated effect size:\n- installment_rate: ATE=+0.0426 (backdoor.linear_regression)\n- credit_amount_kdm: ATE=+0.0159 (backdoor.linear_regression)\n- duration_months: ATE=+0.0047 (backdoor.linear_regression)\nSHAP attribution agrees 'checking_status__lt_0' carries the most predictive weight.\n- Across all applicants, being at or above the duration_months threshold rather than below it goes with a difference of +0.0551 in mean predicted default (an association in observational data)\nRecommended action: 'lower_installment_burden', expected to lower default by 4.26 percentage points at cost=$100 (ROI=0.000426 = reduction per dollar; the default has no dollar value here, so ROI only ranks the actions) -- FAIRNESS FLAG: population-level disparity detected (group ratio 0.69)",
    "shap_summary": {
     "duration_months": 0.35579233198833854,
     "credit_amount_kdm": 0.2621463498955679,

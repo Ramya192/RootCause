@@ -12,6 +12,7 @@ the process lifetime and the oldest finished ones are evicted past
 from __future__ import annotations
 
 import logging
+import re
 import threading
 import uuid
 from collections import OrderedDict
@@ -25,6 +26,20 @@ from pydantic import BaseModel
 from causal_engine.models.schemas import PipelineResult
 
 logger = logging.getLogger(__name__)
+
+
+# Errors from the model providers can quote the key they were given or point at the provider's account pages, and a
+# public page must not show that. Our own errors (a stage that failed, a missing stage) stay readable.
+_PROVIDER_MODULES = ("openai", "litellm", "httpx", "httpcore", "anthropic", "crewai")
+_KEY_LIKE = re.compile(r"\bsk-[A-Za-z0-9_\-*.]{3,}")
+
+
+def public_error(exc: BaseException) -> str:
+    """The error text safe to show a visitor; the full detail goes to the server log."""
+    kind = type(exc).__name__
+    if type(exc).__module__.split(".")[0] in _PROVIDER_MODULES:
+        return f"{kind}: the language-model service rejected or failed the request. Details are in the server log."
+    return _KEY_LIKE.sub("[key removed]", f"{kind}: {exc}")
 
 
 class QueueFull(Exception):
@@ -112,7 +127,7 @@ class JobStore:
                 job_id,
                 status=JobStatus.failed,
                 finished_at=_now(),
-                error=f"{type(exc).__name__}: {exc}",
+                error=public_error(exc),
             )
         else:
             self._update(job_id, status=JobStatus.succeeded, finished_at=_now(), result=result)

@@ -102,8 +102,9 @@ def _template_narrative(
             lines.append(f"No candidate action is expected to reduce {outcome} -- {fairness_note}")
         else:
             lines.append(
-                f"Recommended action: '{top.id}' (ROI={top.roi:.3g}, "
-                f"cost=${top.cost:,.0f}) -- {fairness_note}"
+                f"Recommended action: '{top.id}', expected to lower {outcome} by {top.expected_effect * 100:.2f} "
+                f"percentage points at cost=${top.cost:,.0f} (ROI={top.roi:.3g} = reduction per dollar; the {outcome} "
+                f"has no dollar value here, so ROI only ranks the actions) -- {fairness_note}"
             )
     return "\n".join(lines)
 
@@ -153,9 +154,13 @@ def _tier_order(domain_config: dict) -> list[str]:
     return [t for t in tiers if t != "template"] + ["template"]
 
 
-def _roi_below_cost(recommendations: list[InterventionRecommendation]) -> bool:
-    top = _top_recommended(recommendations)
-    return top is not None and top.roi < 1.0
+def _has_recommended_action(recommendations: list[InterventionRecommendation]) -> bool:
+    """Whether the narrative will name an action, and so must not judge its cost against its benefit.
+
+    ROI is the drop in the outcome per dollar; no domain prices the outcome, so "benefit below cost" (or above) is
+    not something the numbers can show.
+    """
+    return _top_recommended(recommendations) is not None
 
 
 def _grounding(
@@ -166,7 +171,7 @@ def _grounding(
         facts,
         plain_language=plain_language,
         observational=observational,
-        roi_below_cost=_roi_below_cost(recommendations),
+        unpriced_roi=_has_recommended_action(recommendations),
         failed_refutation=any(e.refutation_passed is False for e in effect_estimates),
         fairness_flagged=bool(recommendations) and not recommendations[0].fairness_pass,
     )
@@ -191,7 +196,7 @@ def generate_explanation(
         [e.treatment for e in effect_estimates if e.refutation_passed is False],
         bool(recommendations) and not recommendations[0].fairness_pass,
         observational,
-        _roi_below_cost(recommendations),
+        _has_recommended_action(recommendations),
     )
     writers = {
         "autogen": lambda: narrative.autogen_narrative(

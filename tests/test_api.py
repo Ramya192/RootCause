@@ -308,3 +308,50 @@ def test_selected_dataset_path_is_the_one_run():
     assert job["dataset"] == "semi_synthetic"
     assert seen["config"]["run"]["dataset"] == "semi_synthetic"
     assert seen["data_path"].replace("\\", "/").endswith("ground_truth.json")
+
+
+def test_the_page_offers_the_agent_crew_only_when_the_server_reports_it(fake_client):
+    page = fake_client.get("/").text
+
+    assert 'id="crewOpt" hidden' in page  # hidden until /capabilities says the server allows it
+    # `label { display:flex }` would otherwise override the hidden attribute and show the box anyway
+    assert "[hidden] { display:none !important; }" in page
+    assert "/capabilities" in page
+    assert 'orchestration = "direct"' in page  # the default stays the free direct run
+
+
+def test_the_page_and_saved_examples_are_revalidated_so_a_redeploy_is_not_hidden_by_a_stale_cache(fake_client):
+    assert fake_client.get("/").headers["cache-control"] == "no-cache"
+    index = fake_client.get("/examples/index.json")
+    assert index.status_code == 200
+    assert index.headers["cache-control"] == "no-cache"
+
+
+def test_a_model_provider_error_is_not_shown_to_visitors(config_loader, caplog):
+    # The first local crew test with a fake key showed OpenAI's text, which quotes the key it was given.
+    from openai import AuthenticationError
+
+    def rejected(*_):
+        import httpx
+
+        request = httpx.Request("POST", "https://api.openai.com/v1/chat/completions")
+        response = httpx.Response(401, request=request)
+        raise AuthenticationError("Incorrect API key provided: sk-proj-abc123SECRET", response=response, body=None)
+
+    client = TestClient(create_app(config_loader=config_loader, runners={"direct": rejected}))
+    job_id = client.post("/domains/employee_attrition/analyze").json()["id"]
+
+    done = _wait_for(client, job_id)
+
+    assert done["status"] == "failed"
+    assert "SECRET" not in done["error"] and "platform.openai.com" not in done["error"]
+    assert done["error"].startswith("AuthenticationError:") and "server log" in done["error"]
+    assert "sk-proj-abc123SECRET" in caplog.text  # the detail is still logged for the operator
+
+
+def test_a_key_that_appears_in_one_of_our_own_errors_is_removed():
+    from causal_engine.api.jobs import public_error
+
+    text = public_error(RuntimeError("could not use sk-live_ABC.def-123 for stage 7"))
+
+    assert "ABC" not in text and "[key removed]" in text and "stage 7" in text

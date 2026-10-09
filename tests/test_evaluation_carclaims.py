@@ -185,3 +185,32 @@ def test_subsample_runs_end_to_end_and_the_sex_flag_fires(
     assert run.fairness_passed is False and 0.5 < run.fairness_ratio < 0.85
     assert run.top_choice in {c["id"] for c in claims_config["interventions"]["candidates"]}
     assert not {"ate_mae", "edge_precision", "fairness_flag_correct"} & set(run.values)
+
+
+# --- time order: the discovered graph must not say an accident-time event causes a policy-time fact ---
+
+POLICY_TIME = ["base_policy__liability", "vehicle_price", "deductible_100usd", "agent_internal"]
+ACCIDENT_TIME = ["fault_policy_holder", "police_report_filed"]
+
+
+def test_config_forbids_accident_time_variables_from_causing_policy_time_ones():
+    from causal_engine.utils.config_loader import ConfigLoader
+
+    forbidden = {tuple(e) for e in ConfigLoader().get_domain(DOMAIN).extra["causal_discovery"]["forbidden_edges"]}
+
+    for later in ACCIDENT_TIME:
+        for earlier in POLICY_TIME:
+            assert (later, earlier) in forbidden, f"{later} -> {earlier} is not forbidden"
+
+
+def test_the_discovered_carclaims_graph_has_no_edge_running_backwards_in_time():
+    from causal_engine.pipeline import causal_discovery, ingestion, preprocessing, runner
+    from causal_engine.utils.config_loader import ConfigLoader
+
+    config = runner.with_dataset(ConfigLoader().get_domain(DOMAIN).extra, "real")
+    df = ingestion.ingest(str(runner.resolve_data_path(config, "real")), config)
+
+    graph = causal_discovery.discover_graph(preprocessing.preprocess(df, config).df, config)
+
+    backwards = [(a, b) for a, b in graph.edges if a in ACCIDENT_TIME and b in POLICY_TIME]
+    assert backwards == []

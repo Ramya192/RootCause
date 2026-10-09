@@ -99,6 +99,16 @@ causal_discovery:
     - [deductible_100usd, policyholder_age_group]
     - [agent_internal, policyholder_age_group]
     - [police_report_filed, policyholder_age_group]
+    # time order: the policy type, vehicle, deductible and selling agent are fixed when the policy is bought, before
+    # any accident, so a fault finding or a police report cannot cause them (PC otherwise oriented some edges backwards)
+    - [fault_policy_holder, base_policy__liability]
+    - [fault_policy_holder, vehicle_price]
+    - [fault_policy_holder, deductible_100usd]
+    - [fault_policy_holder, agent_internal]
+    - [police_report_filed, base_policy__liability]
+    - [police_report_filed, vehicle_price]
+    - [police_report_filed, deductible_100usd]
+    - [police_report_filed, agent_internal]
 
 # --- Stage 4: Effect Estimation ---
 # Three things an insurer controls, at least in part: whether a police report is required, the

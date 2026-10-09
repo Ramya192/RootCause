@@ -21,11 +21,13 @@ Choosing between them is deliberately NOT done by asking an LLM which text is be
   * for a domain flagged `explanation.observational` (real data with no randomization or
     ground truth), the text must say the findings are associations and must not use
     causal wording ("drives", "causes", "leads to", "key factor", "contributing to"), and
-  * when the recommended action's ROI is below 1 (benefit smaller than cost), the text must not
-    call it favorable ("favorable", "worthwhile", "good investment", "pays off", ...).
+  * the text must not judge whether the recommended action pays for itself, either way. ROI here is
+    the expected drop in the outcome per dollar, and the outcome is not priced, so benefit and cost
+    are in different units: no "favorable", "worthwhile", "good investment", "pays off", and no
+    "benefit smaller than cost", "costs more than it returns", "not worth it".
 
 What the check does NOT catch: a wrong claim that uses only correct numbers (for example
-attributing an effect to the wrong lever; the ROI-below-1 rule above covers one known case), or an overclaim phrased without numbers or a
+attributing an effect to the wrong lever; the cost-judgment rule above covers one known case), or an overclaim phrased without numbers or a
 hedge word. It is a guard against invented figures and dropped caveats, not a proof that
 the narrative is right.
 
@@ -89,18 +91,21 @@ _CAUSAL_WORDING = re.compile(
     re.IGNORECASE,
 )
 
-# ROI = benefit / cost (interventions.py), so ROI < 1 means the action costs more than it returns. Live runs
-# called an ROI of 0.0000391 "favorable": correct number, wrong meaning. Negated or comparative uses
-# ("not worthwhile", "less favorable") are the honest reading, so they are removed before matching.
+# ROI = (drop in the outcome) / cost (interventions.py): an outcome rate per dollar, not a return ratio, so it
+# cannot be compared with 1 or with the cost. Live runs called an ROI of 0.0000391 "favorable", and a later one
+# said the benefit was "less than its cost"; both are judgments the data cannot support, in opposite directions.
 _POSITIVE_ROI = re.compile(
     r"\bfavou?rabl[ey]\b|\bworth(?:while| it| the (?:cost|investment|money))\b|\bgood (?:investment|return|value)\b"
     r"|\b(?:strong|solid|healthy|attractive|positive|high|great|excellent) (?:return|roi)\b|\bpays? (?:off|for itself)\b"
     r"|\bcost-effective\b|\bprofitabl[ey]\b|\bbeneficial\b|\bpromising\b|\bsensible\b",
     re.IGNORECASE,
 )
-_NEGATED_POSITIVE_ROI = re.compile(
-    r"\b(?:not|never|no|isn't|aren't|doesn't|does not|hardly|barely|less)\s+(?:\w+\s+){0,2}?"
-    r"(?:favou?rabl|worth|good|strong|solid|healthy|attractive|positive|high|great|excellent|pays?|cost-effective|profitabl|beneficial|promising|sensible)\w*",
+_COST_JUDGMENT = re.compile(
+    r"\b(?:less|smaller|lower|under|below) than (?:its|the|their) (?:cost|price|expense)s?\b"
+    r"|\bcosts? (?:more|exceeds?|outweighs?)\b|\boutweigh\w*\b|\bexceeds? (?:its|the) (?:benefits?|returns?)\b"
+    r"|\b(?:benefits?|returns?|gains?) (?:is|are|was|were)? ?(?:smaller|lower|less)\b"
+    r"|\bnot (?:worth|worthwhile|a good (?:investment|return))\b|\bunfavou?rabl[ey]\b|\bnot favou?rabl[ey]\b"
+    r"|\bnot cost-effective\b|\bnot (?:a )?practical\b",
     re.IGNORECASE,
 )
 
@@ -127,7 +132,10 @@ class GroundingReport:
         if self.causal_wording:
             parts.append("causal wording on observational data: " + ", ".join(self.causal_wording))
         if self.roi_wording:
-            parts.append("favorable wording although ROI is below 1 (benefit under cost): " + ", ".join(self.roi_wording))
+            parts.append(
+                "judges whether the action pays for itself, which the analysis cannot (the outcome is not priced): "
+                + ", ".join(self.roi_wording)
+            )
         return "; ".join(parts) or "ok"
 
 
@@ -168,7 +176,7 @@ def check_grounding(
     fairness_flagged: bool = False,
     plain_language: bool = False,
     observational: bool = False,
-    roi_below_cost: bool = False,
+    unpriced_roi: bool = False,
 ) -> GroundingReport:
     """Does `text` stay inside `facts_text`? See the module docstring for what it covers."""
     fact_values = [v for _, v, _ in extract_numbers(facts_text)]
@@ -191,8 +199,8 @@ def check_grounding(
             missing.append("association-not-causation (observational data)")
         causal = sorted({m.group(0).lower() for m in _CAUSAL_WORDING.finditer(_CAUSAL_NEGATION.sub("", text))})
     roi = []
-    if roi_below_cost:
-        roi = sorted({m.group(0).lower() for m in _POSITIVE_ROI.finditer(_NEGATED_POSITIVE_ROI.sub("", text))})
+    if unpriced_roi:
+        roi = sorted({m.group(0).lower() for rx in (_POSITIVE_ROI, _COST_JUDGMENT) for m in rx.finditer(text)})
     jargon = (
         sorted({m.group(0) for m in _JARGON.finditer(_NEGATED_SIGNIFICANCE.sub('', text))})
         if plain_language
@@ -294,7 +302,7 @@ def required_points(
     failed_treatments: list[str],
     fairness_flagged: bool,
     observational: bool = False,
-    roi_below_cost: bool = False,
+    unpriced_roi: bool = False,
 ) -> str:
     """The caveats `check_grounding` will demand, phrased as an instruction, so a writer is
     told what it will be checked on instead of finding out by being rejected."""
@@ -313,10 +321,11 @@ def required_points(
             "say a lever 'drives', 'causes', 'leads to' or is a 'key factor' in the outcome, and say the true "
             "effect could differ because other factors were not measured."
         )
-    if roi_below_cost:
+    if unpriced_roi:
         points.append(
-            "The recommended action's ROI is below 1, meaning its estimated benefit is smaller than its cost: say so "
-            "plainly and do not call it favorable, worthwhile, attractive or a good return."
+            "ROI is the expected drop in the outcome per dollar, and the outcome has no price, so say only what the "
+            "action is expected to do and what it costs. Do not call it favorable, worthwhile, cost-effective or a good "
+            "return, and do not say its benefit is smaller or larger than its cost."
         )
     return "\n".join(f"- {p}" for p in points)
 

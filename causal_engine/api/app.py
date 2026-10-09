@@ -2,7 +2,7 @@
 
     GET  /health                       liveness
     GET  /domains                      configured domains + whether they can run
-    POST /domains/{id}/analyze         queue a run -> 202 + job
+    POST /domains/{id}/analyze         queue a run -> 202 + job (429 when the queue is full or the client is over its rate limit)
     GET  /jobs                         recent jobs (no results)
     GET  /jobs/{job_id}                job status; carries the PipelineResult once done
     GET  /jobs/{job_id}/graph          the discovered causal graph as a PNG (?format=dot for Graphviz DOT)
@@ -25,12 +25,13 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Callable, Literal, Optional
 
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from causal_engine.api.jobs import Job, JobStatus, JobStore, QueueFull
+from causal_engine.api.ratelimit import RateLimiter, client_key
 from causal_engine.models.schemas import PipelineResult
 from causal_engine.pipeline import runner
 from causal_engine.utils.config_loader import ConfigLoader
@@ -69,12 +70,29 @@ class DomainSummary(BaseModel):
 def create_app(
     config_loader: Optional[ConfigLoader] = None,
     runners: Optional[dict[str, Runner]] = None,
+    rate_limiter: Optional[RateLimiter] = None,
+    crew_rate_limiter: Optional[RateLimiter] = None,
 ) -> FastAPI:
     loader = config_loader or ConfigLoader()
     run_fns = runners or DEFAULT_RUNNERS
     # Runs are serialized on one worker, so a public deployment caps how many may wait; without a cap a
     # handful of clicks (or a bot) leaves every other visitor queued behind them.
     jobs = JobStore(max_pending=int(os.environ.get("ROOTCAUSE_MAX_PENDING", "3")))
+    # The queue cap is shared, so one client could still fill it; this also limits how many runs one client may start
+    # per window (ROOTCAUSE_RATE_LIMIT runs per ROOTCAUSE_RATE_WINDOW_SECONDS; a limit of 0 turns it off).
+    limiter = rate_limiter or RateLimiter(
+        limit=int(os.environ.get("ROOTCAUSE_RATE_LIMIT", "6")),
+        window_seconds=float(os.environ.get("ROOTCAUSE_RATE_WINDOW_SECONDS", "600")),
+    )
+    # Crew runs are slower and make paid LLM calls, so they get a much tighter limit of their own on top of the one above.
+    crew_limiter = crew_rate_limiter or RateLimiter(
+        limit=int(os.environ.get("ROOTCAUSE_CREW_RATE_LIMIT", "2")),
+        window_seconds=float(os.environ.get("ROOTCAUSE_CREW_RATE_WINDOW_SECONDS", "3600")),
+    )
+    trusted_proxies = int(os.environ.get("ROOTCAUSE_TRUSTED_PROXIES", "1"))
+
+    def crew_allowed() -> bool:
+        return os.environ.get("ROOTCAUSE_ALLOW_CREW", "").lower() in ("1", "true", "yes")
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
@@ -84,15 +102,28 @@ def create_app(
     app = FastAPI(title="RootCause", description="Causal Decision Intelligence Agent", lifespan=lifespan)
 
     # Saved example results the browser page shows instantly (built by scripts/reports/build_ui_examples.py)
-    app.mount("/examples", StaticFiles(directory=runner.REPO_ROOT / "outputs" / "ui_examples"), name="examples")
+    # `no-cache` = the browser re-checks (cheap ETag round trip) instead of reusing a stale copy after a redeploy
+    class _RevalidatedStaticFiles(StaticFiles):
+        async def get_response(self, path, scope):
+            response = await super().get_response(path, scope)
+            response.headers["Cache-Control"] = "no-cache"
+            return response
+
+    app.mount("/examples", _RevalidatedStaticFiles(directory=runner.REPO_ROOT / "outputs" / "ui_examples"), name="examples")
 
     @app.get("/", include_in_schema=False)
     def index() -> FileResponse:
-        return FileResponse(Path(__file__).with_name("ui.html"))
+        return FileResponse(Path(__file__).with_name("ui.html"), headers={"Cache-Control": "no-cache"})
 
     @app.get("/health")
     def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @app.get("/capabilities")
+    def capabilities() -> dict[str, bool]:
+        """What this server will do, so the page only offers what works (never exposes the key itself)."""
+        has_key = bool(os.environ.get("OPENAI_API_KEY"))
+        return {"crew": crew_allowed() and has_key, "llm_narrative": has_key}
 
     @app.get("/domains", response_model=list[DomainSummary])
     def list_domains() -> list[DomainSummary]:
@@ -124,7 +155,7 @@ def create_app(
         ]
 
     @app.post("/domains/{domain_id}/analyze", response_model=Job, status_code=202)
-    def analyze(domain_id: str, response: Response, body: Optional[AnalyzeRequest] = None) -> Job:
+    def analyze(domain_id: str, request: Request, response: Response, body: Optional[AnalyzeRequest] = None) -> Job:
         body = body or AnalyzeRequest()
         try:
             domain = loader.get_domain(domain_id)
@@ -135,7 +166,7 @@ def create_app(
                 status_code=409,
                 detail=f"Domain '{domain_id}' has status '{domain.status}' and cannot be run yet",
             )
-        if body.orchestration == "crew" and os.environ.get("ROOTCAUSE_ALLOW_CREW", "").lower() not in ("1", "true", "yes"):
+        if body.orchestration == "crew" and not crew_allowed():
             raise HTTPException(
                 status_code=403,
                 detail="orchestration='crew' is disabled on this server (each run makes many paid LLM calls); "
@@ -158,6 +189,25 @@ def create_app(
                 detail=f"Dataset '{dataset}' is configured but its file was not found at {data_path}",
             )
 
+        client = client_key(request, trusted_proxies)
+        wait = limiter.retry_after(client)
+        if wait is None and body.orchestration == "crew":
+            crew_wait = crew_limiter.retry_after(client)
+            if crew_wait is not None:
+                raise HTTPException(
+                    status_code=429,
+                    detail="Agent-crew runs are limited to a few per hour per visitor (each makes many paid model calls). "
+                    f"Try again in about {max(1, round(crew_wait / 60))} minute(s), or run the direct analysis, which is not limited this way.",
+                    headers={"Retry-After": str(crew_wait)},
+                )
+        if wait is not None:
+            raise HTTPException(
+                status_code=429,
+                detail=f"You have started the maximum number of runs for now. Try again in about {max(1, round(wait / 60))} "
+                "minute(s), or open a saved example, which loads instantly.",
+                headers={"Retry-After": str(wait)},
+            )
+
         run_fn = run_fns[body.orchestration]
         run_config = runner.with_dataset(domain.extra, dataset)
         try:
@@ -173,6 +223,9 @@ def create_app(
                 detail="The server is busy with other runs. Try again in a minute, or open a saved example, which loads instantly.",
                 headers={"Retry-After": "60"},
             ) from None
+        limiter.record(client)  # only a run that was actually queued counts against the client
+        if body.orchestration == "crew":
+            crew_limiter.record(client)
         response.headers["Location"] = f"/jobs/{job.id}"
         return job
 

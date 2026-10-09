@@ -278,7 +278,7 @@ def test_required_points_mirror_the_checked_caveats():
 
 
 def test_required_points_reach_both_llm_tiers(stage7, monkeypatch):
-    monkeypatch.setattr(narrative, "required_points", lambda failed, fairness, observational=False, roi_below_cost=False: "- CAVEAT-X")
+    monkeypatch.setattr(narrative, "required_points", lambda failed, fairness, observational=False, unpriced_roi=False: "- CAVEAT-X")
     seen = {}
 
     def fake_autogen(facts, **k):
@@ -388,41 +388,64 @@ def test_only_the_real_observational_domains_are_flagged(config_loader):
                        "illinois_wellness": False, "employee_attrition": False}
 
 
-# --- ROI below 1: benefit under cost must not be called favorable ---
-
-LOW_ROI = "The $40,000 pay plan has an ROI of 0.8 and"
+# --- ROI is an outcome drop per dollar, not a return ratio: the narrative must not judge the action either way ---
 
 
 @pytest.mark.parametrize("phrase", [
     "is favorable", "is a worthwhile investment", "is a good investment", "pays off", "has a strong return",
     "is cost-effective", "looks promising",
 ])
-def test_favorable_wording_is_rejected_when_roi_is_below_one(phrase):
-    text = f"Raising pay lowers attrition by 2.5 percentage points. The plan {phrase} (ROI 0.8)."
-    facts = FACTS.replace("ROI=12.5", "ROI=0.8")
-    assert narrative.check_grounding(text, facts, roi_below_cost=True).roi_wording
-    assert not narrative.check_grounding(text, facts, roi_below_cost=True).passed
-    assert narrative.check_grounding(text, facts).passed  # same text is fine when ROI is not low
+def test_favorable_wording_is_rejected_because_the_outcome_is_not_priced(phrase):
+    text = f"Raising pay lowers attrition by 2.5 percentage points. The plan {phrase} (ROI 12.5)."
+    assert narrative.check_grounding(text, FACTS, unpriced_roi=True).roi_wording
+    assert not narrative.check_grounding(text, FACTS, unpriced_roi=True).passed
+    assert narrative.check_grounding(text, FACTS).passed  # the rule applies only when an action is recommended
 
 
 @pytest.mark.parametrize("phrase", [
-    "is not favorable", "is not a worthwhile investment", "is unfavorable", "is less favorable than it looks",
-    "costs more than it returns",
+    "has benefits smaller than its cost", "costs more than it returns", "is not worthwhile", "is not worth the money",
+    "has an expected benefit less than its cost", "is unfavorable", "is not a practical choice", "has costs that outweigh it",
 ])
-def test_honest_low_roi_wording_is_allowed(phrase):
-    text = f"Raising pay lowers attrition by 2.5 percentage points. The plan {phrase} (ROI 0.8)."
-    facts = FACTS.replace("ROI=12.5", "ROI=0.8")
-    report = narrative.check_grounding(text, facts, roi_below_cost=True)
-    assert not report.roi_wording, report.detail()
+def test_the_opposite_judgment_is_rejected_too(phrase):
+    # A live narrative said the benefit was "less than its cost": benefit is a drop in a rate and cost is dollars.
+    text = f"Raising pay lowers attrition by 2.5 percentage points. The plan {phrase}."
+    report = narrative.check_grounding(text, FACTS, unpriced_roi=True)
+    assert report.roi_wording and not report.passed
+    assert "outcome is not priced" in report.detail()
 
 
-def test_required_points_mention_low_roi_only_when_it_applies():
-    assert "below 1" in narrative.required_points([], False, roi_below_cost=True)
+@pytest.mark.parametrize("text", [
+    "Raising pay is expected to lower attrition by 2.5 percentage points at a cost of $40,000.",
+    "The pay plan ranks first of the three actions by reduction per dollar.",
+])
+def test_plain_statements_of_effect_and_cost_pass(text):
+    assert not narrative.check_grounding(text, FACTS, unpriced_roi=True).roi_wording
+
+
+def test_required_points_explain_the_unpriced_roi_only_when_an_action_is_recommended():
+    points = narrative.required_points([], False, unpriced_roi=True)
+    assert "no price" in points and "smaller or larger than its cost" in points
     assert narrative.required_points([], False) == ""
 
 
-def test_roi_below_cost_follows_the_top_recommendation():
-    rec = lambda roi: [SimpleNamespace(roi=roi, recommended=True)]
-    assert explanation._roi_below_cost(rec(0.0000391)) and not explanation._roi_below_cost(rec(12.5))
-    assert not explanation._roi_below_cost([])
+def test_the_unpriced_roi_rule_applies_exactly_when_an_action_is_recommended():
+    rec = lambda recommended: [SimpleNamespace(roi=0.0000391, recommended=recommended)]
+    assert explanation._has_recommended_action(rec(True))
+    assert not explanation._has_recommended_action(rec(False))
+    assert not explanation._has_recommended_action([])
+
+
+def test_the_fact_sheet_states_the_effect_and_cost_in_real_units_and_that_roi_is_unpriced(domain_config):
+    from causal_engine.models.schemas import InterventionRecommendation
+
+    rec = InterventionRecommendation(
+        id="manager_training", target_variable="manager_quality", expected_effect=0.0426, cost=15000.0,
+        roi=0.0426 / 15000, fairness_ratio=0.99, rank=1,
+    )
+
+    facts = explanation._template_narrative(domain_config, [], [], [rec], {"manager_quality": 1.0})
+
+    assert "expected to lower attrition by 4.26 percentage points" in facts
+    assert "cost=$15,000" in facts
+    assert "has no dollar value here" in facts
 

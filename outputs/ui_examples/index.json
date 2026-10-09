@@ -15,7 +15,7 @@
   "sensitive_attribute": "gender",
   "observational": false,
   "entity_noun_plural": "employees",
-  "built": "2026-10-06",
+  "built": "2026-10-09",
   "truth": {
    "edges": [
     [
@@ -67,7 +67,7 @@
   "sensitive_attribute": "young",
   "observational": true,
   "entity_noun_plural": "applicants",
-  "built": "2026-10-06"
+  "built": "2026-10-09"
  },
  {
   "domain_id": "freddie_mac",
@@ -85,7 +85,7 @@
   "sensitive_attribute": "first_time_buyer",
   "observational": true,
   "entity_noun_plural": "loans",
-  "built": "2026-10-06"
+  "built": "2026-10-09"
  },
  {
   "domain_id": "freddie_mac",
@@ -103,7 +103,7 @@
   "sensitive_attribute": "first_time_buyer",
   "observational": true,
   "entity_noun_plural": "loans",
-  "built": "2026-10-06"
+  "built": "2026-10-09"
  },
  {
   "domain_id": "carclaims",
@@ -121,6 +121,6 @@
   "sensitive_attribute": "female",
   "observational": true,
   "entity_noun_plural": "claims",
-  "built": "2026-10-06"
+  "built": "2026-10-09"
  }
 ]

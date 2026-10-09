@@ -15,7 +15,7 @@
   "sensitive_attribute": "gender",
   "observational": false,
   "entity_noun_plural": "employees",
-  "built": "2026-10-06",
+  "built": "2026-10-09",
   "truth": {
    "edges": [
     [
@@ -188,8 +188,11 @@
     "cost": 15000.0,
     "roi": 9.01177224751852e-06,
     "recommended": true,
+    "not_recommended_reason": null,
     "fairness_ratio": 0.9993501729378472,
     "fairness_pass": true,
+    "equalized_odds_difference": 0.021171091964128697,
+    "equalized_odds_pass": true,
     "rank": 1
    },
    {
@@ -199,8 +202,11 @@
     "cost": 20000.0,
     "roi": 5.944047044927248e-06,
     "recommended": true,
+    "not_recommended_reason": null,
     "fairness_ratio": 0.9993501729378472,
     "fairness_pass": true,
+    "equalized_odds_difference": 0.021171091964128697,
+    "equalized_odds_pass": true,
     "rank": 2
    },
    {
@@ -210,13 +216,16 @@
     "cost": 40000.0,
     "roi": 3.2160449640395647e-06,
     "recommended": true,
+    "not_recommended_reason": null,
     "fairness_ratio": 0.9993501729378472,
     "fairness_pass": true,
+    "equalized_odds_difference": 0.021171091964128697,
+    "equalized_odds_pass": true,
     "rank": 3
    }
   ],
   "explanation": {
-   "narrative": "Top-line drivers of attrition, ranked by causal effect size:\n- manager_quality: ATE=-0.1352 (backdoor.linear_regression)\n- compensation: ATE=-0.1286 (backdoor.linear_regression)\n- workload: ATE=+0.1189 (backdoor.linear_regression)\nSHAP attribution agrees 'job_satisfaction' carries the most predictive weight.\n- Across all employees, being at or above the job_satisfaction threshold rather than below it is estimated to change mean predicted attrition by -0.1787\nRecommended action: 'manager_training' (ROI=9.01e-06, cost=$15,000) -- fairness check passed",
+   "narrative": "Top-line drivers of attrition, ranked by causal effect size:\n- manager_quality: ATE=-0.1352 (backdoor.linear_regression)\n- compensation: ATE=-0.1286 (backdoor.linear_regression)\n- workload: ATE=+0.1189 (backdoor.linear_regression)\nSHAP attribution agrees 'job_satisfaction' carries the most predictive weight.\n- Across all employees, being at or above the job_satisfaction threshold rather than below it is estimated to change mean predicted attrition by -0.1787\nRecommended action: 'manager_training', expected to lower attrition by 13.52 percentage points at cost=$15,000 (ROI=9.01e-06 = reduction per dollar; the attrition has no dollar value here, so ROI only ranks the actions) -- fairness check passed",
    "shap_summary": {
     "compensation": 0.13738857987406497,
     "manager_quality": 0.10491454465158578,

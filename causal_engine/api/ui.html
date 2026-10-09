@@ -106,6 +106,7 @@
   .opt span { font-size:12.5px; color:var(--muted); }
   .live { display:flex; flex-wrap:wrap; gap:12px; align-items:end; }
   label { display:flex; flex-direction:column; font-size:12.5px; color:var(--muted); gap:4px; }
+  [hidden] { display:none !important; }
   select, button.btn { font:inherit; font-size:14.5px; padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:var(--fg); }
   button.btn { background:var(--accent); border-color:var(--accent); color:#fff; cursor:pointer; font-weight:600; }
   button.btn:disabled { opacity:.55; cursor:wait; }
@@ -191,7 +192,7 @@
     <div class="card"><div class="stat">0.97 / 0.93</div><div class="cap">Edge precision / recall of the discovered causal graph, on 10 simulated datasets where the true graph is known.</div></div>
     <div class="card"><div class="stat">0.007</div><div class="cap">Mean absolute error of the estimated effects, where the true effects are about &plusmn;0.12&ndash;0.14. The top-ranked intervention was the true best 10 of 10 times.</div></div>
     <div class="card"><div class="stat">+0.0020</div><div class="cap">Estimate on a real randomized trial (a workplace wellness programme) versus the trial's own +0.0022 [&minus;0.022, +0.027]. Both say: no effect.</div></div>
-    <div class="card"><div class="stat">467</div><div class="cap">Automated tests, run on every push in CI and in a clean Linux container. No test calls a paid API.</div></div>
+    <div class="card"><div class="stat">550</div><div class="cap">Automated tests, run on every push in CI and in a clean Linux container. No test calls a paid API.</div></div>
   </div>
   <div class="tags">
     <span class="pill acc">Causal discovery (PC, GES, LiNGAM)</span><span class="pill acc">DoWhy &middot; CausalML</span><span class="pill acc">Sensitivity analysis</span>
@@ -257,8 +258,8 @@
     <div class="stage"><h3>Causal discovery</h3><p>Learn the graph, seeded with domain rules.</p><div class="tech">causal-learn &middot; LiNGAM</div></div>
     <div class="stage"><h3>Effect estimation</h3><p>Effect of each lever, with noise and confounder checks.</p><div class="tech">DoWhy &middot; statsmodels</div></div>
     <div class="stage"><h3>Counterfactuals</h3><p>&ldquo;What if&rdquo; effects per person and subgroup.</p><div class="tech">CausalML meta-learners</div></div>
-    <div class="stage"><h3>Interventions</h3><p>Rank actions by ROI with a fairness check.</p><div class="tech">fairlearn</div></div>
-    <div class="stage"><h3>Explanation</h3><p>Plain-language answer, machine-checked against the numbers.</p><div class="tech">SHAP &middot; AutoGen &middot; OpenAI</div></div>
+    <div class="stage"><h3>Interventions</h3><p>Rank actions by ROI (return on investment) with a fairness check.</p><div class="tech">fairlearn</div></div>
+    <div class="stage"><h3>Explanation</h3><p>Plain-language answer, machine-checked against the numbers.</p><div class="tech">SHAP (SHapley Additive exPlanations) &middot; AutoGen &middot; OpenAI</div></div>
   </div>
 </section>
 
@@ -275,11 +276,12 @@
     <div class="live">
       <label>Domain <select id="domain"></select></label>
       <label>Dataset <select id="dataset"></select></label>
+      <label id="crewOpt" hidden style="flex-direction:row;align-items:center;gap:6px;padding-bottom:10px" title="A manager model delegates the seven stages to seven specialist agents. Slower, and each run makes paid model calls, so it is limited to a few per hour."><input type="checkbox" id="crew"> Agent crew (experimental)</label>
       <button class="btn" id="run" disabled>Run analysis</button>
     </div>
     <div class="bar-anim" id="barAnim"><i></i></div>
     <div id="status"></div>
-    <div class="note">Runs the full pipeline on the server (the &ldquo;direct&rdquo; orchestration, no paid API needed; the narrative then comes from the template tier).</div>
+    <div class="note">Runs the full pipeline on the server (the &ldquo;direct&rdquo; orchestration, no paid API needed; unless the server has a model key, the narrative then comes from the template tier). The optional agent crew runs the same seven stage functions behind seven agents and a manager model: it takes a few minutes, the numbers are the same, and the agents' own commentary is not shown because it is not checked.</div>
   </div>
 
   <div class="result" id="result" hidden></div>
@@ -317,7 +319,7 @@
     <div class="card"><h3>Evaluation rigour</h3><ul><li>Truth-scored simulations, true ATE by simulating <code>do()</code></li><li>Real-trial benchmark; bootstrap stability</li><li>Negative results written up, not hidden</li></ul></div>
     <div class="card"><h3>LLM and agents</h3><ul><li>CrewAI hierarchical crew (7 agents + manager)</li><li>AutoGen analyst &rarr; skeptic &rarr; writer</li><li>Programmatic grounding check on every number</li></ul></div>
     <div class="card"><h3>Data and ML engineering</h3><ul><li>Feast offline/online feature store</li><li>Five real and simulated domains from one config format</li></ul></div>
-    <div class="card"><h3>Software engineering</h3><ul><li>FastAPI service with async job queue</li><li>Docker image and GitHub Actions CI</li><li>467 tests; bugs found by CI fixed with regression tests</li></ul></div>
+    <div class="card"><h3>Software engineering</h3><ul><li>FastAPI service with async job queue</li><li>Docker image and GitHub Actions CI</li><li>550 tests; bugs found by CI fixed with regression tests</li></ul></div>
   </div>
 </section>
 
@@ -348,7 +350,12 @@ async function loadSamples() {
   ).join("") : `<div class="note">Saved examples are not available. Run <code>python scripts/reports/build_ui_examples.py</code>.</div>`;
   document.querySelectorAll(".opt").forEach(b => b.onclick = () => openSample(+b.dataset.i));
   renderFeatured();
-  // deep link: #example=german_credit__real opens that saved example on load
+  await openFromHash();
+  // a link pasted into a tab that already has the page open only changes the hash
+  window.addEventListener("hashchange", openFromHash);
+}
+// deep link: #example=german_credit__real opens that saved example
+async function openFromHash() {
   const want = (location.hash.match(/example=([\w]+__[\w]+)/) || [])[1];
   const i = samples.findIndex(m => `${m.domain_id}__${m.dataset}` === want);
   if (i >= 0) {
@@ -367,7 +374,11 @@ async function openSample(i) {
   const s = await getSample(samples[i]);
   show(s.meta, s.result, null);
 }
+async function loadCapabilities() {
+  try { $("crewOpt").hidden = !(await (await fetch("/capabilities")).json()).crew; } catch (e) { /* offer nothing extra */ }
+}
 async function loadDomains() {
+  loadCapabilities();
   try {
     domains = await (await fetch("/domains")).json();
     const opts = domains.map(d => `<option value="${esc(d.id)}" ${d.runnable ? "" : "disabled"}>${esc(d.name)}</option>`).join("");
@@ -403,7 +414,7 @@ function setBusy(on) {
 
 // One run function behind both buttons. From the Try-it card the result is scrolled into view;
 // from the top strip it is not (the visitor is reading elsewhere): the nav pill announces it instead.
-async function runLive(domainId, dataset, scrollToResult) {
+async function runLive(domainId, dataset, scrollToResult, orchestration = "direct") {
   if (running) return;
   const d = domains.find(x => x.id === domainId);
   setBusy(true);
@@ -411,12 +422,12 @@ async function runLive(domainId, dataset, scrollToResult) {
   status("Submitting..."); pill("Starting analysis…", "busy");
   try {
     const r = await fetch(`/domains/${d.id}/analyze`, {method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({orchestration:"direct", dataset})});
+      body: JSON.stringify({orchestration, dataset})});
     if (!r.ok) throw new Error((await r.json()).detail || r.statusText);
     let job = await r.json(); const t0 = Date.now();
     while (job.status === "queued" || job.status === "running") {
       const s = Math.round((Date.now() - t0) / 1000);
-      status(`Job ${job.id.slice(0,8)} ${job.status}… ${s}s (typically 30–90 s)`);
+      status(`Job ${job.id.slice(0,8)} ${job.status}… ${s}s (typically ${orchestration === "crew" ? "1–4 min" : "30–90 s"})`);
       pill(`Analysing ${d.name.split(" (")[0]}… ${s}s · keep exploring`, "busy");
       await new Promise(r => setTimeout(r, 2000));
       job = await (await fetch(`/jobs/${job.id}`)).json();
@@ -424,7 +435,7 @@ async function runLive(domainId, dataset, scrollToResult) {
     if (job.status === "failed") throw new Error(job.error || "job failed");
     status(`Finished in ${Math.round((Date.now() - t0) / 1000)} s.`);
     const known = samples.find(s => s.domain_id === d.id && s.dataset === dataset);
-    const meta = {domain_id:d.id, domain_name:d.name, description:d.description, dataset, label:"Live run",
+    const meta = {domain_id:d.id, domain_name:d.name, description:d.description, dataset, label: orchestration === "crew" ? "Live run (agent crew)" : "Live run",
       outcome:d.outcome, treatments:d.treatments, sensitive_attribute:d.sensitive_attribute,
       observational:d.observational, entity_noun_plural:d.entity_noun_plural, truth: known?.truth, live:true};
     show(meta, job.result, job.id, scrollToResult);
@@ -432,7 +443,7 @@ async function runLive(domainId, dataset, scrollToResult) {
   } catch (e) { status("Error: " + e.message, true); pill("Run failed: " + e.message, "err"); }
   finally { setBusy(false); }
 }
-$("run").onclick = () => runLive($("domain").value, $("dataset").value, true);
+$("run").onclick = () => runLive($("domain").value, $("dataset").value, true, $("crew").checked ? "crew" : "direct");
 $("heroRun").onclick = () => {
   const d = domains.find(x => x.id === $("heroDomain").value);
   runLive(d.id, d.default_dataset, false);
@@ -481,7 +492,7 @@ function render() {
     <div class="views" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
       <div class="card"><h3>3 &middot; Counterfactual: &ldquo;what if&rdquo;</h3><div id="cf"></div></div>
       <div class="card"><h3>What predicts ${esc(nice(meta.outcome))} <span class="pill">not causal</span></h3>
-        <p class="howto">SHAP shows which inputs a prediction model leans on. Strong predictors are not necessarily causes.</p><div id="shap"></div></div>
+        <p class="howto">SHAP (SHapley Additive exPlanations) shows which inputs a prediction model leans on. Strong predictors are not necessarily causes.</p><div id="shap"></div></div>
     </div>`;
   drawGraph(); drawEvidence(); drawInterventions(); drawCounterfactuals(); drawShap();
   const t = $("tgl"); if (t) t.onchange = () => { showTruth = t.checked; drawGraph(); };
@@ -632,12 +643,15 @@ function drawInterventions() {
     const fair = r.fairness_ratio == null ? "" : r.fairness_pass
       ? `<span class="pill good" title="lowest group outcome rate / highest, must be at least 0.80">fairness OK (${esc(s)}): ${f(r.fairness_ratio, 2)}</span>`
       : `<span class="pill bad" title="lowest group outcome rate / highest, must be at least 0.80">fairness flag (${esc(s)}): ${f(r.fairness_ratio, 2)}</span>`;
-    const skip = r.recommended === false ? ` <span class="pill bad" title="its estimated effect would raise ${esc(nice(meta.outcome))}">not recommended</span>` : "";
+    const eo = r.equalized_odds_difference == null ? "" : ` <span class="pill ${r.equalized_odds_pass ? "good" : "bad"}" title="a model that predicts ${esc(nice(meta.outcome))} from the other columns: the largest gap between groups in its true-positive or false-positive rate. It describes that model, not the action.">error-rate gap ${r.equalized_odds_pass ? "OK" : "flag"}: ${f(r.equalized_odds_difference, 2)}</span>`;
+    const why = {effect_not_distinguishable_from_noise: "its estimated effect failed the noise (placebo) check, so it cannot be told apart from no effect",
+      no_expected_reduction: "it is not expected to lower " + nice(meta.outcome)}[r.not_recommended_reason] || `its estimated effect would raise ${nice(meta.outcome)}`;
+    const skip = r.recommended === false ? ` <span class="pill bad" title="${esc(why)}">not recommended</span>` : "";
     return `<div class="row" data-v="${esc(r.target_variable)}">
       <div class="nm">#${r.rank} ${esc(nice(r.id))}${skip}<small>acts on ${esc(nice(r.target_variable))} &middot; cost ${r.cost.toLocaleString()} &middot; ROI ${f(r.roi, 6)}</small></div>
-      <div><div class="track"><div class="fill ${neg ? "neg" : ""}" style="left:0;width:${w}%"></div></div><div style="margin-top:4px">${fair}</div></div>
+      <div><div class="track"><div class="fill ${neg ? "neg" : ""}" style="left:0;width:${w}%"></div></div><div style="margin-top:4px">${fair}${eo}</div></div>
       <div class="val"><b>${neg ? "+" : "−"}${Math.abs(r.expected_effect * 100).toFixed(2)} pts</b><br><span class="note">${neg ? "raises" : "lowers"} ${esc(nice(meta.outcome))}</span></div></div>`;
-  }).join("") + `<div class="note">Costs are illustrative inputs set in each domain's config, not measured. A fairness flag means the groups' outcome rates differ by more than the four-fifths rule allows; it is a prompt to look closer, not a verdict.</div>`;
+  }).join("") + `<div class="note">Costs are illustrative inputs set in each domain's config, not measured. A fairness flag means the groups' outcome rates differ by more than the four-fifths rule allows; it is a prompt to look closer, not a verdict. The error-rate gap is the equalized-odds check of a simple prediction model, so it says how such a model would treat the groups, not what an action would do.</div>`;
   document.querySelectorAll("#ibars .row").forEach(r => r.onclick = () => select(r.dataset.v));
 }
 

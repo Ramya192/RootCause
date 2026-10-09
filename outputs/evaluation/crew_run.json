@@ -1,0 +1,28 @@
+{
+  "domain": "employee_attrition",
+  "dataset": "synthetic",
+  "manager_llm": "gpt-4o-mini",
+  "seconds": 57.0,
+  "stages_run": [
+    "ingestion",
+    "feature_store",
+    "causal_discovery",
+    "effect_estimation",
+    "counterfactuals",
+    "interventions",
+    "explanation"
+  ],
+  "stages_missing": [],
+  "token_usage": {
+    "total_tokens": 19620,
+    "prompt_tokens": 16355,
+    "cached_prompt_tokens": 0,
+    "completion_tokens": 3265,
+    "reasoning_tokens": 0,
+    "cache_creation_tokens": 0,
+    "successful_requests": 28
+  },
+  "narrative_tier": "llm",
+  "edges": 6,
+  "recommendations": 3
+}

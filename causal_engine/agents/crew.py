@@ -24,7 +24,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 import pandas as pd
-from crewai import Agent, Crew, Process, Task
+from crewai import LLM, Agent, Crew, Process, Task
 from crewai.tools import tool
 
 from causal_engine.models.schemas import (
@@ -44,6 +44,40 @@ from causal_engine.pipeline import (
     ingestion,
     interventions,
 )
+
+
+def _interval(e: EffectEstimate) -> str:
+    return "" if e.ci_low is None or e.ci_high is None else f" (95% interval {e.ci_low:+.4f} to {e.ci_high:+.4f})"
+
+
+def _noise_check(e: EffectEstimate) -> str:
+    if e.refutation_passed is None:
+        return "noise check not run"
+    p = "" if e.refutation_p_value is None else f", p={e.refutation_p_value:.2f}"
+    return "noise check passed" + p if e.refutation_passed else "noise check FAILED" + p + " (no evidence of an effect beyond noise)"
+
+
+def summarize_effects(estimates: list[EffectEstimate]) -> str:
+    """What Stage 4 found, including the checks that did not pass, so an agent has nothing to fill in."""
+    return "; ".join(f"{e.treatment}->{e.outcome}: ATE={e.ate:+.4f}{_interval(e)}, {_noise_check(e)}" for e in estimates)
+
+
+def summarize_counterfactuals(results: list[CounterfactualResult]) -> str:
+    """Each result is about ONE treatment; the wording says so, since an agent once read it as a combined effect."""
+    return "; ".join(f"[{cf.treatment} only, {cf.meta_learner}] {cf.description}" for cf in results)
+
+
+def summarize_recommendations(recs: list[InterventionRecommendation]) -> str:
+    def one(r: InterventionRecommendation) -> str:
+        why = {
+            "effect_not_distinguishable_from_noise": "its effect failed the noise check",
+            "no_expected_reduction": "no expected reduction",
+        }.get(r.not_recommended_reason or "", "would raise the outcome")
+        verdict = "recommended" if r.recommended else f"NOT recommended ({why})"
+        eo = "" if r.equalized_odds_pass is None else f", equalized_odds_pass={r.equalized_odds_pass}"
+        return f"#{r.rank} {r.id} ({verdict}, roi={r.roi:.3g}, fairness_pass={r.fairness_pass}{eo})"
+
+    return "; ".join(one(r) for r in recs)
 
 
 @dataclass
@@ -102,7 +136,7 @@ def _build_tools(run: PipelineRun) -> dict[str, object]:
             return "ERROR: no feature vectors yet -- run the feature store tool first"
         run.effect_estimates = effect_estimation.estimate_effects(run.feature_df, run.domain_config)
         run.completed.add("effect_estimation")
-        return "; ".join(f"{e.treatment}->{e.outcome}: ATE={e.ate:+.4f}" for e in run.effect_estimates)
+        return summarize_effects(run.effect_estimates)
 
     @tool("simulate_counterfactuals")
     def counterfactuals_tool() -> str:
@@ -115,7 +149,7 @@ def _build_tools(run: PipelineRun) -> dict[str, object]:
             run.feature_df, run.domain_config
         )
         run.completed.add("counterfactuals")
-        return "; ".join(cf.description for cf in run.counterfactual_results)
+        return summarize_counterfactuals(run.counterfactual_results)
 
     @tool("rank_interventions")
     def interventions_tool() -> str:
@@ -128,10 +162,7 @@ def _build_tools(run: PipelineRun) -> dict[str, object]:
             run.raw_data, run.effect_estimates, run.domain_config
         )
         run.completed.add("interventions")
-        return "; ".join(
-            f"#{r.rank} {r.id} (roi={r.roi:.3g}, fairness_pass={r.fairness_pass})"
-            for r in run.recommendations
-        )
+        return summarize_recommendations(run.recommendations)
 
     @tool("generate_explanation")
     def explanation_tool() -> str:
@@ -234,6 +265,15 @@ _STAGE_TOOL_NAMES = {
 }
 
 
+# The agents are LLMs, and left to summarise a tool's output they add claims the tool never made (a placebo check
+# that was never reported, a combined effect from a one-treatment result). The pipeline result is built from what the
+# tools wrote, not from this text, but the crew's printed answer should not mislead either.
+_VERBATIM = (
+    "When the tool returns, reply with its output exactly as given and nothing else: no interpretation, no "
+    "causal wording, no checks or numbers the tool did not report, no advice."
+)
+
+
 def _mandate(stage: str, goal: str) -> str:
     tool_name = _STAGE_TOOL_NAMES[stage]
     role = _AGENT_SPECS[stage]["role"]
@@ -244,44 +284,44 @@ def _mandate(stage: str, goal: str) -> str:
         f"call the `{tool_name}` tool exactly once to do this -- it is the "
         f"only source of real output for this stage. Do not answer from "
         f"reasoning or general knowledge instead of calling it, and do not "
-        f"call it more than once."
+        f"call it more than once. {_VERBATIM}"
     )
 
 
 _TASK_DESCRIPTIONS = {
     "ingestion": (
         _mandate("ingestion", "Ingest the domain's raw data."),
-        "A short summary of how many rows were ingested and which columns are present.",
+        "The ingestion tool's output, verbatim.",
     ),
     "feature_store": (
         _mandate("feature_store", "Build causal feature vectors from the ingested data."),
-        "A short summary of the feature vectors built.",
+        "The tool's output, verbatim.",
     ),
     "causal_discovery": (
         _mandate("causal_discovery", "Discover the causal graph from the feature vectors."),
-        "A short summary of the discovered edges.",
+        "The tool's output, verbatim.",
     ),
     "effect_estimation": (
         _mandate(
             "effect_estimation",
             "Estimate the causal effect of each configured treatment on the outcome.",
         ),
-        "A short summary of each treatment's ATE.",
+        "The tool's output, verbatim.",
     ),
     "counterfactuals": (
         _mandate("counterfactuals", "Simulate the domain's configured counterfactual scenario."),
-        "A short summary of the counterfactual result.",
+        "The tool's output, verbatim.",
     ),
     "interventions": (
         _mandate("interventions", "Rank the candidate interventions using the effect estimates."),
-        "A short summary of the ranked recommendations.",
+        "The tool's output, verbatim.",
     ),
     "explanation": (
         _mandate(
             "explanation",
             "Generate the final narrative explanation using every prior stage's output.",
         ),
-        "The final narrative explanation text.",
+        "The tool's output, verbatim.",
     ),
 }
 
@@ -290,8 +330,9 @@ def build_crew(domain_config: dict, data_path: str, manager_llm: str) -> tuple[C
     run = PipelineRun(domain_config=domain_config, data_path=data_path)
     tools = _build_tools(run)
 
+    # temperature 0 for the agents and the manager: nothing here benefits from creative wording
     agents = {
-        stage: Agent(tools=[tools[stage]], allow_delegation=False, **spec)
+        stage: Agent(tools=[tools[stage]], allow_delegation=False, llm=LLM(model=manager_llm, temperature=0), **spec)
         for stage, spec in _AGENT_SPECS.items()
     }
 
@@ -310,7 +351,7 @@ def build_crew(domain_config: dict, data_path: str, manager_llm: str) -> tuple[C
         agents=list(agents.values()),
         tasks=tasks,
         process=Process.hierarchical,
-        manager_llm=manager_llm,
+        manager_llm=LLM(model=manager_llm, temperature=0),
         verbose=True,
     )
     return crew, run

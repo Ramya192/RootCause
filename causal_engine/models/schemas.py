@@ -101,8 +101,16 @@ class InterventionRecommendation(BaseModel):
     # False when the estimated effect would RAISE the outcome (negative benefit): the action is
     # listed so the reader can see it, but it is not something to do.
     recommended: bool = True
+    # Why `recommended` is False: "raises_outcome" (its estimated effect would raise the outcome),
+    # "no_expected_reduction", or "effect_not_distinguishable_from_noise" (the placebo check on its
+    # effect estimate failed, so the estimated reduction cannot be told apart from zero).
+    not_recommended_reason: Optional[str] = None
     fairness_ratio: Optional[float] = None
     fairness_pass: bool = True
+    # Equalized odds of an outcome model trained on the domain's features (None when it cannot be computed,
+    # e.g. a group with no positives). It describes that model's error rates by group, not the intervention.
+    equalized_odds_difference: Optional[float] = None
+    equalized_odds_pass: Optional[bool] = None
     rank: int
 
 

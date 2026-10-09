@@ -68,4 +68,4 @@ def test_narrative_says_so_when_no_candidate_action_would_help(domain_config):
     text = explanation._template_narrative(domain_config, [], [], [rec], {"compensation": 1.0})
     assert "No candidate action is expected to reduce attrition" in text
     assert "Recommended action" not in text
-    assert explanation._roi_below_cost([rec]) is False  # there is no recommended action to judge
+    assert explanation._has_recommended_action([rec]) is False  # there is no recommended action to judge

@@ -15,7 +15,7 @@
   "sensitive_attribute": "first_time_buyer",
   "observational": true,
   "entity_noun_plural": "loans",
-  "built": "2026-10-06"
+  "built": "2026-10-09"
  },
  "result": {
   "domain_id": "freddie_mac",
@@ -107,7 +107,7 @@
    {
     "treatment": "interest_rate",
     "outcome": "default",
-    "ate": 0.0623479953238074,
+    "ate": 0.062347995323807096,
     "estimator": "backdoor.linear_regression",
     "std_error": 0.006410804111059662,
     "ci_low": 0.049782275326738824,
@@ -132,7 +132,7 @@
    {
     "treatment": "ltv",
     "outcome": "default",
-    "ate": 0.0006517314268004032,
+    "ate": 0.0006517314268004171,
     "estimator": "backdoor.linear_regression",
     "std_error": 0.00018527566164636478,
     "ci_low": 0.000288575409834696,
@@ -157,7 +157,7 @@
    {
     "treatment": "dti",
     "outcome": "default",
-    "ate": 0.002496913616859657,
+    "ate": 0.002496913616859664,
     "estimator": "backdoor.linear_regression",
     "std_error": 0.00024471926360192437,
     "ci_low": 0.002017243096432158,
@@ -196,39 +196,48 @@
    {
     "id": "cap_dti",
     "target_variable": "dti",
-    "expected_effect": 0.012484568084298285,
+    "expected_effect": 0.01248456808429832,
     "cost": 300.0,
-    "roi": 4.161522694766095e-05,
+    "roi": 4.161522694766106e-05,
     "recommended": true,
+    "not_recommended_reason": null,
     "fairness_ratio": 0.8283579654854782,
     "fairness_pass": true,
+    "equalized_odds_difference": 0.049166076475955334,
+    "equalized_odds_pass": true,
     "rank": 1
    },
    {
     "id": "lower_interest_rate",
     "target_variable": "interest_rate",
-    "expected_effect": 0.0311739976619037,
+    "expected_effect": 0.031173997661903548,
     "cost": 1500.0,
-    "roi": 2.07826651079358e-05,
+    "roi": 2.07826651079357e-05,
     "recommended": true,
+    "not_recommended_reason": null,
     "fairness_ratio": 0.8283579654854782,
     "fairness_pass": true,
+    "equalized_odds_difference": 0.049166076475955334,
+    "equalized_odds_pass": true,
     "rank": 2
    },
    {
     "id": "cap_ltv",
     "target_variable": "ltv",
-    "expected_effect": 0.006517314268004032,
+    "expected_effect": 0.006517314268004171,
     "cost": 400.0,
-    "roi": 1.629328567001008e-05,
+    "roi": 1.6293285670010428e-05,
     "recommended": true,
+    "not_recommended_reason": null,
     "fairness_ratio": 0.8283579654854782,
     "fairness_pass": true,
+    "equalized_odds_difference": 0.049166076475955334,
+    "equalized_odds_pass": true,
     "rank": 3
    }
   ],
   "explanation": {
-   "narrative": "Associations with serious delinquency within 36 months in observational data (not proven causes), ranked by estimated effect size:\n- interest_rate: ATE=+0.0623 (backdoor.linear_regression)\n- dti: ATE=+0.0025 (backdoor.linear_regression)\n- ltv: ATE=+0.0007 (backdoor.linear_regression)\nSHAP attribution agrees 'credit_score' carries the most predictive weight.\n- Across all loans, being at or above the ltv threshold rather than below it goes with a difference of +0.0549 in mean predicted serious delinquency within 36 months (an association in observational data)\nRecommended action: 'cap_dti' (ROI=4.16e-05, cost=$300) -- fairness check passed",
+   "narrative": "Associations with serious delinquency within 36 months in observational data (not proven causes), ranked by estimated effect size:\n- interest_rate: ATE=+0.0623 (backdoor.linear_regression)\n- dti: ATE=+0.0025 (backdoor.linear_regression)\n- ltv: ATE=+0.0007 (backdoor.linear_regression)\nSHAP attribution agrees 'credit_score' carries the most predictive weight.\n- Across all loans, being at or above the ltv threshold rather than below it goes with a difference of +0.0549 in mean predicted serious delinquency within 36 months (an association in observational data)\nRecommended action: 'cap_dti', expected to lower serious delinquency within 36 months by 1.25 percentage points at cost=$300 (ROI=4.16e-05 = reduction per dollar; the serious delinquency within 36 months has no dollar value here, so ROI only ranks the actions) -- fairness check passed",
    "shap_summary": {
     "credit_score": 0.4446912648235271,
     "ltv": 0.18865247580295494,
